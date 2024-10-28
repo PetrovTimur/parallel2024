@@ -29,18 +29,43 @@ int main(int argc, char** argv) {
     std::vector<double> diag(nodes);
 
     makeCSR(Nx, Ny, K1, K2, ia, ja);
+
+    std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
+
+    // buildAM(ia, ja, matrix);
+
+    // printMatrix(matrix);
+
     fillCSR(ia, ja, a, b, diag);
+
+    std::cout << "IA: ";
+
+    for (auto x: ia) {
+        std::cout << x << " ";
+    }
+    std::cout << std::endl << "JA: ";
+
+    for (auto y : ja) {
+        std::cout << y << " ";
+    }
+    std::cout << std::endl << "A: ";
+
+    for (auto z : a) {
+        std::cout << z << " ";
+    }
+    std::cout << std::endl;
 
     std::vector<double> res(nodes);
 
+    // Nx = 2, Ny = 2, K1 = 1, K2 = 1
     solve(ia, ja, a, b, diag, res);
 
     double end = omp_get_wtime();
     printf("Work took %f seconds\n", end - start);
 
-    /*for (int i = 0; i < nodes; i++) {
+    for (int i = 0; i < nodes; i++) {
         std::cout << res[i] << " ";
-    }*/
+    }
 
     std::cout << res[253] << std::endl;
 

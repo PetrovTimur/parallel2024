@@ -57,3 +57,11 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
     for (int i = 0; i < b.size(); i++)
         b[i] = std::sin(i);
 }
+
+void buildAM(std::vector<int> &ia, std::vector<int> &ja, std::vector<std::vector<bool>> &matrix) {
+    for (int i = 0; i < ia.size() - 1; i++) {
+        for (int k = ia[i]; k < ia[i + 1]; k++) {
+            matrix[i][ja[k]] = true;
+        }
+    }
+}
