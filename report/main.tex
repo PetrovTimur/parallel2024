@@ -91,6 +91,14 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 
 \subsection{Краткое описание программной реализации}
 
+Для запуска на локальных системах используется следующая команда:
+
+\begin{lstlisting}{bash}
+	OMP_NUM_THREADS=k ./a.out Nx Ny K1 K2
+\end{lstlisting}
+
+Для запуска на кластере, использующем систему очередей, запускается скрипт со следующими параметрами.
+
 \subsection{Описание опробованных способов оптимизации последовательных вычислений}
 
 sdfs
@@ -116,12 +124,6 @@ sdfs
 \end{center}
 
 \lstset{style=mystyle}
-
-Для запуска на локальных системах используется следующая команда:
-
-\begin{lstlisting}{bash}
-	OMP_NUM_THREADS=k ./a.out Nx Ny K1 K2
-\end{lstlisting}
 
 \subsection{Результаты измерений производительности}
 

@@ -6,8 +6,6 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
 
-#add_library(mathfunc mathfunc.cpp)
-
 add_executable(parallel2024_task1 main.cpp
         mathfunc.cpp
         mathfunc.h
@@ -18,5 +16,14 @@ add_executable(parallel2024_task1 main.cpp
         solvers.cpp
         solvers.h)
 
-#target_link_libraries(parallel2024_task1 mathfunc)
-#add_dependencies(parallel2024_task1 )
+
+#testing binary
+add_executable(math_test tests.cpp)
+#target_link_libraries(cpp_test PRIVATE sum_integers)
+
+enable_testing()
+
+add_test(
+        NAME math_test
+        COMMAND $<TARGET_FILE:math_test>
+)
