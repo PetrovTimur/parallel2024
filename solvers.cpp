@@ -5,7 +5,7 @@ void solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, s
     std::vector<double> &diag, std::vector<double> &res) {
     int N = ia.size() - 1;
     double eps = 0.001;
-    int maxit = 10;
+    int maxit = 100000;
 
     std::vector<double> x(N);
     std::vector<double> r(b);
@@ -22,9 +22,9 @@ void solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, s
             z[i] = r[i] / diag[i];
         }
 
-
         rho[0] = rho[1];
         rho[1] = dot(r, z);
+
         if (k == 1)
             #pragma omp parallel for
             for (int i = 0; i < N; i++)
@@ -45,7 +45,7 @@ void solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, s
 
         #pragma omp parallel for
         for (int i = 0; i < N; i++)
-            r[i] = r[i] - alpha * p[i];
+            r[i] = r[i] - alpha * q[i];
     }
     while (rho[1] > eps * eps && k < maxit);
 

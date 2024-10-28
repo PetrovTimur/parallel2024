@@ -35,7 +35,7 @@ void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<i
 
 void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
     std::vector<double> &diag) {
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < ia.size() - 1; i++) {
         double sum = 0;
         int k_i = 0;
@@ -58,10 +58,19 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
         b[i] = std::sin(i);
 }
 
-void buildAM(std::vector<int> &ia, std::vector<int> &ja, std::vector<std::vector<bool>> &matrix) {
+void buildAdjacencyMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<std::vector<bool>> &matrix) {
     for (int i = 0; i < ia.size() - 1; i++) {
         for (int k = ia[i]; k < ia[i + 1]; k++) {
             matrix[i][ja[k]] = true;
+        }
+    }
+}
+
+void buildMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
+    std::vector<std::vector<double>> &matrix) {
+    for (int i = 0; i < ia.size() - 1; i++) {
+        for (int k = ia[i]; k < ia[i + 1]; k++) {
+            matrix[i][ja[k]] = a[k];
         }
     }
 }

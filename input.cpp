@@ -1,5 +1,4 @@
 #include "input.h"
-#include <iostream>
 
 std::tuple<int, int> input(int Nx, int Ny, int K1, int K2) {
     // std::cout << "Hello, World!" << std::endl;
@@ -18,13 +17,4 @@ std::tuple<int, int> input(int Nx, int Ny, int K1, int K2) {
     int nonzero_elements = 2 * total_edges + nodes;
 
     return std::make_tuple(nodes, nonzero_elements);
-}
-
-void printMatrix(std::vector<std::vector<bool>> &matrix) {
-    for (int i = 0; i < matrix.size(); i++) {
-        for (int j = 0; j < matrix[i].size(); j++) {
-            std::cout << matrix[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
 }

@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 
     makeCSR(Nx, Ny, K1, K2, ia, ja);
 
-    std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
+    // std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
 
     // buildAM(ia, ja, matrix);
 
