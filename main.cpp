@@ -11,7 +11,7 @@
 int main(int argc, char** argv) {
     double start = omp_get_wtime();
 
-    omp_set_num_threads(12);
+    omp_set_num_threads(omp_get_max_threads());
 
     int Nx = std::stoi(argv[1]);
     int Ny = std::stoi(argv[2]);
@@ -43,8 +43,6 @@ int main(int argc, char** argv) {
     }*/
 
     std::cout << res[253] << std::endl;
-
-    // std::cout << std::endl;
 
     return 0;
 }

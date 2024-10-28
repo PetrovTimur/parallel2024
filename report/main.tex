@@ -1,0 +1,136 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+
+\usepackage{graphicx}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{cmap}
+\usepackage[hidelinks]{hyperref}
+\usepackage{epstopdf}
+\usepackage{cite}
+\usepackage{indentfirst}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\usepackage[left=2cm,right=1cm,
+top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
+
+\graphicspath{{./images/}{./course}}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+
+\begin{document}
+	
+\thispagestyle{empty}
+
+\begin{center}
+	\ \vspace{-3cm}
+	
+	\includegraphics[width=0.5\textwidth]{msu.eps}\\
+	{Московский государственный университет имени М. В. Ломоносова}\\
+	Факультет вычислительной математики и кибернетики\\
+	Кафедра вычислительных методов
+	
+	\vspace{6cm}
+	
+	{\Large \bfseries Построение разреженной матрицы и решение СЛАУ}
+	
+	\vspace{1cm}
+	
+	{\large Параллельные высокопроизводительные вычисления}
+\end{center}
+
+\vfill
+
+\begin{flushright}
+	\textbf{выполнил:}\\
+	Петров Тимур \\
+	группа 504
+\end{flushright}
+
+\vfill
+
+\begin{center}
+	31 октября \\
+	Москва, 2024
+\end{center}
+
+\enlargethispage{2\baselineskip}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{Описание задания и программной реализации}
+
+\subsection{Краткое описание задания}
+
+\subsection{Краткое описание программной реализации}
+
+\subsection{Описание опробованных способов оптимизации последовательных вычислений}
+
+sdfs
+
+\newpage
+
+\section{Исследование производительности}
+
+\subsection{Характеристики вычислительной системы}
+
+\begin{center}
+	\begin{tabular}{ c|c|c|c| } 
+		 & ноутбук & десктоп & кластер \\ 
+		\hline
+		CPU & i7-7700H & i5-12400F & IBM POWER 8 \\ 
+		Cores & 4 & 6 & 20 \\ 
+		Threads & 2 & 2 & 8 \\
+		Peak perf &  &  &  \\
+		RAM &  & DDR5-5600 2x16 &  \\
+		transfer rate &  &  &  \\
+		OS & 22.04 & 22.04  &  \\
+	\end{tabular}
+\end{center}
+
+\lstset{style=mystyle}
+
+Для запуска на локальных системах используется следующая команда:
+
+\begin{lstlisting}{bash}
+	OMP_NUM_THREADS=k ./a.out Nx Ny K1 K2
+\end{lstlisting}
+
+\subsection{Результаты измерений производительности}
+
+sdfs
+
+\newpage
+
+\section{Анализ полученных результатов}
+
+adssad
+
+\end{document}
