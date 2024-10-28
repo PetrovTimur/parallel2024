@@ -1,7 +1,7 @@
 #include <iostream>
 #include <ostream>
 
-#include "mathfunc.cpp"
+#include "Ops/mathfunc.h"
 
 
 int main() {
@@ -12,5 +12,5 @@ int main() {
 
     std::cout << res << std::endl;
 
-    return 0;
+    return res == 206.0;
 }

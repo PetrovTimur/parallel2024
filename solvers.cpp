@@ -1,5 +1,5 @@
 #include "solvers.h"
-#include "mathfunc.h"
+#include "Ops/mathfunc.h"
 
 void solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
     std::vector<double> &diag, std::vector<double> &res) {

@@ -7,7 +7,10 @@ void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<i
     for (int i = 0; i < Ny + 1; i++) {
         for (int j = 0; j < Nx + 1; j++) {
             int flat_idx = i * (Nx + 1) + j;
-            // add top, left, bot, right ...
+            int top_idx = (i - 1) * (Nx + 1) + j;
+            int right_idx = i * (Nx + 1) + j + 1;
+            int bottom_idx = (i + 1) * (Nx + 1) + j;
+            int left_idx = i * (Nx + 1) + j - 1;
             ia[flat_idx] = k;
 
             if (i != 0)
