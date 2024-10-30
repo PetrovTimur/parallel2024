@@ -35,21 +35,14 @@ void solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, s
                 p[i] = z[i];
         else {
             double beta = rho[1] / rho[0];
-            #pragma omp parallel for
-            for (int i = 0; i < N; i++)
-                p[i] = z[i] + beta * p[i];
+            axpy(beta, p, z, p);
         }
 
         spMV(ia, ja, a, p, q);
         double alpha = rho[1] / dot(p, q);
 
-        #pragma omp parallel for
-        for (int i = 0; i < N; i++)
-            x[i] = x[i] + alpha * p[i];
-
-        #pragma omp parallel for
-        for (int i = 0; i < N; i++)
-            r[i] = r[i] - alpha * q[i];
+        axpy(alpha, p, x, x);
+        axpy(-alpha, q, r, r);
     }
     while (rho[1] > eps * eps && k < maxit);
 
