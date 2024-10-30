@@ -1,10 +1,14 @@
 #include "solvers.h"
-#include "Ops/mathfunc.h"
+
+#include <iostream>
+#include <ostream>
+
+#include "Kernels/mathfunc.h"
 
 void solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
     std::vector<double> &diag, std::vector<double> &res) {
     int N = ia.size() - 1;
-    double eps = 0.001;
+    double eps = 1e-3;
     int maxit = 100000;
 
     std::vector<double> x(N);
@@ -52,4 +56,6 @@ void solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, s
     #pragma omp parallel for
     for (int i = 0; i < N; i++)
         res[i] = x[i];
+
+    std::cout << "k = " << k << std::endl;
 }

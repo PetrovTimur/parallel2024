@@ -5,7 +5,7 @@
 #include <cmath>
 #include <omp.h>
 #include "csr.h"
-#include "input.h"
+#include "Utilities/input.h"
 #include "solvers.h"
 
 int main(int argc, char** argv) {
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
         std::cout << res[i] << " ";
     }
 
-    std::cout << res[253] << std::endl;
+    std::cout << std::endl;
 
     return 0;
 }

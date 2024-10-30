@@ -3,7 +3,7 @@
 
 #include "solvers.h"
 #include "Ops/mathfunc.h"
-#include "input.h"
+#include "Utilities/input.h"
 // #include "csr.h"
 
 
@@ -45,9 +45,9 @@ int main() {
     std::vector<double> res(5);
 
     int nodes = 5;
-    std::vector<std::vector<double>> matrix(nodes, std::vector<double>(nodes, 0));
+    // std::vector<std::vector<double>> matrix(nodes, std::vector<double>(nodes, 0));
     // buildMatrix(ia, ja, a, matrix);
-    printMatrix(matrix);
+    // printMatrix(matrix);
 
     solve(ia, ja, a, b, diag, res);
 
@@ -64,6 +64,7 @@ int main() {
     spMV(ia, ja, a, res, b_pred);
     for (int i = 0; i < 5; i++) {
         residual[i] = b[i] - b_pred[i];
+        std::cout << res[i] << std::endl;
     }
 
     double norm = dot(residual, residual);

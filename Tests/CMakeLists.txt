@@ -2,7 +2,7 @@ add_executable(MathTest DotTest.cpp)
 add_executable(SolveTest SolveTest.cpp
         ${TOPLEVEL_INCLUDE_DIR}/solvers.h ${TOPLEVEL_INCLUDE_DIR}/solvers.cpp
         ${TOPLEVEL_INCLUDE_DIR}/csr.h ${TOPLEVEL_INCLUDE_DIR}/csr.cpp
-        ${TOPLEVEL_INCLUDE_DIR}/input.h ${TOPLEVEL_INCLUDE_DIR}/input.cpp)
+        ${TOPLEVEL_INCLUDE_DIR}/Utilities/input.h ${TOPLEVEL_INCLUDE_DIR}/Utilities/input.cpp)
 
 add_dependencies(MathTest MathFunc)
 add_dependencies(SolveTest MathFunc)
