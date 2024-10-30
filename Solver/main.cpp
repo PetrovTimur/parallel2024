@@ -3,20 +3,48 @@
 #include <tuple>
 #include <vector>
 #include <cmath>
+#include <fstream>
 #include <omp.h>
 #include "csr.h"
 #include "Utilities/input.h"
 #include "solvers.h"
+#include "Utilities/argparse.h"
+
 
 int main(int argc, char** argv) {
-    double start = omp_get_wtime();
+    struct arguments arguments{};
+
+    /* Default values. */
+    arguments.verbose = 0;
+    arguments.output_file = "-";
+
+    /* Parse our arguments; every option seen by parse_opt will
+       be reflected in arguments. */
+    argp_parse (&argp, argc, argv, 0, nullptr, &arguments);
+
+    // printf ("ARG1 = %s\nARG2 = %s\nARG3 = %s\nARG4 = %s\nOUTPUT_FILE = %s\n"
+    //         "VERBOSE = %s\n",
+    //         arguments.args[0], arguments.args[1],
+    //         arguments.args[2], arguments.args[3],
+    //         arguments.output_file,
+    //         arguments.verbose ? "yes" : "no");
 
     omp_set_num_threads(omp_get_max_threads());
 
-    int Nx = std::stoi(argv[1]);
-    int Ny = std::stoi(argv[2]);
-    int K1 = std::stoi(argv[3]);
-    int K2 = std::stoi(argv[4]);
+    std::fstream out;
+    if (arguments.output_file[0] != '-') {
+        out.open(arguments.output_file, std::ios::out);
+        std::cout.rdbuf(out.rdbuf()); //save and redirect
+    }
+
+    int Nx = std::stoi(arguments.args[0]);
+    int Ny = std::stoi(arguments.args[1]);
+    int K1 = std::stoi(arguments.args[2]);
+    int K2 = std::stoi(arguments.args[3]);
+
+    std::cout << "Nx = " << Nx << std::endl;
+
+    double start = omp_get_wtime();
 
     std::tuple<int, int> t = input(Nx, Ny, K1, K2);
     int nodes = std::get<0>(t);
@@ -61,13 +89,15 @@ int main(int argc, char** argv) {
     solve(ia, ja, a, b, diag, res);
 
     double end = omp_get_wtime();
-    printf("Work took %f seconds\n", end - start);
+    std::cout << "Work took " << end - start << " seconds\n";
 
     for (int i = 0; i < nodes; i++) {
         std::cout << res[i] << " ";
     }
 
     std::cout << std::endl;
+
+    out.close();
 
     return 0;
 }
