@@ -16,4 +16,12 @@ void printMatrix(std::vector<std::vector<T>> &matrix) {
     }
 }
 
+template <typename T>
+void printVector(std::vector<T> &a) {
+    for (int i = 0; i < a.size(); i++) {
+        std::cout << a[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
 #endif //INPUT_H
