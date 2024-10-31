@@ -1,14 +1,13 @@
 #include "mathfunc.h"
 
-double dot(std::vector<double> &x, std::vector<double> &y) {
+void dot(std::vector<double> &x, std::vector<double> &y, double &res) {
     double sum = 0;
 
     #pragma omp parallel for reduction(+:sum)
     for (int i = 0; i < x.size(); i++) {
         sum += x[i] * y[i];
     }
-
-    return sum;
+    res = sum;
 }
 
 void spMV(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
@@ -29,5 +28,19 @@ void axpy(double a, std::vector<double> x, std::vector<double> y, std::vector<do
     #pragma omp parallel for
     for (int i = 0; i < x.size(); i++) {
         res[i] = a * x[i] + y[i];
+    }
+}
+
+void vecCopy(std::vector<double> &x, std::vector<double> &y) {
+    #pragma omp parallel for
+    for (int i = 0; i < x.size(); i++) {
+        y[i] = x[i];
+    }
+}
+
+void vecInit(std::vector<double> &x, const double a) {
+    #pragma omp parallel for
+    for (int i = 0; i < x.size(); i++) {
+        x[i] = a;
     }
 }

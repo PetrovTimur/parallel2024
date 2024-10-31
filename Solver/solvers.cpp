@@ -17,6 +17,7 @@ void solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, s
     std::vector<double> p(N);
     std::vector<double> q(N);
     std::vector<double> rho(2);
+    double buf;
     int k = 0;
 
     do {
@@ -27,7 +28,7 @@ void solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, s
         }
 
         rho[0] = rho[1];
-        rho[1] = dot(r, z);
+        dot(r, z, rho[1]);
 
         if (k == 1)
             #pragma omp parallel for
@@ -39,7 +40,8 @@ void solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, s
         }
 
         spMV(ia, ja, a, p, q);
-        double alpha = rho[1] / dot(p, q);
+        dot(p, q, buf);
+        double alpha = rho[1] / buf;
 
         axpy(alpha, p, x, x);
         axpy(-alpha, q, r, r);
