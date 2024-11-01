@@ -1,6 +1,3 @@
-#include <iostream>
-#include <ostream>
-
 #include "Solver/Kernels/mathfunc.h"
 
 
