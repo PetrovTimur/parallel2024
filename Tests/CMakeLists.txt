@@ -16,11 +16,11 @@ add_dependencies(AXpYParallelTest MathFunc)
 add_dependencies(SpMVCorrectnessTest MathFunc)
 #add_dependencies(SolveTest MathFunc)
 
-target_link_libraries(DotCorrectnessTest PRIVATE MathFunc)
-target_link_libraries(DotParallelTest PRIVATE MathFunc)
-target_link_libraries(AXpYCorrectnessTest PRIVATE MathFunc)
-target_link_libraries(AXpYParallelTest PRIVATE MathFunc)
-target_link_libraries(SpMVCorrectnessTest PRIVATE MathFunc)
+target_link_libraries(DotCorrectnessTest PUBLIC MathFunc)
+target_link_libraries(DotParallelTest PUBLIC MathFunc)
+target_link_libraries(AXpYCorrectnessTest PUBLIC MathFunc)
+target_link_libraries(AXpYParallelTest PUBLIC MathFunc)
+target_link_libraries(SpMVCorrectnessTest PUBLIC MathFunc)
 #target_link_libraries(SolveTest PRIVATE MathFunc)
 
 set_target_properties(DotCorrectnessTest PROPERTIES FOLDER "Tests")
@@ -57,3 +57,6 @@ add_test(
 #        NAME Test2
 #        COMMAND $<TARGET_FILE:SolveTest>
 #)
+
+
+add_subdirectory(Time)
