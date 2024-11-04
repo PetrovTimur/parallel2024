@@ -1,8 +1,21 @@
-add_executable(DotMeasure DotMeasure.cpp)
-add_executable(AXpYMeasure AXpYMeasure.cpp)
+set(MEASURE_SOURCES
+    DotMeasure.cpp
+    AXpYMeasure.cpp
+    SpMVMeasure.cpp
+)
 
-add_dependencies(DotMeasure MathFunc)
-add_dependencies(AXpYMeasure MathFunc)
+foreach (MEASURE_SOURCE ${MEASURE_SOURCES})
+    cmake_path(GET MEASURE_SOURCE STEM MEASURE)
 
-target_link_libraries(DotMeasure PUBLIC MathFunc)
-target_link_libraries(AXpYMeasure PUBLIC MathFunc)
+    if (${MEASURE} STREQUAL "SpMVMeasure")
+        add_executable(${MEASURE} ${MEASURE_SOURCE} ${PROJECT_SOURCE_DIR}/Solver/csr.cpp)
+        add_dependencies(${MEASURE} Utilities)
+        target_link_libraries(${MEASURE} PUBLIC Utilities)
+    else ()
+        add_executable(${MEASURE} ${MEASURE_SOURCE})
+    endif ()
+
+    add_dependencies(${MEASURE} MathFunc)
+    target_link_libraries(${MEASURE} PUBLIC MathFunc)
+
+endforeach ()
