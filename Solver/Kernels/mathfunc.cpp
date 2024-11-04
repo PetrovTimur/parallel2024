@@ -1,9 +1,12 @@
 #include "mathfunc.h"
 
+#include <iostream>
+#include <omp.h>
+
 void dot(std::vector<double> &x, std::vector<double> &y, double &res) {
     double sum = 0;
 
-    #pragma omp parallel for reduction(+:sum)
+    #pragma omp parallel for schedule(static) reduction(+:sum)
     for (int i = 0; i < x.size(); i++) {
         sum += x[i] * y[i];
     }
@@ -24,7 +27,7 @@ void spMV(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, st
     }
 }
 
-void axpy(double a, std::vector<double> x, std::vector<double> y, std::vector<double> &res) {
+void axpy(double a, std::vector<double> &x, std::vector<double> &y, std::vector<double> &res) {
     #pragma omp parallel for
     for (int i = 0; i < x.size(); i++) {
         res[i] = a * x[i] + y[i];
