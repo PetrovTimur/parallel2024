@@ -16,9 +16,10 @@ int main() {
     std::vector<double> diag;
     std::vector<double> res;
 
-    std::cout << "T = " << omp_get_max_threads() << std::endl;
+    int T  = omp_get_max_threads();
+    std::cout << "T = " << T << std::endl;
 
-    for (int k = 1e4; k <= 1e7; k *= 10) {
+    for (int k = 1e5; k <= 1e8; k *= 10) {
         int K1 = 30;
         int K2 = 23;
         int Nx = 1000;
@@ -33,11 +34,11 @@ int main() {
         b.resize(nodes);
         diag.resize(nodes);
         res.resize(nodes);
-        
+
         makeCSR(Nx, Ny, K1, K2, ia, ja);
         fillCSR(ia, ja, a, b, diag);
 
-        int runs = 4 * omp_get_max_threads() * (1e6 / k + 1);
+        int runs = 1e7 / k + 1;
         double aggregate_time = 0;
         for (int p = 0; p < runs; ++p) {
             // Calculate

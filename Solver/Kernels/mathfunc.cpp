@@ -6,7 +6,7 @@
 void dot(std::vector<double> &x, std::vector<double> &y, double &res) {
     double sum = 0;
 
-    #pragma omp parallel for schedule(static) reduction(+:sum)
+    #pragma omp parallel for reduction(+:sum)
     for (int i = 0; i < x.size(); i++) {
         sum += x[i] * y[i];
     }

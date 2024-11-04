@@ -1,8 +1,12 @@
+#include <cassert>
 #include <cmath>
 #include <omp.h>
 #include <iostream>
 #include <ostream>
+#include <unistd.h>
+
 #include "Solver/Kernels/mathfunc.h"
+#include "sched.h"
 
 int main() {
     omp_set_num_threads(omp_get_max_threads());
@@ -11,22 +15,25 @@ int main() {
     std::vector<double> y;
     std::vector<double> res;
 
-    for (int k = 1e4; k <= 1e7; k *= 10) {
+    int T  = omp_get_max_threads();
+    std::cout << "T = " << T << std::endl;
+
+    for (int k = 1e5; k <= 1e8; k *= 10) {
         x.resize(k);
         y.resize(k);
         res.resize(k);
 
-        int runs = 5;
-        double aggregate_time = 0;
-        for (int p = 0; p < runs; ++p) {
-            // Fill
-            #pragma omp parallel for
-            for (int i = 0; i < k; i++) {
-                x[i] = sin(i);
-                y[i] = cos(i);
-            }
-            double alpha = std::tan(p);
+        // Fill
+        #pragma omp parallel for
+        for (int i = 0; i < k; i++) {
+            x[i] = sin(i);
+            y[i] = cos(i);
+        }
 
+        int runs = 1e9 / k + 1;
+        double aggregate_time = 0;
+        for (int p = 1; p < runs + 1; ++p) {
+            double alpha = std::tan(p);
             // Calculate
             double start = omp_get_wtime();
             axpy(alpha, x, y, res);
@@ -34,12 +41,11 @@ int main() {
 
             aggregate_time += end - start;
 
-            std::cout << end - start << std::endl;
         }
 
         double average_time = aggregate_time / runs;
 
-        std::cout << "N = " << k <<", average time: " << average_time << std::endl;
+        std::cout << 2 * k / (average_time * 1e9) << ", ";
     }
-
+    std::cout << std::endl;
 }

@@ -18,11 +18,11 @@ int main() {
 
     std::cout << "T = " << omp_get_max_threads() << std::endl;
 
-    for (int k = 1e4; k <= 1e7; k *= 10) {
+    for (int k = 1e5; k <= 1e8; k *= 10) {
         int K1 = 30;
         int K2 = 23;
-        int Nx = 1000;
-        int Ny = k / Nx;
+        int Nx = 2000;
+        int Ny = k / Nx / 5;
         std::tuple<int, int> t = input(Nx, Ny, K1, K2);
         int nodes = std::get<0>(t);
         int nonzero_elements =std::get<1>(t);
@@ -37,7 +37,7 @@ int main() {
         makeCSR(Nx, Ny, K1, K2, ia, ja);
         fillCSR(ia, ja, a, b, diag);
 
-        int runs = 2 * omp_get_max_threads() * (1e4 / k + 1);
+        int runs = 1;
         int iterations = 0;
         double aggregate_time = 0;
         for (int p = 0; p < runs; ++p) {
