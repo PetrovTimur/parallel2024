@@ -2,7 +2,6 @@
 #include <string>
 #include <tuple>
 #include <vector>
-#include <cmath>
 #include <fstream>
 #include <omp.h>
 #include "csr.h"
@@ -58,11 +57,11 @@ int main(int argc, char** argv) {
 
     makeCSR(Nx, Ny, K1, K2, ia, ja);
 
-    // std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
-
-    // buildAM(ia, ja, matrix);
-
-    // printMatrix(matrix);
+    #ifdef USE_DEBUG_MODE
+        std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
+        buildAdjacencyMatrix(ia, ja, matrix);
+        printMatrix(matrix);
+    #endif
 
     fillCSR(ia, ja, a, b, diag);
 
