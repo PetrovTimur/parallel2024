@@ -66,14 +66,14 @@ int main(int argc, char** argv) {
 
     fillCSR(ia, ja, a, b, diag);
 
-    std::cout << "IA: ";
-    printVector(ia);
-
-    std::cout << "JA: ";
-    printVector(ja);
-
-    std::cout << "A: ";
-    printVector(a);
+    // std::cout << "IA: ";
+    // printVector(ia);
+    //
+    // std::cout << "JA: ";
+    // printVector(ja);
+    //
+    // std::cout << "A: ";
+    // printVector(a);
 
     std::vector<double> res(nodes);
 
@@ -83,8 +83,9 @@ int main(int argc, char** argv) {
     double end = omp_get_wtime();
     std::cout << "Work took " << end - start << " seconds\n";
 
-    std::cout << "res: ";
-    printVector(res);
+    // std::cout << "res: ";
+    // printVector(res);
+    std::cout << res[0] << std::endl;
 
     out.close();
 
