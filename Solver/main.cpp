@@ -14,19 +14,11 @@ int main(int argc, char** argv) {
     struct arguments arguments{};
 
     /* Default values. */
-    arguments.verbose = 0;
     arguments.output_file = "-";
 
     /* Parse our arguments; every option seen by parse_opt will
        be reflected in arguments. */
     argp_parse (&argp, argc, argv, 0, nullptr, &arguments);
-
-    // printf ("ARG1 = %s\nARG2 = %s\nARG3 = %s\nARG4 = %s\nOUTPUT_FILE = %s\n"
-    //         "VERBOSE = %s\n",
-    //         arguments.args[0], arguments.args[1],
-    //         arguments.args[2], arguments.args[3],
-    //         arguments.output_file,
-    //         arguments.verbose ? "yes" : "no");
 
     omp_set_num_threads(omp_get_max_threads());
 
@@ -58,33 +50,35 @@ int main(int argc, char** argv) {
     makeCSR(Nx, Ny, K1, K2, ia, ja);
 
     #ifdef USE_DEBUG_MODE
-        std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
-        buildAdjacencyMatrix(ia, ja, matrix);
-        printMatrix(matrix);
+    std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
+    buildAdjacencyMatrix(ia, ja, matrix);
+    printMatrix(matrix);
     #endif
 
     fillCSR(ia, ja, a, b, diag);
 
-    // std::cout << "IA: ";
-    // printVector(ia);
-    //
-    // std::cout << "JA: ";
-    // printVector(ja);
-    //
-    // std::cout << "A: ";
-    // printVector(a);
+    #ifdef USE_DEBUG_MODE
+    std::cout << "IA: ";
+    printVector(ia);
 
+    std::cout << "JA: ";
+    printVector(ja);
+
+    std::cout << "A: ";
+    printVector(a);
+    #endif
     std::vector<double> res(nodes);
 
-    // Nx = 2, Ny = 2, K1 = 1, K2 = 1
     solve(ia, ja, a, b, diag, res);
 
     double end = omp_get_wtime();
     std::cout << "Work took " << end - start << " seconds\n";
 
-    // std::cout << "res: ";
-    // printVector(res);
-    std::cout << res[0] << std::endl;
+    #ifdef USE_DEBUG_MODE
+    std::cout << "res: ";
+    printVector(res);
+    #endif
+
 
     out.close();
 

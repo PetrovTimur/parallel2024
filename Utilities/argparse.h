@@ -11,14 +11,14 @@ const char *argp_program_bug_address =
 
 /* Program documentation. */
 static char doc[] =
-  "Argp example #3 -- a program with options and arguments using argp";
+  "CGSolver 20 20 5 6 -- a program with options and arguments";
 
 /* A description of the arguments we accept. */
 static char args_doc[] = "Nx Ny K1 K2";
 
 /* The options we understand. */
 static struct argp_option options[] = {
-    {"verbose",  'v', 0,      0,  "Produce verbose output" },
+    // {"verbose",  'v', 0,      0,  "Produce verbose output" },
     // {"quiet",    'q', 0,      0,  "Don't produce any output" },
     // {"silent",   's', 0,      OPTION_ALIAS },
     {"output",   'o', "FILE", 0,
@@ -30,7 +30,6 @@ static struct argp_option options[] = {
 struct arguments
 {
     char *args[4];                /* arg1 & arg2 */
-    int verbose;
     const char *output_file;
 };
 
@@ -45,9 +44,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         // case 'q': case 's':
         //     arguments->silent = 1;
         // break;
-        case 'v':
-            arguments->verbose = 1;
-        break;
         case 'o':
             arguments->output_file = arg;
         break;
