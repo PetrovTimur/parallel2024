@@ -23,7 +23,7 @@ int main() {
         int K1 = 30;
         int K2 = 23;
         int Nx = 1000;
-        int Ny = k / Nx;
+        int Ny = k / Nx / 5;
         std::tuple<int, int> t = input(Nx, Ny, K1, K2);
         int nodes = std::get<0>(t);
         int nonzero_elements =std::get<1>(t);
