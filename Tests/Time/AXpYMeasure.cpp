@@ -6,7 +6,6 @@
 #include <unistd.h>
 
 #include "Solver/Kernels/mathfunc.h"
-#include "sched.h"
 
 int main() {
     omp_set_num_threads(omp_get_max_threads());
