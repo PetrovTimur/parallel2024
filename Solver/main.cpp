@@ -69,10 +69,11 @@ int main(int argc, char** argv) {
     #endif
     std::vector<double> res(nodes);
 
-    solve(ia, ja, a, b, diag, res);
+    int iterations = solve(ia, ja, a, b, diag, res);
 
     double end = omp_get_wtime();
     std::cout << "Work took " << end - start << " seconds\n";
+    std::cout << "Convergence required "  << iterations << " iterations\n";
 
     #ifdef USE_DEBUG_MODE
     std::cout << "res: ";
