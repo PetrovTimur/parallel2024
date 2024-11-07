@@ -1,16 +1,32 @@
 #include "csr.h"
+
+#include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <ostream>
 
 void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<int> &ja) {
     int cycle_length = K1 + K2;
-    int k = 0;
+    std::vector<int> extras(Ny + 1);
+    #pragma omp parallel for proc_bind(spread)
     for (int i = 0; i < Ny + 1; i++) {
+        extras[i] = i * Nx / cycle_length * K2 + std::max(0, i * Nx % cycle_length - K1);
+        // std::cout << extras[i] << " ";
+    }
+    // std::cout << std::endl;
+
+    // int k = 0;
+    #pragma omp parallel for proc_bind(spread)
+    for (int i = 0; i < Ny + 1; i++) {
+        // std::cout << i << " " << k << std::endl;
+        int k = 2 * Nx * i + (Nx + 1) * std::max(0, 2 * i - 1) + i * (Nx + 1) + (i > 0 ? extras[i] + extras[i - 1] : 0);
+        // std::cout << i << " " << k << std::endl;
         for (int j = 0; j < Nx + 1; j++) {
             int flat_idx = i * (Nx + 1) + j;
-            int top_idx = (i - 1) * (Nx + 1) + j;
-            int right_idx = i * (Nx + 1) + j + 1;
-            int bottom_idx = (i + 1) * (Nx + 1) + j;
-            int left_idx = i * (Nx + 1) + j - 1;
+            // int top_idx = (i - 1) * (Nx + 1) + j;
+            // int right_idx = i * (Nx + 1) + j + 1;
+            // int bottom_idx = (i + 1) * (Nx + 1) + j;
+            // int left_idx = i * (Nx + 1) + j - 1;
             ia[flat_idx] = k;
 
             if (i != 0)
@@ -30,12 +46,12 @@ void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<i
                 ja[k++] = (i + 1) * (Nx + 1) + j;
         }
     }
-    ia[(Nx + 1) * (Ny + 1)] = k;
+    ia[(Nx + 1) * (Ny + 1)] = ja.size();
 }
 
 void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
     std::vector<double> &diag) {
-    #pragma omp parallel for
+    #pragma omp parallel for proc_bind(spread)
     for (int i = 0; i < ia.size() - 1; i++) {
         double sum = 0;
         int k_i = 0;
@@ -54,6 +70,7 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
         // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
     }
 
+    #pragma omp parallel for proc_bind(spread)
     for (int i = 0; i < b.size(); i++)
         b[i] = std::sin(i);
 }
