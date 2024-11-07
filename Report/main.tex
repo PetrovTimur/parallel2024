@@ -81,7 +81,7 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 \vfill
 
 \begin{center}
-	31 октября \\
+	5 ноября \\
 	Москва, 2024
 \end{center}
 
@@ -110,6 +110,33 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 
 ...
 
+\subsubsection{Запуск программы}
+
+Для запуска на локальных системах достаточно указать количество нитей, а также все необходимые входные данные:
+
+\begin{lstlisting}{bash}
+	OMP_NUM_THREADS=k ./CGSolver Nx Ny K1 K2
+\end{lstlisting}
+
+Для запуска на кластере, использующем систему очередей, запускается скрипт со следующими параметрами:
+
+\begin{lstlisting}{bash}
+	mpisubmit.pl -t k CGSolver -- Nx Ny K1 K2
+\end{lstlisting}
+
+Однако желательно редактирование командного файла для запуска на заданных узлах и привязки к определенному сокету узла.
+
+\begin{lstlisting}{bash}
+	source /polusfs/setenv/setup.SMPI
+	#BSUB -W 00:15
+	#BSUB -o CGSolver.%J.out
+	#BSUB -e CGSolver.%J.err
+	#BSUB -m polus-c4-ib
+	#BSUB -R affinity[core(10):distribute=pack(socket=1)]
+	OMP_NUM_THREADS=k
+	/polusfs/lsf/openmp/launchOpenMP.py CGSolver Nx Ny K1 K2
+\end{lstlisting}
+
 
 \newpage
 
@@ -132,39 +159,15 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 	\end{tabular}
 \end{center}
 
-Для того, чтобы собрать программу и скомпилировать все файлы, необходимо выполнить ряд следующих действий.
+Для того, чтобы собрать программу и скомпилировать все файлы, необходимо выполнить ряд следующих действий:
 
 \begin{lstlisting}{bash}
 	mkdir build && cd build
-	cmake .. -DENABLE_TESTS=<On|Off>
+	cmake -DENABLE_TESTS=<On|Off> -DUSE_DEBUG_MODE=<On|Off> ..
 	make -j 4
 	cd ../bin
 \end{lstlisting}
 
-Для запуска на локальных системах достаточно указать количество нитей, а также все необходимые параметры:
-
-\begin{lstlisting}{bash}
-	OMP_NUM_THREADS=k ./a.out Nx Ny K1 K2
-\end{lstlisting}
-
-Для запуска на кластере, использующем систему очередей, запускается скрипт со следующими параметрами.
-
-\begin{lstlisting}{bash}
-	mpisubmit.pl params a.out -- a.out params
-\end{lstlisting}
-
-Однако желательно редактирование командного файла для запуска на заданных узлах и привязки к определенному сокету узла.
-
-\begin{lstlisting}{bash}
-	source /polusfs/setenv/setup.SMPI
-	#BSUB -W 00:15
-	#BSUB -o ../out/DotMeasure.%J.out
-	#BSUB -e ../out/DotMeasure.%J.err
-	#BSUB -m polus-c4-ib
-	#BSUB -R affinity[core(10):distribute=pack(socket=1)]
-	OMP_NUM_THREADS=1
-	/polusfs/lsf/openmp/launchOpenMP.py ../DotMeasure
-\end{lstlisting}
 
 
 \subsection{Результаты измерений производительности}
@@ -213,7 +216,7 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 		\includegraphics[width=85mm]{multithread_polus_spmv} & \includegraphics[width=85mm]{multithread_polus_cgsolver} \\
 		(в) SpMV & (г) CGSolver \\[6pt]
 	\end{tabular}
-	\caption{Зависимость производительности от числа нитей на (Polus)}
+	\caption{Зависимость производительности от числа нитей (Polus)}
 	\label{fig:multithread_flops_polus} 
 \end{figure}
 
@@ -225,20 +228,18 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 		\hline
 		T & 2 & 4 & 8 & 16 & 32 & 40 & 64 & 80  \\
 		\hline
-		Dot &  &  &  &  &  &  &  &   \\
+		Dot & 1.99 & 3.92 & 7.44 & 10.43 & 14.34 & 17.44 & 18.99 & 19.98 \\
 		\hline
-		AXpY &  &  &  &  &  &  &  &   \\
+		AXpY & 2.04 & 3.89 & 7.40 & 10.75 & 15.12 & 18.24 & 19.76 & 20.55  \\
 		\hline
-		SpMV &  &  &  &  &  &  &  &   \\
+		SpMV & 2.01 & 3.96 & 7.57 & 11.42 & 15.45 & 18.79 & 20.23 & 20.46  \\
 		\hline
-		CGSolve &  &  &  &  &  &  &  &   \\
+		CGSolve & 1.99 & 3.91 & 7.36 & 10.98 & 14.64 & 17.56 & 18.96 & 19.18 \\
 		\hline
 	\end{tabular}
-	\caption{Расчеты ускорения для каждой из операций при $N = 10^8$}
+	\caption{Расчеты ускорения для каждой из операций при $N = 1e8$ (Polus)}
 	\label{fig:speedup}
 \end{figure}
-
-sdfs
 
 \newpage
 
@@ -246,7 +247,7 @@ sdfs
 
 $ TPP_{PC} = 4\ GHz \cdot 6\ Cores \cdot 2\ Threads/Core \cdot 512/64 = 384\ GFLOPS $ 
 
-$ TPP_{Polus} = 290 GFLOPS $
+$ TPP_{Polus} = 290\ GFLOPS $
 
 $ BW_{PC} = 2\ Channels \cdot 5600\ MT/s \cdot 8\ bytes = 89,6\ GB/s $
 
@@ -254,38 +255,42 @@ $ BW_{Polus} = 8\ Channels \cdot 2400\ MT/s \cdot 8\ bytes = 153,6\ GB/s $ \\ \\
 
 $ AI_{dot} = 2\ FLOP / (3 \cdot 8\ bytes) = 1/12 $
 
-$ AI_{AXpY} = 2\ FLOP / (3 \cdot 8\ bytes) = 1/12  $
+$ AI_{AXpY} = 2\ FLOP / (3 \cdot 8\ bytes) = 1/12 $
 
-$ AI_{SpMV} =   $ \\ \\
+$ AI_{SpMV} = 12\ FLOP / (13 \cdot 8\ bytes) = 3/26 $ \\ \\
 
 $ TBP = \min(TPP, BW \cdot AI)  $
 
-$ TBP_{PC, dot} = \min(384\ GFLOPS, 89,6\ GB/s \cdot 1/8) = 5.6 GFLOPS = 0.8\% \ TPP_{PC} $
+$ TBP_{PC, dot} = \min(384\ GFLOPS, 89,6\ GB/s \cdot 1/12) = 7.5\ GFLOPS $
 
-$ TBP_{PC, AXpY} = \min(384\ GFLOPS, 1.28e11/24) = 5.3 GFLOPS = 0.8\% \ TPP_{PC} $
+$ TBP_{PC, AXpY} = \min(384\ GFLOPS, 89,6\ GB/s \cdot 1/12) = 7.5\ GFLOPS $
 
-$ TBP_{PC, SpMV} = \min(6.4e11, 1.28e11/24) = 5.3 GFLOPS = 0.8\% \ TPP_{PC} $
+$ TBP_{PC, SpMV} = \min(384\ GFLOPS, 89,6\ GB/s \cdot 3/26) = 10.3\ GFLOPS $
 
-$ TBP_{Polus, dot} = \min(6.4e11, 1.28e11/24) = 5.3 GFLOPS = 0.8\% \ TPP_{Polus} $
+$ TBP_{Polus, dot} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/12) = 12.8\ GFLOPS $
 
-$ TBP_{Polus, AXpY} = \min(6.4e11, 1.28e11/24) = 5.3 GFLOPS = 0.8\% \ TPP_{Polus} $
+$ TBP_{Polus, AXpY} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/12) = 12.8\ GFLOPS $
 
-$ TBP_{Polus, SpMV} = \min(6.4e11, 1.28e11/24) = 5.3 GFLOPS = 0.8\% \ TPP_{Polus} $
+$ TBP_{Polus, SpMV} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 3/26) = 17.7\ GFLOPS $
 
 \begin{figure}[h!]
 	\center
 	\setlength{\tabcolsep}{10pt}
 	\renewcommand{\arraystretch}{1.5}
-	\begin{tabular}{|c|c|c|c|}
+	\begin{tabular}{|l|c|c|c|}
 		\hline
 		... & Dot & AXpY & SpMV \\
 		\hline
-		PC &  &  &  \\
+		$PC\ TBP_{Analytical} $ & $ 7.5\ GFLOPS $ & $ 7.5\ GFLOPS $ & $ 10.3\ GFLOPS $ \\
 		\hline
-		polus &  &  &  \\
+		$PC\ RealP $ & $ 5.06\ GFLOPS $ & $ 3.45\ GFLOPS $ & $ 2.25\ GFLOPS $ \\
+		\hline
+		$ Polus\ TBP_{Analytical} $& $ 12.8\ GFLOPS $ & $ 12.8\ GFLOPS $ & $ 17.7\ GFLOPS $ \\
+		\hline
+		$ Polus\ RealP $ & $ 3.01\ GFLOPS $ & $ 2.16\ GFLOPS $ & $ 1.31\ GFLOPS $ \\
 		\hline
 	\end{tabular}
-	\caption{}
+	\caption{Аналитические и реальные значение производительности для каждой из операций}
 	\label{fig:tbps}
 \end{figure}
 
