@@ -169,9 +169,9 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 
 Для того, чтобы собрать программу и скомпилировать все файлы, необходимо выполнить ряд следующих действий:
 
-\begin{lstlisting}{bash}
+\begin{lstlisting}[escapechar=!]{bash}
 	mkdir build && cd build
-	cmake -DENABLE_TESTS=<On|Off> -DUSE_DEBUG_MODE=<On|Off> ..
+	cmake -DENABLE_TESTS=<!\color{cyan}On!|Off> -DUSE_DEBUG_MODE=<On|!\color{cyan}Off!> ..
 	make -j 4
 	cd ../bin
 \end{lstlisting}
@@ -216,7 +216,7 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 		\includegraphics[width=85mm]{csr_init_speedup} & \includegraphics[width=85mm]{csr_fill_speedup} \\
 		(а) & (б) \\[6pt]
 	\end{tabular}
-	\caption{Зависимость времени создания (а) и заполнения (б) массивов формата CSR в зависимости от числа нитей} 
+	\caption{Ускорение создания (а) и заполнения (б) массивов формата CSR в зависимости от числа нитей} 
 	\label{fig:gridd}
 \end{figure}
 
