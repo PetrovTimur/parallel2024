@@ -42,7 +42,7 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 	showstringspaces=false,
 	showtabs=false,                  
 	tabsize=2,
-	emph={make, cmake, mkdir},
+	emph={make, cmake, mkdir, ctest},
 	emphstyle = {\color{magenta}},
 }
 
@@ -81,7 +81,7 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 \vfill
 
 \begin{center}
-	5 ноября \\
+	15 ноября \\
 	Москва, 2024
 \end{center}
 
@@ -102,9 +102,17 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 	\item Генерация графа сетки и его матричного представления – создание графа, связей элементов и его представление в разреженном формате CSR
 	\item Заполнение матрицы СЛАУ – построение матрицы коэффициентов и вектора правой части с использованием тестовых формул
 	\item Решение СЛАУ – реализация итерационного метода сопряженных градиентов для решения уравнения с поддержкой параллелизма
-	\item Проверка производительности – измерение времени выполнения каждого этапа и анализ многопоточного ускорения и эффективности алгоритма
+	\item Проверка производительности – измерение времени выполнения каждого этапа и анализ многопоточного ускорения и эффективности алгоритма	
 \end{enumerate}
 
+\begin{figure}[H]
+	\center
+	\includegraphics[width=85mm]{grid} \\
+	\caption{Пример сетки для генерации графа} 
+	\label{fig:grid}
+\end{figure}
+
+\newpage
 
 \subsection{Краткое описание программной реализации}
 
@@ -151,11 +159,11 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 		 & PC & Polus \\ 
 		\hline
 		CPU  & i5-12400F & IBM POWER 8 \\ 
-		Cores & 6 & 20 \\ 
+		Cores & 6 & 10 \\ 
 		Threads & 2 & 8 \\
 		TPP & 384 GFLOPS & 290 GFLOPS \\
 		RAM & 2xDDR5-5600  & 4xDDR4-2400 \\
-		BW & 89.6 GB/s & 307.2 GB/s \\
+		BW & 89.6 GB/s & 153.6 GB/s \\
 	\end{tabular}
 \end{center}
 
@@ -168,6 +176,12 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 	cd ../bin
 \end{lstlisting}
 
+Также на локальных системах можно запустить несколько простых тестов для проверки корректности работы программы (при условии, что на этапе сборки флаг ENABLE\_TESTS был включен):
+
+\begin{lstlisting}{bash}
+	cd build/Tests
+	ctest
+\end{lstlisting}
 
 
 \subsection{Результаты измерений производительности}
@@ -195,6 +209,16 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 \end{figure}
 
 \subsubsection{Параллельное ускорение}
+
+\begin{figure}[H]
+	\center
+	\begin{tabular}{cc}
+		\includegraphics[width=85mm]{csr_init_speedup} & \includegraphics[width=85mm]{csr_fill_speedup} \\
+		(а) & (б) \\[6pt]
+	\end{tabular}
+	\caption{Зависимость времени создания (а) и заполнения (б) массивов формата CSR в зависимости от числа нитей} 
+	\label{fig:gridd}
+\end{figure}
 
 \begin{figure}[H]
 	\center
@@ -253,25 +277,33 @@ $ BW_{PC} = 2\ Channels \cdot 5600\ MT/s \cdot 8\ bytes = 89,6\ GB/s $
 
 $ BW_{Polus} = 8\ Channels \cdot 2400\ MT/s \cdot 8\ bytes = 153,6\ GB/s $ \\ \\
 
-$ AI_{dot} = 2\ FLOP / (3 \cdot 8\ bytes) = 1/12 $
+$ AI_{dot} = 2\ FLOP / (2 \cdot 8)\ bytes = 1/8 $
 
-$ AI_{AXpY} = 2\ FLOP / (3 \cdot 8\ bytes) = 1/12 $
+На каждой итерации считываем из памяти $x[i]$ и $y[i]$, каждый из которых типа 'double' занимает --- 8 байт. При этом на каждой итерации происходит 2 операции: умножение $x[i] \cdot y[i]$ и сложение с итоговой суммой
 
-$ AI_{SpMV} = 12\ FLOP / (13 \cdot 8\ bytes) = 3/26 $ \\ \\
+$ AI_{AXpY} = 2\ FLOP / (3 \cdot 8)\ bytes = 1/12 $
+
+На каждой итерации считываем из памяти $x[i]$ и $y[i]$, каждый из которых типа 'double' занимает --- 8 байт, а также записываем в память результат $z[i] = a \cdot x[i] + y[i]$ типа 'double' --- тоже 8 байт. Следовательно, всего $3 \cdot 8$ байтов. При этом на каждой итерации происходит 2 операции: умножение $a \cdot x[i]$ и сложение $x[i] + y[i]$
+
+$ AI_{SpMV} = 12\ FLOP / (132)\ bytes = 1/11 $ 
+
+За итерацию будем считать умножение строки $i$ матрицы $A$ на столбец $x$. Для считывания элементов матрицы $A$ необходимо вначале получить номер $col=ia[i]$, с которого в массиве $a$ начинают храниться элементы $i$-ой строки --- 4 байта ($ia$ имеет тип 'int'). Далее будем считать, что в среднем в строке 6 ненулевых элементов. Для каждого такого элемента необходимо считать значение $a[col]$ типа 'double' --- 8 байт, считать $j = ja[col]$ номер столбца --- 4 байта ($ja$ имеет тип 'int'), а также считать $x[j]$ типа 'double' --- 8 байт. В конце вычислений необходимо записать полученный результат в $y[i]$ типа 'double' --- 8 байт. Таким образом получаем, что на каждую строку нам понадобится $4 + 6 \cdot (4 + 8 + 8) + 8 = 132$. При этом для каждого элемента строки потребуется 2 операции (умножение $a[col] \cdot x[j]$ и сложение в общий результат). Следовательно всего $6 \cdot 2 = 12$ операций.
+ \\ \\ 
+
 
 $ TBP = \min(TPP, BW \cdot AI)  $
 
-$ TBP_{PC, dot} = \min(384\ GFLOPS, 89,6\ GB/s \cdot 1/12) = 7.5\ GFLOPS $
+$ TBP_{PC, dot} = \min(384\ GFLOPS, 89,6\ GB/s \cdot 1/8) = 11.2\ GFLOPS $
 
 $ TBP_{PC, AXpY} = \min(384\ GFLOPS, 89,6\ GB/s \cdot 1/12) = 7.5\ GFLOPS $
 
-$ TBP_{PC, SpMV} = \min(384\ GFLOPS, 89,6\ GB/s \cdot 3/26) = 10.3\ GFLOPS $
+$ TBP_{PC, SpMV} = \min(384\ GFLOPS, 89,6\ GB/s \cdot 1/11) = 8.1\ GFLOPS $
 
-$ TBP_{Polus, dot} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/12) = 12.8\ GFLOPS $
+$ TBP_{Polus, dot} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/8) = 19.2\ GFLOPS $
 
 $ TBP_{Polus, AXpY} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/12) = 12.8\ GFLOPS $
 
-$ TBP_{Polus, SpMV} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 3/26) = 17.7\ GFLOPS $
+$ TBP_{Polus, SpMV} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/11) = 14\ GFLOPS $
 
 \begin{figure}[h!]
 	\center
@@ -281,11 +313,11 @@ $ TBP_{Polus, SpMV} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 3/26) = 17.7\ GFLOPS $
 		\hline
 		... & Dot & AXpY & SpMV \\
 		\hline
-		$PC\ TBP_{Analytical} $ & $ 7.5\ GFLOPS $ & $ 7.5\ GFLOPS $ & $ 10.3\ GFLOPS $ \\
+		$PC\ TBP_{Analytical} $ & $ 11.2\ GFLOPS $ & $ 7.5\ GFLOPS $ & $ 8.1\ GFLOPS $ \\
 		\hline
 		$PC\ RealP $ & $ 5.06\ GFLOPS $ & $ 3.45\ GFLOPS $ & $ 2.25\ GFLOPS $ \\
 		\hline
-		$ Polus\ TBP_{Analytical} $& $ 12.8\ GFLOPS $ & $ 12.8\ GFLOPS $ & $ 17.7\ GFLOPS $ \\
+		$ Polus\ TBP_{Analytical} $& $ 19.2\ GFLOPS $ & $ 12.8\ GFLOPS $ & $ 14\ GFLOPS $ \\
 		\hline
 		$ Polus\ RealP $ & $ 3.01\ GFLOPS $ & $ 2.16\ GFLOPS $ & $ 1.31\ GFLOPS $ \\
 		\hline
