@@ -34,6 +34,9 @@ int main(int argc, char** argv) {
     int K2 = std::stoi(arguments.args[3]);
 
     std::cout << "Nx = " << Nx << std::endl;
+    std::cout << "Ny = " << Ny << std::endl;
+    std::cout << "K1 = " << K1 << std::endl;
+    std::cout << "K2 = " << K2 << std::endl;
 
     double start = omp_get_wtime();
 
