@@ -8,6 +8,7 @@
 #include "Utilities/input.h"
 #include "solvers.h"
 #include "Utilities/argparse.h"
+#include <mpi.h>
 
 
 int main(int argc, char** argv) {
