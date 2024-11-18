@@ -10,11 +10,21 @@ const char *argp_program_bug_address =
   "<s02240520@stud.cs.msu.ru>";
 
 /* Program documentation. */
+#ifdef USE_MPI
+static char doc[] =
+  "CGSolver 20 20 5 6 2 2 -- a program with options and arguments";
+#else
 static char doc[] =
   "CGSolver 20 20 5 6 -- a program with options and arguments";
+#endif
+
 
 /* A description of the arguments we accept. */
+#ifdef USE_MPI
+static char args_doc[] = "Nx Ny K1 K2 Px Py";
+#else
 static char args_doc[] = "Nx Ny K1 K2";
+#endif
 
 /* The options we understand. */
 static struct argp_option options[] = {
@@ -29,7 +39,11 @@ static struct argp_option options[] = {
 /* Used by main to communicate with parse_opt. */
 struct arguments
 {
-    char *args[4];                /* arg1 & arg2 */
+    #ifdef USE_MPI
+    char *args[6];                /* Nx & Ny & K1 & K2 & Px & Py */
+    #else
+    char *args[4];                /* Nx & Ny & K1 & K2 */
+    #endif
     const char *output_file;
 };
 
@@ -49,18 +63,31 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         break;
 
         case ARGP_KEY_ARG:
+            #ifdef USE_MPI
+            if (state->arg_num > 6)
+                /* Too many arguments. */
+                    argp_usage (state);
+            #else
             if (state->arg_num > 4)
                 /* Too many arguments. */
                     argp_usage (state);
+            #endif
+
 
         arguments->args[state->arg_num] = arg;
 
         break;
 
         case ARGP_KEY_END:
+            #ifdef USE_MPI
+            if (state->arg_num < 6)
+                /* Not enough arguments. */
+                    argp_usage (state);
+            #else
             if (state->arg_num < 4)
                 /* Not enough arguments. */
                     argp_usage (state);
+            #endif
         break;
 
         default:
