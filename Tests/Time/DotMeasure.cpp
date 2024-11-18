@@ -19,7 +19,7 @@ int main() {
         y.resize(k);
 
         // FIll
-        #pragma omp parallel for
+        #pragma omp parallel for proc_bind(spread)
         for (int i = 0; i < k; i++) {
             x[i] = std::sin(i);
             y[i] = std::cos(i);
