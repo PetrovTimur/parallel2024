@@ -267,6 +267,41 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 
 \newpage
 
+\begin{figure}[H]
+	\center
+	\begin{tabular}{cc}
+		\includegraphics[width=85mm]{multithread_polus_dot2} & \includegraphics[width=85mm]{multithread_polus_axpy2} \\
+		(a) Dot & (б) AXpY \\
+		\includegraphics[width=85mm]{multithread_polus_spmv2} & \includegraphics[width=85mm]{multithread_polus_cgsolver2} \\
+		(в) SpMV & (г) CGSolver \\[6pt]
+	\end{tabular}
+	\caption{Зависимость производительности от числа нитей (Polus)}
+	\label{fig:multithread_flops_polus2} 
+\end{figure}
+
+\begin{figure}[H]
+	\center
+	\setlength{\tabcolsep}{10pt}
+	\renewcommand{\arraystretch}{1.5}
+	\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
+		\hline
+		T & 2 & 4 & 8 & 16 & 32 & 40 & 60 & 80 & 120 & 160  \\
+		\hline
+		Dot & 1.98 & 3.96 & 7.42 & 14.11 & 20.10 & 25.46 & 29.11 & 34.95 & 37.51 & 38.85 \\
+		\hline
+		AXpY & 1.99 & 3.89 & 7.38 & 14.41 & 20.83 & 26.19 & 30.44 & 35.95 & 38.97 & 40.22  \\
+		\hline
+		SpMV & 1.99 & 3.94 & 7.51 & 13.26 & 22.23 & 27.52 & 31.48 & 36.85 & 39.65 & 40.60  \\
+		\hline
+		CGSolve & 1.98 & 3.86 & 7.19 & 13.43 & 19.63 & 21.34 & 26.18 & 30.03 & 31.73 & 32.27 \\
+		\hline
+	\end{tabular}
+	\caption{Расчеты ускорения для каждой из операций на двухсокетной конфигурации при $N = 1e8$ (Polus)}
+	\label{fig:speedup2}
+\end{figure}
+
+\newpage
+
 \section{Анализ полученных результатов}
 
 $ TPP_{PC} = 4\ GHz \cdot 6\ Cores \cdot 2\ Threads/Core \cdot 512/64 = 384\ GFLOPS $ 
