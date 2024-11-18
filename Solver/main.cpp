@@ -8,10 +8,39 @@
 #include "Utilities/input.h"
 #include "solvers.h"
 #include "Utilities/argparse.h"
+
+#ifdef USE_MPI
 #include <mpi.h>
+#endif
 
 
 int main(int argc, char** argv) {
+    #ifdef USE_MPI
+    int mpi_res;
+    mpi_res = MPI_Init(&argc, &argv); // первым делом подключаемся к MPI
+    if(mpi_res != MPI_SUCCESS) {
+        MPI_Abort(MPI_COMM_WORLD, -1);
+        exit(mpi_res);
+    }
+
+    int NumProc;
+    mpi_res = MPI_Comm_size(MPI_COMM_WORLD,&NumProc); // узнаем число процессов
+    if(mpi_res!= MPI_SUCCESS){
+        MPI_Abort(MPI_COMM_WORLD, -1);
+        exit(mpi_res);
+    }
+
+    int MyID;
+    mpi_res = MPI_Comm_rank(MPI_COMM_WORLD,&MyID); // узнаем номер данного процесса
+    if(mpi_res!= MPI_SUCCESS){
+        MPI_Abort(MPI_COMM_WORLD, -1);
+        exit(mpi_res);
+    }
+
+    return 0;
+    #endif
+
+
     struct arguments arguments{};
 
     /* Default values. */

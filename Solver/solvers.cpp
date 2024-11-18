@@ -2,8 +2,11 @@
 
 #include <iostream>
 #include <ostream>
-
 #include "Kernels/mathfunc.h"
+
+#ifdef USE_MPI
+#include <mpi.h>
+#endif
 
 int solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
           std::vector<double> &diag, std::vector<double> &res) {
@@ -17,7 +20,7 @@ int solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, st
     std::vector<double> p(N);
     std::vector<double> q(N);
     std::vector<double> rho(2);
-    double buf;
+    double buf, total;
     int k = 0;
 
     do {
@@ -28,7 +31,13 @@ int solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, st
         }
 
         rho[0] = rho[1];
-        dot(r, z, rho[1]);
+
+        dot(r, z, buf);
+        #ifdef USE_MPI
+        MPI_Allreduce(&buf, &rho[1], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        #else
+        rho[1] = buf;
+        #endif
 
         if (k == 1)
             #pragma omp parallel for
@@ -40,8 +49,14 @@ int solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, st
         }
 
         spMV(ia, ja, a, p, q);
+
         dot(p, q, buf);
+        #ifdef USE_MPI
+        MPI_Allreduce(&buf, &total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        double alpha = rho[1] / total;
+        #else
         double alpha = rho[1] / buf;
+        #endif
 
         axpy(alpha, p, x, x);
         axpy(-alpha, q, r, r);

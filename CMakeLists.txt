@@ -20,6 +20,11 @@ if (USE_DEBUG_MODE)
     add_definitions(-DUSE_DEBUG_MODE)
 endif ()
 
+option(USE_MPI "Use MPI" OFF)
+if (USE_MPI)
+    add_definitions(-DUSE_MPI)
+endif ()
+
 
 set(TOPLEVEL_INCLUDE_DIR ${PROJECT_SOURCE_DIR})
 
