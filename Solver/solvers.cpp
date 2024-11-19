@@ -25,7 +25,7 @@ int solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, st
 
     do {
         k++;
-        #pragma omp parallel for
+        #pragma omp parallel for proc_bind(spread)
         for (int i = 0; i < N; i++) {
             z[i] = r[i] / diag[i];
         }
@@ -40,7 +40,7 @@ int solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, st
         #endif
 
         if (k == 1)
-            #pragma omp parallel for
+            #pragma omp parallel for proc_bind(spread)
             for (int i = 0; i < N; i++)
                 p[i] = z[i];
         else {
@@ -63,7 +63,7 @@ int solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, st
     }
     while (rho[1] > eps * eps && k < maxit);
 
-    #pragma omp parallel for
+    #pragma omp parallel for proc_bind(spread)
     for (int i = 0; i < N; i++)
         res[i] = x[i];
 

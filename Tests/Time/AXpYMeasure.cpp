@@ -23,7 +23,7 @@ int main() {
         res.resize(k);
 
         // Fill
-        #pragma omp parallel for
+        #pragma omp parallel for proc_bind(spread)
         for (int i = 0; i < k; i++) {
             x[i] = sin(i);
             y[i] = cos(i);
