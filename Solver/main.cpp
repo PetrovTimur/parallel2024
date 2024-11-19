@@ -15,7 +15,7 @@
 
 
 int main(int argc, char** argv) {
-#ifdef USE_MPI
+    #ifdef USE_MPI
     int mpi_res;
     mpi_res = MPI_Init(&argc, &argv); // первым делом подключаемся к MPI
     if(mpi_res != MPI_SUCCESS) {
@@ -36,9 +36,7 @@ int main(int argc, char** argv) {
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(mpi_res);
     }
-#endif
 
-#ifdef USE_MPI
     struct arguments arguments{};
 
     /* Default values. */
@@ -48,7 +46,7 @@ int main(int argc, char** argv) {
        be reflected in arguments. */
     argp_parse (&argp, argc, argv, 0, nullptr, &arguments);
 
-    omp_set_num_threads(omp_get_max_threads());
+    // omp_set_num_threads(omp_get_max_threads());
 
     std::fstream out;
     if (arguments.output_file[0] != '-') {
@@ -72,8 +70,135 @@ int main(int argc, char** argv) {
         std::cout << "Py = " << Py << std::endl;
     }
 
-    MPI_Finalize();
-    return 0;
+    int MyID_j = MyID % Px;
+    int MyID_i = MyID / Px;
+
+    int i_start, i_end, i_count, j_start, j_end, j_count;
+    j_start = (MyID_j) * ((Nx + 1) / Px) + std::min((Nx + 1) % Px, MyID_j);
+    j_count = (Nx + 1) / Px + ((Nx + 1) % Px > MyID_j) - 1;
+    j_end = j_start + j_count;
+    int left_halo = (MyID_j > 0); // Halo
+    j_start -= left_halo;
+    int right_halo = (MyID_j < Px - 1); // Halo
+    j_end += right_halo;
+
+    i_start = (MyID_i) * ((Ny + 1) / Py) + std::min((Ny + 1) % Py, MyID_i);
+    i_count = (Ny + 1) / Py + ((Ny + 1) % Py > MyID_i) - 1;
+    i_end = i_start + i_count;
+    int top_halo = (MyID_i > 0); // Halo
+    i_start -= top_halo;
+    int bottom_halo = (MyID_i < Py - 1); // Halo
+    i_end += bottom_halo;
+
+    // std::cout << "MyID: " << MyID << std::endl;
+    // std::cout << "i_start: " << i_start << ", i_end: " << i_end << std::endl;
+    // std::cout << "j_start: " << j_start << ", j_end: " << j_end << std::endl;
+
+    int k = 0, N0;
+    std::vector<int> L2G(((i_end - i_start) + 1) * ((j_end - j_start) + 1));
+    for (int i = i_start + top_halo; i <= i_end - bottom_halo; i++) {
+        for (int j = j_start + left_halo; j <= j_end - right_halo; j++) {
+            L2G[k++] = i * (Nx + 1) + j;
+        }
+    }
+    N0 = k;
+    if (top_halo) {
+        for (int j = j_start + left_halo; j <= j_end - right_halo; j++) {
+            L2G[k++] = i_start * (Nx + 1) + j;
+        }
+        if (right_halo)
+            L2G[k++] = i_start * (Nx + 1) + j_end;
+    }
+    if (left_halo) {
+        for (int i = i_start + top_halo; i <= i_end - bottom_halo; i++) {
+            L2G[k++] = i * (Nx + 1) + j_start;
+        }
+    }
+    if (right_halo) {
+        for (int i = i_start + top_halo; i <= i_end - bottom_halo; i++) {
+            L2G[k++] = i * (Nx + 1) + j_end;
+        }
+    }
+    if (bottom_halo) {
+        if (left_halo)
+            L2G[k++] = i_end * (Nx + 1) + j_start;
+        for (int j = j_start + left_halo; j <= j_end - right_halo; j++) {
+            L2G[k++] = i_end * (Nx + 1) + j;
+        }
+    }
+
+    L2G.resize(k);
+
+    if (MyID == 0) {
+        std::cout << i_start << i_end << j_start << j_end << std::endl;
+        // std::cout << top_halo << bottom_halo << left_halo << right_halo << std::endl;
+        std::cout << "L2G size: " << L2G.size() << std::endl;
+        for (int i = 0; i < L2G.size(); i++) {
+            std::cout << L2G[i] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    std::vector<int> G2L((Nx + 1) * (Ny + 1), -1);
+    for (int iL = 0; iL < L2G.size(); iL++) {
+        G2L[L2G[iL]] = iL;
+    }
+
+
+    std::vector<int> Part((Nx + 1) * (Ny + 1));
+    for (int i = 0; i < Py; i++) {
+        int is = (i) * ((Ny + 1) / Py) + std::min((Ny + 1) % Py, i);
+        int ic = (Ny + 1) / Py + ((Ny + 1) % Py > i) - 1;
+        int ie = is + ic;
+        for (int j = 0; j < Px; j++) {
+            int js = (j) * ((Nx + 1) / Px) + std::min((Nx + 1) % Px, j);
+            int jc = (Nx + 1) / Px + ((Nx + 1) % Px > j) - 1;
+            int je = js + jc;
+
+            #ifdef  USE_DEBUG_MODE
+            if (MyID == 0) {
+                std::cout << "id: " << i * Px + j << std::endl;
+                std::cout << is << " " << ie << " " << js << " " << jc << std::endl;
+            }
+            #endif
+
+            for (int ii = is; ii <= ie; ii++) {
+                for (int jj = js; jj <= je; jj++) {
+                    Part[ii * (Nx + 1) + jj] = i * Px + j;
+                }
+            }
+        }
+    }
+
+    #ifdef USE_DEBUG_MODE
+    if (MyID == 0) {
+        std::cout << "Part size: " << Part.size() << std::endl;
+        for (int i : Part) {
+            std::cout << i << " ";
+        }
+        std::cout << std::endl;
+    }
+    #endif
+
+    std::vector<int> ia(N0 + 1);
+    std::vector<int> ja(7 * (N0 + 1));
+
+    makeCSR(Nx, Ny, K1, K2, i_start + top_halo, i_end - bottom_halo, j_start + left_halo, j_end - right_halo, G2L, ia, ja);
+
+    if (MyID == 1) {
+        std::cout << ia.size() << " " << ja.size() << std::endl;
+
+        for (int i : ia)
+            std::cout << i << " ";
+        std::cout << std::endl;
+
+        for (int i : ja)
+            std::cout << i << " ";
+        std::cout << std::endl;
+    }
+
+
+
     #else
     struct arguments arguments{};
 
@@ -102,7 +227,6 @@ int main(int argc, char** argv) {
     std::cout << "K1 = " << K1 << std::endl;
     std::cout << "K2 = " << K2 << std::endl;
 
-    #endif
 
     double start = omp_get_wtime();
 
@@ -149,8 +273,10 @@ int main(int argc, char** argv) {
     printVector(res);
     #endif
 
+    #endif
 
     out.close();
+    MPI_Finalize();
 
     return 0;
 }
