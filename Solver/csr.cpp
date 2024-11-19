@@ -102,9 +102,36 @@ void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<i
 #endif
 
 
+#ifdef USE_MPI
+void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, std::vector<double> &a, std::vector<double> &b,
+    std::vector<double> &diag) {
+    // #pragma omp parallel for proc_bind(spread)
+    for (int i = 0; i < ia.size() - 1; i++) {
+        double sum = 0;
+        int k_i = 0;
+        for (int k = ia[i]; k < ia[i + 1]; k++) {
+            int j = ja[k];
+            if (i != j) {
+                a[k] = std::cos(L2G[i] * L2G[j] + L2G[i] + L2G[j]);
+                sum += std::abs(a[k]);
+            } else
+                k_i = k;
+            // std::cout << "el: " << i << ", j: " << j << ", val = " << a[k] << std::endl;
+        }
+
+        a[k_i] = 1.234 * sum;
+        diag[i] = a[k_i];
+        // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
+    }
+
+    // #pragma omp parallel for proc_bind(spread)
+    for (int i = 0; i < b.size(); i++)
+        b[i] = std::sin(L2G[i]);
+}
+#else
 void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
     std::vector<double> &diag) {
-    #pragma omp parallel for proc_bind(spread)
+#pragma omp parallel for proc_bind(spread)
     for (int i = 0; i < ia.size() - 1; i++) {
         double sum = 0;
         int k_i = 0;
@@ -123,10 +150,11 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
         // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
     }
 
-    #pragma omp parallel for proc_bind(spread)
+#pragma omp parallel for proc_bind(spread)
     for (int i = 0; i < b.size(); i++)
         b[i] = std::sin(i);
 }
+#endif
 
 void buildAdjacencyMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<std::vector<bool>> &matrix) {
     for (int i = 0; i < ia.size() - 1; i++) {

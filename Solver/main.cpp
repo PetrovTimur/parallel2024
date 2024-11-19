@@ -7,6 +7,7 @@
 #include "csr.h"
 #include "Utilities/input.h"
 #include "solvers.h"
+#include "Kernels/mathfunc.h"
 #include "Utilities/argparse.h"
 
 #ifdef USE_MPI
@@ -129,7 +130,7 @@ int main(int argc, char** argv) {
 
     L2G.resize(k);
 
-    if (MyID == 0) {
+     if (MyID == 7) {
         std::cout << i_start << i_end << j_start << j_end << std::endl;
         // std::cout << top_halo << bottom_halo << left_halo << right_halo << std::endl;
         std::cout << "L2G size: " << L2G.size() << std::endl;
@@ -185,7 +186,7 @@ int main(int argc, char** argv) {
 
     makeCSR(Nx, Ny, K1, K2, i_start + top_halo, i_end - bottom_halo, j_start + left_halo, j_end - right_halo, G2L, ia, ja);
 
-    if (MyID == 1) {
+    if (MyID == 0) {
         std::cout << ia.size() << " " << ja.size() << std::endl;
 
         for (int i : ia)
@@ -197,7 +198,35 @@ int main(int argc, char** argv) {
         std::cout << std::endl;
     }
 
+    std::vector<double> a(ja.size());
+    std::vector<double> b(ia.size() - 1);
+    std::vector<double> diag(ia.size() - 1);
+    fillCSR(ia, ja, L2G, a, b, diag);
 
+    // if (MyID == 0) {
+    //     for (double i : a)
+    //         std::cout << i << " ";
+    //     std::cout << std::endl;
+    // }
+    std::cout << "MyID: " << MyID << std::endl;
+    for (int j : ja)
+        std::cout << L2G[j] << " ";
+    std::cout << std::endl;
+    for (double i : a)
+        std::cout << i << " ";
+    std::cout << std::endl;
+
+
+    double buf, total = 0;
+    dot(b, b, buf);
+    MPI_Reduce(&buf, &total, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (MyID == 0) {
+        std::cout << "Total: " << total << std::endl;
+    }
+
+
+    out.close();
+    MPI_Finalize();
 
     #else
     struct arguments arguments{};
@@ -250,6 +279,10 @@ int main(int argc, char** argv) {
 
     fillCSR(ia, ja, a, b, diag);
 
+    double buf;
+    dot(b, b, buf);
+    std::cout << buf << std::endl;
+
     #ifdef USE_DEBUG_MODE
     std::cout << "IA: ";
     printVector(ia);
@@ -261,6 +294,8 @@ int main(int argc, char** argv) {
     printVector(a);
     #endif
     std::vector<double> res(nodes);
+
+    printVector(b);
 
     int iterations = solve(ia, ja, a, b, diag, res);
 
@@ -274,9 +309,6 @@ int main(int argc, char** argv) {
     #endif
 
     #endif
-
-    out.close();
-    MPI_Finalize();
 
     return 0;
 }
