@@ -18,7 +18,7 @@
 
 
 int main(int argc, char** argv) {
-    #ifdef USE_MPI
+#ifdef USE_MPI
     int mpi_res;
     mpi_res = MPI_Init(&argc, &argv); // первым делом подключаемся к MPI
     if(mpi_res != MPI_SUCCESS) {
@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
 
     L2G.resize(k);
 
-     if (MyID == 7) {
+    if (MyID == 7) {
         std::cout << i_start << i_end << j_start << j_end << std::endl;
         // std::cout << top_halo << bottom_halo << left_halo << right_halo << std::endl;
         std::cout << "L2G size: " << L2G.size() << std::endl;
@@ -158,12 +158,12 @@ int main(int argc, char** argv) {
             int jc = (Nx + 1) / Px + ((Nx + 1) % Px > j) - 1;
             int je = js + jc;
 
-            #ifdef  USE_DEBUG_MODE
+#ifdef  USE_DEBUG_MODE
             if (MyID == 0) {
                 std::cout << "id: " << i * Px + j << std::endl;
                 std::cout << is << " " << ie << " " << js << " " << jc << std::endl;
             }
-            #endif
+#endif
 
             for (int ii = is; ii <= ie; ii++) {
                 for (int jj = js; jj <= je; jj++) {
@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    #ifdef USE_DEBUG_MODE
+#ifdef USE_DEBUG_MODE
     if (MyID == 0) {
         std::cout << "Part size: " << Part.size() << std::endl;
         for (int i : Part) {
@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
         }
         std::cout << std::endl;
     }
-    #endif
+#endif
 
     std::vector<int> ia(N0 + 1);
     std::vector<int> ja(7 * (N0 + 1));
@@ -241,39 +241,44 @@ int main(int argc, char** argv) {
     std::vector<MPI_Status> recv_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
     int nrreq = 0;
     int mpires;
+
+    // int qq = 0;
+    // while(!qq)
+    //     sleep(3);
+
     if (top_halo) {
         int size = recv_offset[1]-recv_offset[0];
-        MPI_Irecv(&recv_buf[recv_offset[0]], size, MPI_DOUBLE, MyID - Px, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+        MPI_Irecv(&recv_buf[recv_offset[0]], size, MPI_DOUBLE, MyID - Px, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
         nrreq++;
 
         if (right_halo) {
             int size = recv_offset[2]-recv_offset[1];
-            MPI_Irecv(&recv_buf[recv_offset[1]], size, MPI_DOUBLE, MyID - Px + 1, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+            MPI_Irecv(&recv_buf[recv_offset[1]], size, MPI_DOUBLE, MyID - Px + 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
             nrreq++;
         }
     }
 
     if (left_halo) {
         int size = recv_offset[3]-recv_offset[2];
-        MPI_Irecv(&recv_buf[recv_offset[2]], size, MPI_DOUBLE, MyID - 1, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+        MPI_Irecv(&recv_buf[recv_offset[2]], size, MPI_DOUBLE, MyID - 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
         nrreq++;
     }
 
     if (right_halo) {
         int size = recv_offset[4]-recv_offset[3];
-        MPI_Irecv(&recv_buf[recv_offset[3]], size, MPI_DOUBLE, MyID + 1, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+        MPI_Irecv(&recv_buf[recv_offset[3]], size, MPI_DOUBLE, MyID + 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
         nrreq++;
     }
 
     if (bottom_halo) {
         if (left_halo) {
             int size = recv_offset[5]-recv_offset[4];
-            MPI_Irecv(&recv_buf[recv_offset[4]], size, MPI_DOUBLE, MyID + Px - 1, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+            MPI_Irecv(&recv_buf[recv_offset[4]], size, MPI_DOUBLE, MyID + Px - 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
             nrreq++;
         }
 
         int size = recv_offset[6]-recv_offset[5];
-        MPI_Irecv(&recv_buf[recv_offset[5]], size, MPI_DOUBLE, MyID + Px, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+        MPI_Irecv(&recv_buf[recv_offset[5]], size, MPI_DOUBLE, MyID + Px, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
         nrreq++;
     }
 
@@ -284,12 +289,8 @@ int main(int argc, char** argv) {
     send_offset[2] = send_offset[1] + top_halo * right_halo;
     send_offset[3] = send_offset[2] + left_halo * i_count;
     send_offset[4] = send_offset[3] + right_halo * i_count;
-    send_offset[5] = send_offset[4] + left_halo * j_count;
+    send_offset[5] = send_offset[4] + left_halo * bottom_halo;
     send_offset[6] = send_offset[5] + bottom_halo * j_count;
-
-    int qq = 0;
-    while(!qq)
-        sleep(3);
 
     int p = 0;
 
@@ -297,78 +298,90 @@ int main(int argc, char** argv) {
     std::vector<MPI_Status> send_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
     int nsreq = 0;
     if (top_halo) {
-        for (int i = j_start + left_halo; i <= j_end - right_halo; i++) {
-            send_buf[p] = b[p];
+        for (int j = 0; j < j_count; j++) {
+            send_buf[p] = b[j];
             p++;
         }
 
         int size = send_offset[1]-send_offset[0];
-        MPI_Isend(&recv_buf[send_offset[0]], size, MPI_DOUBLE, MyID - Px, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+        MPI_Isend(&send_buf[send_offset[0]], size, MPI_DOUBLE, MyID - Px, 0, MPI_COMM_WORLD, &send_req[nsreq]);
         nsreq++;
 
         if (right_halo) {
-            send_buf[p] = b[p - 1];
+            send_buf[p] = b[j_count - 1];
             p++;
 
             int size = send_offset[2]-send_offset[1];
-            MPI_Isend(&recv_buf[send_offset[1]], size, MPI_DOUBLE, MyID - Px + 1, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+            MPI_Isend(&send_buf[send_offset[1]], size, MPI_DOUBLE, MyID - Px + 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
             nsreq++;
         }
     }
 
     if (left_halo) {
-        for (int i = i_start + top_halo; i <= i_end + bottom_halo; i++) {
-            send_buf[p] = b[p];
+        for (int i = 0; i < i_count; i++) {
+            send_buf[p] = b[i * j_count];
             p++;
         }
 
         int size = send_offset[3]-send_offset[2];
-        MPI_Isend(&recv_buf[send_offset[2]], size, MPI_DOUBLE, MyID - 1, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+        MPI_Isend(&send_buf[send_offset[2]], size, MPI_DOUBLE, MyID - 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
         nsreq++;
     }
 
     if (right_halo) {
-        for (int i = i_start + top_halo; i <= i_end - bottom_halo; i++) {
-            send_buf[p] = b[p];
+        for (int i = 0; i < i_count; i++) {
+            send_buf[p] = b[i * j_count + j_count - 1];
             p++;
         }
 
         int size = send_offset[4]-send_offset[3];
-        MPI_Isend(&recv_buf[send_offset[3]], size, MPI_DOUBLE, MyID + 1, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+        MPI_Isend(&send_buf[send_offset[3]], size, MPI_DOUBLE, MyID + 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
         nsreq++;
     }
 
     if (bottom_halo) {
         if (left_halo) {
-            send_buf[p] = b[p - 1];
+            send_buf[p] = b[(i_count - 1) * j_count];
             p++;
 
             int size = send_offset[5]-send_offset[4];
-            MPI_Isend(&recv_buf[send_offset[4]], size, MPI_DOUBLE, MyID + Px - 1, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+            MPI_Isend(&send_buf[send_offset[4]], size, MPI_DOUBLE, MyID + Px - 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
             nsreq++;
         }
 
-        for (int i = j_start + left_halo; i <= j_end - right_halo; i++) {
-            send_buf[p] = b[p];
+        for (int j = 0; j < j_count; j++) {
+            send_buf[p] = b[(i_count - 1) * j_count + j];
             p++;
         }
 
         int size = send_offset[6]-send_offset[5];
-        MPI_Isend(&recv_buf[send_offset[5]], size, MPI_DOUBLE, MyID + Px, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+        MPI_Isend(&send_buf[send_offset[5]], size, MPI_DOUBLE, MyID + Px, 0, MPI_COMM_WORLD, &send_req[nsreq]);
         nsreq++;
     }
 
-    if(nrreq>0){ // ждем завершения получения
-        MPI_Waitall(nrreq, &recv_req[0], &recv_stat[0]);
-        // ASSERT(mpires==MPI_SUCCESS, "MPI_Waitall (recv) failed");
+    if (MyID == 9) {
+        std::cout << "Offsets for send" << std::endl;
+        for (int i : send_offset)
+            std::cout << i << " ";
+        std::cout << std::endl;
     }
 
-    if(nsreq>0){ // ждем завершения получения
-        MPI_Waitall(nsreq, &send_req[0], &send_stat[0]);
+
+
+    if (nrreq>0){ // ждем завершения получения
+        mpires = MPI_Waitall(nrreq, &recv_req[0], &recv_stat[0]);
         // ASSERT(mpires==MPI_SUCCESS, "MPI_Waitall (recv) failed");
+        std::cout << (mpires == MPI_SUCCESS) << std::endl;
     }
 
-    std::cout << "MyID: " << MyID << std::endl;
+    if (nsreq>0){ // ждем завершения отправок
+        mpires = MPI_Waitall(nsreq, &send_req[0], &send_stat[0]);
+        // ASSERT(mpires==MPI_SUCCESS, "MPI_Waitall (recv) failed");
+        std::cout << (mpires == MPI_SUCCESS) << std::endl;
+    }
+
+    std::cout << "After recv: MyID: " << MyID << std::endl;
+    std::cout << "rec buf size: " << recv_buf.size() << std::endl;
     for (double x : recv_buf) {
         std::cout << x << std::endl;
     }
