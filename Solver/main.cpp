@@ -225,6 +225,21 @@ int main(int argc, char** argv) {
     }
 
 
+    std::vector<double> recv_buf(L2G.size() - b.size());
+    std::vector<int> recv_offset(7);
+    recv_offset[0] = 0;
+    recv_offset[1] = top_halo * j_count;
+    recv_offset[2] = recv_offset[1] + top_halo * right_halo;
+    recv_offset[3] = recv_offset[2] + left_halo * i_count;
+    recv_offset[4] = recv_offset[3] + right_halo * i_count;
+    recv_offset[5] = recv_offset[4] + left_halo * j_count;
+
+    std::vector<MPI_Status> recv_stat(top_halo + top_halo*right_halo + left_halo + left_halo*bottom_halo + bottom_halo);
+    // if (top_halo) {
+    //     int mpires = MPI_Irecv();
+    // }
+
+
     out.close();
     MPI_Finalize();
 
