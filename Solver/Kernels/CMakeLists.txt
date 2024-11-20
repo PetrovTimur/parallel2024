@@ -1,4 +1,4 @@
-add_library(MathFunc
+add_library(MathFunc SHARED
         mathfunc.cpp
         mathfunc.h)
 

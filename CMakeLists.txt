@@ -23,6 +23,9 @@ endif ()
 option(USE_MPI "Use MPI" OFF)
 if (USE_MPI)
     add_definitions(-DUSE_MPI)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin_mpi" CACHE INTERNAL "Where to place executables")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib_mpi" CACHE INTERNAL "Where to place libraries")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib_mpi" CACHE INTERNAL "Where to place libraries")
 endif ()
 
 

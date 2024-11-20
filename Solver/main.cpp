@@ -11,6 +11,9 @@
 #include "solvers.h"
 #include "Kernels/mathfunc.h"
 #include "Utilities/argparse.h"
+#ifdef USE_MPI
+#include "Utilities/coms.h"
+#endif
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -18,7 +21,7 @@
 
 
 int main(int argc, char** argv) {
-#ifdef USE_MPI
+    #ifdef USE_MPI
     int mpi_res;
     mpi_res = MPI_Init(&argc, &argv); // первым делом подключаемся к MPI
     if(mpi_res != MPI_SUCCESS) {
@@ -132,15 +135,15 @@ int main(int argc, char** argv) {
 
     L2G.resize(k);
 
-    if (MyID == 7) {
-        std::cout << i_start << i_end << j_start << j_end << std::endl;
-        // std::cout << top_halo << bottom_halo << left_halo << right_halo << std::endl;
-        std::cout << "L2G size: " << L2G.size() << std::endl;
-        for (int i = 0; i < L2G.size(); i++) {
-            std::cout << L2G[i] << " ";
-        }
-        std::cout << std::endl;
-    }
+    // if (MyID == 7) {
+    //     std::cout << i_start << i_end << j_start << j_end << std::endl;
+    //     // std::cout << top_halo << bottom_halo << left_halo << right_halo << std::endl;
+    //     std::cout << "L2G size: " << L2G.size() << std::endl;
+    //     for (int i = 0; i < L2G.size(); i++) {
+    //         std::cout << L2G[i] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
 
     std::vector<int> G2L((Nx + 1) * (Ny + 1), -1);
     for (int iL = 0; iL < L2G.size(); iL++) {
@@ -188,17 +191,17 @@ int main(int argc, char** argv) {
 
     makeCSR(Nx, Ny, K1, K2, i_start + top_halo, i_end - bottom_halo, j_start + left_halo, j_end - right_halo, G2L, ia, ja);
 
-    if (MyID == 0) {
-        std::cout << ia.size() << " " << ja.size() << std::endl;
-
-        for (int i : ia)
-            std::cout << i << " ";
-        std::cout << std::endl;
-
-        for (int i : ja)
-            std::cout << i << " ";
-        std::cout << std::endl;
-    }
+    // if (MyID == 0) {
+    //     std::cout << ia.size() << " " << ja.size() << std::endl;
+    //
+    //     for (int i : ia)
+    //         std::cout << i << " ";
+    //     std::cout << std::endl;
+    //
+    //     for (int i : ja)
+    //         std::cout << i << " ";
+    //     std::cout << std::endl;
+    // }
 
     std::vector<double> a(ja.size());
     std::vector<double> b(ia.size() - 1);
@@ -210,186 +213,61 @@ int main(int argc, char** argv) {
     //         std::cout << i << " ";
     //     std::cout << std::endl;
     // }
-    std::cout << "MyID: " << MyID << std::endl;
-    for (int j : ja)
-        std::cout << L2G[j] << " ";
-    std::cout << std::endl;
-    for (double i : a)
-        std::cout << i << " ";
-    std::cout << std::endl;
+    // std::cout << "MyID: " << MyID << std::endl;
+    // for (int j : ja)
+    //     std::cout << L2G[j] << " ";
+    // std::cout << std::endl;
+    // for (double i : a)
+    //     std::cout << i << " ";
+    // std::cout << std::endl;
 
 
     double buf, total = 0;
-    dot(b, b, buf);
-    MPI_Reduce(&buf, &total, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    if (MyID == 0) {
-        std::cout << "Total: " << total << std::endl;
-    }
+    // dot(b, b, buf);
+    // MPI_Reduce(&buf, &total, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    // if (MyID == 0) {
+    //     std::cout << "Total: " << total << std::endl;
+    // }
 
+    // Comm INIT
 
     std::vector<double> recv_buf(L2G.size() - b.size());
     std::vector<int> recv_offset(7);
-    recv_offset[0] = 0;
-    recv_offset[1] = top_halo * j_count;
-    recv_offset[2] = recv_offset[1] + top_halo * right_halo;
-    recv_offset[3] = recv_offset[2] + left_halo * i_count;
-    recv_offset[4] = recv_offset[3] + right_halo * i_count;
-    recv_offset[5] = recv_offset[4] + left_halo * bottom_halo;
-    recv_offset[6] = recv_offset[5] + bottom_halo * j_count;
+
+    std::vector<double> send_buf;
+    std::vector<int> send_offset(7);
 
     std::vector<MPI_Request> recv_req(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
     std::vector<MPI_Status> recv_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
-    int nrreq = 0;
-    int mpires;
-
-    // int qq = 0;
-    // while(!qq)
-    //     sleep(3);
-
-    if (top_halo) {
-        int size = recv_offset[1]-recv_offset[0];
-        MPI_Irecv(&recv_buf[recv_offset[0]], size, MPI_DOUBLE, MyID - Px, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-        nrreq++;
-
-        if (right_halo) {
-            int size = recv_offset[2]-recv_offset[1];
-            MPI_Irecv(&recv_buf[recv_offset[1]], size, MPI_DOUBLE, MyID - Px + 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-            nrreq++;
-        }
-    }
-
-    if (left_halo) {
-        int size = recv_offset[3]-recv_offset[2];
-        MPI_Irecv(&recv_buf[recv_offset[2]], size, MPI_DOUBLE, MyID - 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-        nrreq++;
-    }
-
-    if (right_halo) {
-        int size = recv_offset[4]-recv_offset[3];
-        MPI_Irecv(&recv_buf[recv_offset[3]], size, MPI_DOUBLE, MyID + 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-        nrreq++;
-    }
-
-    if (bottom_halo) {
-        if (left_halo) {
-            int size = recv_offset[5]-recv_offset[4];
-            MPI_Irecv(&recv_buf[recv_offset[4]], size, MPI_DOUBLE, MyID + Px - 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-            nrreq++;
-        }
-
-        int size = recv_offset[6]-recv_offset[5];
-        MPI_Irecv(&recv_buf[recv_offset[5]], size, MPI_DOUBLE, MyID + Px, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-        nrreq++;
-    }
-
-    std::vector<double> send_buf(100); // TODO: recalculate size
-    std::vector<int> send_offset(7);
-    send_offset[0] = 0;
-    send_offset[1] = top_halo * j_count;
-    send_offset[2] = send_offset[1] + top_halo * right_halo;
-    send_offset[3] = send_offset[2] + left_halo * i_count;
-    send_offset[4] = send_offset[3] + right_halo * i_count;
-    send_offset[5] = send_offset[4] + left_halo * bottom_halo;
-    send_offset[6] = send_offset[5] + bottom_halo * j_count;
-
-    int p = 0;
-
     std::vector<MPI_Request> send_req(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
     std::vector<MPI_Status> send_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
-    int nsreq = 0;
-    if (top_halo) {
-        for (int j = 0; j < j_count; j++) {
-            send_buf[p] = b[j];
-            p++;
-        }
 
-        int size = send_offset[1]-send_offset[0];
-        MPI_Isend(&send_buf[send_offset[0]], size, MPI_DOUBLE, MyID - Px, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-        nsreq++;
+    ComInitOffsets(top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, recv_offset, send_offset);
+    recv_buf.resize(recv_offset[recv_offset.size() - 1]);
+    send_buf.resize(send_offset[send_offset.size() - 1]);
+    // Com(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count,
+    //     b, recv_offset, send_offset,
+    //     recv_buf, send_buf, recv_req,
+    //     send_req, recv_stat, send_stat);
 
-        if (right_halo) {
-            send_buf[p] = b[j_count - 1];
-            p++;
+    std::vector<double> res(b.size());
 
-            int size = send_offset[2]-send_offset[1];
-            MPI_Isend(&send_buf[send_offset[1]], size, MPI_DOUBLE, MyID - Px + 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-            nsreq++;
-        }
-    }
+    double start = MPI_Wtime();
+    solve(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, recv_offset, send_offset, recv_buf,
+          send_buf, recv_req, send_req, recv_stat, send_stat, ia, ja, a, b, diag, res);
 
-    if (left_halo) {
-        for (int i = 0; i < i_count; i++) {
-            send_buf[p] = b[i * j_count];
-            p++;
-        }
-
-        int size = send_offset[3]-send_offset[2];
-        MPI_Isend(&send_buf[send_offset[2]], size, MPI_DOUBLE, MyID - 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-        nsreq++;
-    }
-
-    if (right_halo) {
-        for (int i = 0; i < i_count; i++) {
-            send_buf[p] = b[i * j_count + j_count - 1];
-            p++;
-        }
-
-        int size = send_offset[4]-send_offset[3];
-        MPI_Isend(&send_buf[send_offset[3]], size, MPI_DOUBLE, MyID + 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-        nsreq++;
-    }
-
-    if (bottom_halo) {
-        if (left_halo) {
-            send_buf[p] = b[(i_count - 1) * j_count];
-            p++;
-
-            int size = send_offset[5]-send_offset[4];
-            MPI_Isend(&send_buf[send_offset[4]], size, MPI_DOUBLE, MyID + Px - 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-            nsreq++;
-        }
-
-        for (int j = 0; j < j_count; j++) {
-            send_buf[p] = b[(i_count - 1) * j_count + j];
-            p++;
-        }
-
-        int size = send_offset[6]-send_offset[5];
-        MPI_Isend(&send_buf[send_offset[5]], size, MPI_DOUBLE, MyID + Px, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-        nsreq++;
-    }
-
-    if (MyID == 9) {
-        std::cout << "Offsets for send" << std::endl;
-        for (int i : send_offset)
-            std::cout << i << " ";
-        std::cout << std::endl;
-    }
-
-
-
-    if (nrreq>0){ // ждем завершения получения
-        mpires = MPI_Waitall(nrreq, &recv_req[0], &recv_stat[0]);
-        // ASSERT(mpires==MPI_SUCCESS, "MPI_Waitall (recv) failed");
-        std::cout << (mpires == MPI_SUCCESS) << std::endl;
-    }
-
-    if (nsreq>0){ // ждем завершения отправок
-        mpires = MPI_Waitall(nsreq, &send_req[0], &send_stat[0]);
-        // ASSERT(mpires==MPI_SUCCESS, "MPI_Waitall (recv) failed");
-        std::cout << (mpires == MPI_SUCCESS) << std::endl;
-    }
-
-    std::cout << "After recv: MyID: " << MyID << std::endl;
-    std::cout << "rec buf size: " << recv_buf.size() << std::endl;
-    for (double x : recv_buf) {
-        std::cout << x << std::endl;
-    }
-    std::cout << std::endl;
-
+    // std::cout << "MyID: " << MyID << std::endl;
+    // for (double x : res)
+    //     std::cout << x << " ";
+    // std::cout << std::endl;
 
     out.close();
     MPI_Finalize();
+
+    if (MyID == 0) {
+        double end = MPI_Wtime();
+        std::cout << end - start << " sec" << std::endl;
+    }
 
     #else
     struct arguments arguments{};
@@ -419,9 +297,6 @@ int main(int argc, char** argv) {
     std::cout << "K1 = " << K1 << std::endl;
     std::cout << "K2 = " << K2 << std::endl;
 
-
-    double start = omp_get_wtime();
-
     std::tuple<int, int> t = input(Nx, Ny, K1, K2);
     int nodes = std::get<0>(t);
     int nonzero_elements =std::get<1>(t);
@@ -442,10 +317,6 @@ int main(int argc, char** argv) {
 
     fillCSR(ia, ja, a, b, diag);
 
-    double buf;
-    dot(b, b, buf);
-    std::cout << buf << std::endl;
-
     #ifdef USE_DEBUG_MODE
     std::cout << "IA: ";
     printVector(ia);
@@ -455,10 +326,13 @@ int main(int argc, char** argv) {
 
     std::cout << "A: ";
     printVector(a);
+
+    std::cout << "b: ";
+    printVector(b);
     #endif
     std::vector<double> res(nodes);
 
-    printVector(b);
+    double start = omp_get_wtime();
 
     int iterations = solve(ia, ja, a, b, diag, res);
 

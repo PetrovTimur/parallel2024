@@ -6,5 +6,9 @@ add_executable(CGSolver main.cpp
         solvers.cpp
         solvers.h)
 
-add_dependencies(CGSolver Utilities MathFunc)
-target_link_libraries(CGSolver PUBLIC MathFunc Utilities)
+add_dependencies(CGSolver IOs MathFunc)
+target_link_libraries(CGSolver PUBLIC IOs MathFunc)
+if (USE_MPI)
+    add_dependencies(CGSolver Coms)
+    target_link_libraries(CGSolver PUBLIC Coms)
+endif ()
