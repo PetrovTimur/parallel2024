@@ -4,6 +4,8 @@
 #include <vector>
 #include <fstream>
 #include <omp.h>
+#include <unistd.h>
+
 #include "csr.h"
 #include "Utilities/input.h"
 #include "solvers.h"
@@ -75,20 +77,20 @@ int main(int argc, char** argv) {
     int MyID_i = MyID / Px;
 
     int i_start, i_end, i_count, j_start, j_end, j_count;
-    j_start = (MyID_j) * ((Nx + 1) / Px) + std::min((Nx + 1) % Px, MyID_j);
-    j_count = (Nx + 1) / Px + ((Nx + 1) % Px > MyID_j) - 1;
-    j_end = j_start + j_count;
-    int left_halo = (MyID_j > 0); // Halo
+    j_start = MyID_j * ((Nx + 1) / Px) + std::min((Nx + 1) % Px, MyID_j);
+    j_count = (Nx + 1) / Px + ((Nx + 1) % Px > MyID_j);
+    j_end = j_start + j_count - 1;
+    int left_halo = MyID_j > 0; // Halo
     j_start -= left_halo;
-    int right_halo = (MyID_j < Px - 1); // Halo
+    int right_halo = MyID_j < Px - 1; // Halo
     j_end += right_halo;
 
-    i_start = (MyID_i) * ((Ny + 1) / Py) + std::min((Ny + 1) % Py, MyID_i);
-    i_count = (Ny + 1) / Py + ((Ny + 1) % Py > MyID_i) - 1;
-    i_end = i_start + i_count;
-    int top_halo = (MyID_i > 0); // Halo
+    i_start = MyID_i * ((Ny + 1) / Py) + std::min((Ny + 1) % Py, MyID_i);
+    i_count = (Ny + 1) / Py + ((Ny + 1) % Py > MyID_i);
+    i_end = i_start + i_count - 1;
+    int top_halo = MyID_i > 0; // Halo
     i_start -= top_halo;
-    int bottom_halo = (MyID_i < Py - 1); // Halo
+    int bottom_halo = MyID_i < Py - 1; // Halo
     i_end += bottom_halo;
 
     // std::cout << "MyID: " << MyID << std::endl;
@@ -96,7 +98,7 @@ int main(int argc, char** argv) {
     // std::cout << "j_start: " << j_start << ", j_end: " << j_end << std::endl;
 
     int k = 0, N0;
-    std::vector<int> L2G(((i_end - i_start) + 1) * ((j_end - j_start) + 1));
+    std::vector<int> L2G((i_end - i_start + 1) * (j_end - j_start + 1));
     for (int i = i_start + top_halo; i <= i_end - bottom_halo; i++) {
         for (int j = j_start + left_halo; j <= j_end - right_halo; j++) {
             L2G[k++] = i * (Nx + 1) + j;
@@ -148,11 +150,11 @@ int main(int argc, char** argv) {
 
     std::vector<int> Part((Nx + 1) * (Ny + 1));
     for (int i = 0; i < Py; i++) {
-        int is = (i) * ((Ny + 1) / Py) + std::min((Ny + 1) % Py, i);
+        int is = i * ((Ny + 1) / Py) + std::min((Ny + 1) % Py, i);
         int ic = (Ny + 1) / Py + ((Ny + 1) % Py > i) - 1;
         int ie = is + ic;
         for (int j = 0; j < Px; j++) {
-            int js = (j) * ((Nx + 1) / Px) + std::min((Nx + 1) % Px, j);
+            int js = j * ((Nx + 1) / Px) + std::min((Nx + 1) % Px, j);
             int jc = (Nx + 1) / Px + ((Nx + 1) % Px > j) - 1;
             int je = js + jc;
 
@@ -232,12 +234,145 @@ int main(int argc, char** argv) {
     recv_offset[2] = recv_offset[1] + top_halo * right_halo;
     recv_offset[3] = recv_offset[2] + left_halo * i_count;
     recv_offset[4] = recv_offset[3] + right_halo * i_count;
-    recv_offset[5] = recv_offset[4] + left_halo * j_count;
+    recv_offset[5] = recv_offset[4] + left_halo * bottom_halo;
+    recv_offset[6] = recv_offset[5] + bottom_halo * j_count;
 
-    std::vector<MPI_Status> recv_stat(top_halo + top_halo*right_halo + left_halo + left_halo*bottom_halo + bottom_halo);
-    // if (top_halo) {
-    //     int mpires = MPI_Irecv();
-    // }
+    std::vector<MPI_Request> recv_req(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
+    std::vector<MPI_Status> recv_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
+    int nrreq = 0;
+    int mpires;
+    if (top_halo) {
+        int size = recv_offset[1]-recv_offset[0];
+        MPI_Irecv(&recv_buf[recv_offset[0]], size, MPI_DOUBLE, MyID - Px, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+        nrreq++;
+
+        if (right_halo) {
+            int size = recv_offset[2]-recv_offset[1];
+            MPI_Irecv(&recv_buf[recv_offset[1]], size, MPI_DOUBLE, MyID - Px + 1, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+            nrreq++;
+        }
+    }
+
+    if (left_halo) {
+        int size = recv_offset[3]-recv_offset[2];
+        MPI_Irecv(&recv_buf[recv_offset[2]], size, MPI_DOUBLE, MyID - 1, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+        nrreq++;
+    }
+
+    if (right_halo) {
+        int size = recv_offset[4]-recv_offset[3];
+        MPI_Irecv(&recv_buf[recv_offset[3]], size, MPI_DOUBLE, MyID + 1, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+        nrreq++;
+    }
+
+    if (bottom_halo) {
+        if (left_halo) {
+            int size = recv_offset[5]-recv_offset[4];
+            MPI_Irecv(&recv_buf[recv_offset[4]], size, MPI_DOUBLE, MyID + Px - 1, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+            nrreq++;
+        }
+
+        int size = recv_offset[6]-recv_offset[5];
+        MPI_Irecv(&recv_buf[recv_offset[5]], size, MPI_DOUBLE, MyID + Px, 0, MPI_COMM_WORLD, &(recv_req[nrreq]));
+        nrreq++;
+    }
+
+    std::vector<double> send_buf(100); // TODO: recalculate size
+    std::vector<int> send_offset(7);
+    send_offset[0] = 0;
+    send_offset[1] = top_halo * j_count;
+    send_offset[2] = send_offset[1] + top_halo * right_halo;
+    send_offset[3] = send_offset[2] + left_halo * i_count;
+    send_offset[4] = send_offset[3] + right_halo * i_count;
+    send_offset[5] = send_offset[4] + left_halo * j_count;
+    send_offset[6] = send_offset[5] + bottom_halo * j_count;
+
+    int qq = 0;
+    while(!qq)
+        sleep(3);
+
+    int p = 0;
+
+    std::vector<MPI_Request> send_req(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
+    std::vector<MPI_Status> send_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
+    int nsreq = 0;
+    if (top_halo) {
+        for (int i = j_start + left_halo; i <= j_end - right_halo; i++) {
+            send_buf[p] = b[p];
+            p++;
+        }
+
+        int size = send_offset[1]-send_offset[0];
+        MPI_Isend(&recv_buf[send_offset[0]], size, MPI_DOUBLE, MyID - Px, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+        nsreq++;
+
+        if (right_halo) {
+            send_buf[p] = b[p - 1];
+            p++;
+
+            int size = send_offset[2]-send_offset[1];
+            MPI_Isend(&recv_buf[send_offset[1]], size, MPI_DOUBLE, MyID - Px + 1, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+            nsreq++;
+        }
+    }
+
+    if (left_halo) {
+        for (int i = i_start + top_halo; i <= i_end + bottom_halo; i++) {
+            send_buf[p] = b[p];
+            p++;
+        }
+
+        int size = send_offset[3]-send_offset[2];
+        MPI_Isend(&recv_buf[send_offset[2]], size, MPI_DOUBLE, MyID - 1, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+        nsreq++;
+    }
+
+    if (right_halo) {
+        for (int i = i_start + top_halo; i <= i_end - bottom_halo; i++) {
+            send_buf[p] = b[p];
+            p++;
+        }
+
+        int size = send_offset[4]-send_offset[3];
+        MPI_Isend(&recv_buf[send_offset[3]], size, MPI_DOUBLE, MyID + 1, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+        nsreq++;
+    }
+
+    if (bottom_halo) {
+        if (left_halo) {
+            send_buf[p] = b[p - 1];
+            p++;
+
+            int size = send_offset[5]-send_offset[4];
+            MPI_Isend(&recv_buf[send_offset[4]], size, MPI_DOUBLE, MyID + Px - 1, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+            nsreq++;
+        }
+
+        for (int i = j_start + left_halo; i <= j_end - right_halo; i++) {
+            send_buf[p] = b[p];
+            p++;
+        }
+
+        int size = send_offset[6]-send_offset[5];
+        MPI_Isend(&recv_buf[send_offset[5]], size, MPI_DOUBLE, MyID + Px, 0, MPI_COMM_WORLD, &(send_req[nsreq]));
+        nsreq++;
+    }
+
+    if(nrreq>0){ // ждем завершения получения
+        MPI_Waitall(nrreq, &recv_req[0], &recv_stat[0]);
+        // ASSERT(mpires==MPI_SUCCESS, "MPI_Waitall (recv) failed");
+    }
+
+    if(nsreq>0){ // ждем завершения получения
+        MPI_Waitall(nsreq, &send_req[0], &send_stat[0]);
+        // ASSERT(mpires==MPI_SUCCESS, "MPI_Waitall (recv) failed");
+    }
+
+    std::cout << "MyID: " << MyID << std::endl;
+    for (double x : recv_buf) {
+        std::cout << x << std::endl;
+    }
+    std::cout << std::endl;
 
 
     out.close();
@@ -317,6 +452,8 @@ int main(int argc, char** argv) {
     double end = omp_get_wtime();
     std::cout << "Work took " << end - start << " seconds\n";
     std::cout << "Convergence required "  << iterations << " iterations\n";
+
+    out.close();
 
     #ifdef USE_DEBUG_MODE
     std::cout << "res: ";
