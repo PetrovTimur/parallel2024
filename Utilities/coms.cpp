@@ -24,14 +24,14 @@ void ComInitOffsets(int top_halo, int left_halo, int right_halo, int bottom_halo
 
 void Com(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bottom_halo, int i_count, int j_count,
         std::vector<double> &b, std::vector<int> &recv_offset, std::vector<int> &send_offset,
-        std::vector<double> &recv_buf, std::vector<double> &send_buf, std::vector<MPI_Request> &recv_req,
-        std::vector<MPI_Request> &send_req, std::vector<MPI_Status> &recv_stat, std::vector<MPI_Status> &send_stat) {
+        std::vector<double> &recv_buf, std::vector<double> &send_buf) {
     int nrreq = 0;
     int mpires;
 
-    // int qq = 0;
-    // while(!qq)
-    //     sleep(3);
+    std::vector<MPI_Request> recv_req(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
+    std::vector<MPI_Status> recv_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
+    std::vector<MPI_Request> send_req(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
+    std::vector<MPI_Status> send_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
 
     if (top_halo) {
         int size = recv_offset[1]-recv_offset[0];
