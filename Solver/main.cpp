@@ -191,72 +191,22 @@ int main(int argc, char** argv) {
 
     makeCSR(Nx, Ny, K1, K2, i_start + top_halo, i_end - bottom_halo, j_start + left_halo, j_end - right_halo, G2L, ia, ja);
 
-    // if (MyID == 0) {
-    //     std::cout << ia.size() << " " << ja.size() << std::endl;
-    //
-    //     for (int i : ia)
-    //         std::cout << i << " ";
-    //     std::cout << std::endl;
-    //
-    //     for (int i : ja)
-    //         std::cout << i << " ";
-    //     std::cout << std::endl;
-    // }
-
     std::vector<double> a(ja.size());
     std::vector<double> b(ia.size() - 1);
     std::vector<double> diag(ia.size() - 1);
     fillCSR(ia, ja, L2G, a, b, diag);
 
-    // if (MyID == 0) {
-    //     for (double i : a)
-    //         std::cout << i << " ";
-    //     std::cout << std::endl;
-    // }
-    // std::cout << "MyID: " << MyID << std::endl;
-    // for (int j : ja)
-    //     std::cout << L2G[j] << " ";
-    // std::cout << std::endl;
-    // for (double i : a)
-    //     std::cout << i << " ";
-    // std::cout << std::endl;
-
-
-    double buf, total = 0;
-    // dot(b, b, buf);
-    // MPI_Reduce(&buf, &total, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    // if (MyID == 0) {
-    //     std::cout << "Total: " << total << std::endl;
-    // }
-
-    // Comm INIT
-
-    std::vector<double> recv_buf(L2G.size() - b.size());
-    std::vector<int> recv_offset(7);
-
-    std::vector<double> send_buf;
-    std::vector<int> send_offset(7);
-
-    std::vector<MPI_Request> recv_req(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
-    std::vector<MPI_Status> recv_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
-    std::vector<MPI_Request> send_req(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
-    std::vector<MPI_Status> send_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
-
-    ComInitOffsets(top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, recv_offset, send_offset);
-    recv_buf.resize(recv_offset[recv_offset.size() - 1]);
-    send_buf.resize(send_offset[send_offset.size() - 1]);
-    // Com(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count,
-    //     b, recv_offset, send_offset,
-    //     recv_buf, send_buf, recv_req,
-    //     send_req, recv_stat, send_stat);
+    // printVector(ia);
+    // printVector(ja);
+    // printVector(a);
+    // printVector(b);
 
     std::vector<double> res(b.size());
 
     double start = MPI_Wtime();
-    solve(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, recv_offset, send_offset, recv_buf,
-          send_buf, recv_req, send_req, recv_stat, send_stat, ia, ja, a, b, diag, res);
+    solve(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, ia, ja, a, b, diag, res);
 
-    // std::cout << "MyID: " << MyID << std::endl;
+    std::cout << "MyID: " << MyID << ", x[0]: " << res[0] << std::endl;
     // for (double x : res)
     //     std::cout << x << " ";
     // std::cout << std::endl;
@@ -335,6 +285,8 @@ int main(int argc, char** argv) {
     double start = omp_get_wtime();
 
     int iterations = solve(ia, ja, a, b, diag, res);
+
+    printVector(res);
 
     double end = omp_get_wtime();
     std::cout << "Work took " << end - start << " seconds\n";
