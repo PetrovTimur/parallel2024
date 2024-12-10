@@ -76,6 +76,11 @@ int main(int argc, char** argv) {
         std::cout << "Py = " << Py << std::endl;
     }
 
+    int P0 = Px * Py;
+    // std::cout << omp_get_max_threads() << std::endl;
+    omp_set_num_threads(omp_get_max_threads() / P0);
+    // std::cout << omp_get_max_threads() << std::endl;
+
     int MyID_j = MyID % Px;
     int MyID_i = MyID / Px;
 
@@ -186,8 +191,10 @@ int main(int argc, char** argv) {
     }
 #endif
 
-    std::vector<int> ia(N0 + 1);
-    std::vector<int> ja(7 * (N0 + 1));
+    // std::vector<int> ia(N0 + 1);
+    std::vector<int> ia = {0};
+    // std::vector<int> ja(7 * (N0 + 1));
+    std::vector<int> ja;
 
     makeCSR(Nx, Ny, K1, K2, i_start + top_halo, i_end - bottom_halo, j_start + left_halo, j_end - right_halo, G2L, ia, ja);
 
