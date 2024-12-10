@@ -4,7 +4,11 @@
 #include <tuple>
 #include <vector>
 
+#ifdef USE_MPI
+std::tuple<int, int, int, int, int, int, int, int, int, int> input(int Nx, int Ny, int Px, int Py, int MyID, std::vector<int> &L2G, std::vector<int> &G2L, std::vector<int> &Part);
+#else
 std::tuple<int, int> input(int Nx, int Ny, int K1, int K2);
+#endif
 
 template <typename T>
 void printMatrix(std::vector<std::vector<T>> &matrix) {

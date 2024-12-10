@@ -76,120 +76,25 @@ int main(int argc, char** argv) {
         std::cout << "Py = " << Py << std::endl;
     }
 
-    int P0 = Px * Py;
     // std::cout << omp_get_max_threads() << std::endl;
     // omp_set_num_threads(omp_get_max_threads() / P0);
     // std::cout << omp_get_max_threads() << std::endl;
 
-    int MyID_j = MyID % Px;
-    int MyID_i = MyID / Px;
-
-    int i_start, i_end, i_count, j_start, j_end, j_count;
-    j_start = MyID_j * ((Nx + 1) / Px) + std::min((Nx + 1) % Px, MyID_j);
-    j_count = (Nx + 1) / Px + ((Nx + 1) % Px > MyID_j);
-    j_end = j_start + j_count - 1;
-    int left_halo = MyID_j > 0; // Halo
-    j_start -= left_halo;
-    int right_halo = MyID_j < Px - 1; // Halo
-    j_end += right_halo;
-
-    i_start = MyID_i * ((Ny + 1) / Py) + std::min((Ny + 1) % Py, MyID_i);
-    i_count = (Ny + 1) / Py + ((Ny + 1) % Py > MyID_i);
-    i_end = i_start + i_count - 1;
-    int top_halo = MyID_i > 0; // Halo
-    i_start -= top_halo;
-    int bottom_halo = MyID_i < Py - 1; // Halo
-    i_end += bottom_halo;
-
-    // std::cout << "MyID: " << MyID << std::endl;
-    // std::cout << "i_start: " << i_start << ", i_end: " << i_end << std::endl;
-    // std::cout << "j_start: " << j_start << ", j_end: " << j_end << std::endl;
-
-    int k = 0, N0;
-    std::vector<int> L2G((i_end - i_start + 1) * (j_end - j_start + 1));
-    for (int i = i_start + top_halo; i <= i_end - bottom_halo; i++) {
-        for (int j = j_start + left_halo; j <= j_end - right_halo; j++) {
-            L2G[k++] = i * (Nx + 1) + j;
-        }
-    }
-    N0 = k;
-    if (top_halo) {
-        for (int j = j_start + left_halo; j <= j_end - right_halo; j++) {
-            L2G[k++] = i_start * (Nx + 1) + j;
-        }
-        if (right_halo)
-            L2G[k++] = i_start * (Nx + 1) + j_end;
-    }
-    if (left_halo) {
-        for (int i = i_start + top_halo; i <= i_end - bottom_halo; i++) {
-            L2G[k++] = i * (Nx + 1) + j_start;
-        }
-    }
-    if (right_halo) {
-        for (int i = i_start + top_halo; i <= i_end - bottom_halo; i++) {
-            L2G[k++] = i * (Nx + 1) + j_end;
-        }
-    }
-    if (bottom_halo) {
-        if (left_halo)
-            L2G[k++] = i_end * (Nx + 1) + j_start;
-        for (int j = j_start + left_halo; j <= j_end - right_halo; j++) {
-            L2G[k++] = i_end * (Nx + 1) + j;
-        }
-    }
-
-    L2G.resize(k);
-
-    // if (MyID == 7) {
-    //     std::cout << i_start << i_end << j_start << j_end << std::endl;
-    //     // std::cout << top_halo << bottom_halo << left_halo << right_halo << std::endl;
-    //     std::cout << "L2G size: " << L2G.size() << std::endl;
-    //     for (int i = 0; i < L2G.size(); i++) {
-    //         std::cout << L2G[i] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
-
+    std::vector<int> L2G;
     std::vector<int> G2L((Nx + 1) * (Ny + 1), -1);
-    for (int iL = 0; iL < L2G.size(); iL++) {
-        G2L[L2G[iL]] = iL;
-    }
-
-
     std::vector<int> Part((Nx + 1) * (Ny + 1));
-    for (int i = 0; i < Py; i++) {
-        int is = i * ((Ny + 1) / Py) + std::min((Ny + 1) % Py, i);
-        int ic = (Ny + 1) / Py + ((Ny + 1) % Py > i) - 1;
-        int ie = is + ic;
-        for (int j = 0; j < Px; j++) {
-            int js = j * ((Nx + 1) / Px) + std::min((Nx + 1) % Px, j);
-            int jc = (Nx + 1) / Px + ((Nx + 1) % Px > j) - 1;
-            int je = js + jc;
 
-#ifdef  USE_DEBUG_MODE
-            if (MyID == 0) {
-                std::cout << "id: " << i * Px + j << std::endl;
-                std::cout << is << " " << ie << " " << js << " " << jc << std::endl;
-            }
-#endif
-
-            for (int ii = is; ii <= ie; ii++) {
-                for (int jj = js; jj <= je; jj++) {
-                    Part[ii * (Nx + 1) + jj] = i * Px + j;
-                }
-            }
-        }
-    }
-
-#ifdef USE_DEBUG_MODE
-    if (MyID == 0) {
-        std::cout << "Part size: " << Part.size() << std::endl;
-        for (int i : Part) {
-            std::cout << i << " ";
-        }
-        std::cout << std::endl;
-    }
-#endif
+    std::tuple<int, int, int, int, int, int, int, int, int, int> t = input(Nx, Ny, Px, Py, MyID, L2G, G2L, Part);
+    int i_start = std::get<0>(t);
+    int i_end = std::get<1>(t);
+    int i_count = std::get<2>(t);
+    int j_start = std::get<3>(t);
+    int j_end = std::get<4>(t);
+    int j_count = std::get<5>(t);
+    int top_halo = std::get<6>(t);
+    int right_halo = std::get<7>(t);
+    int bottom_halo = std::get<8>(t);
+    int left_halo = std::get<9>(t);
 
     // std::vector<int> ia(N0 + 1);
     std::vector<int> ia = {0};
