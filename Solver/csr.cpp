@@ -93,11 +93,11 @@ void makeCSR(int Nx, int Ny, int K1, int K2, int i_start, int i_end, int j_start
     std::partial_sum(ia.begin(), ia.end(), ia.begin());
     // std::cout << "Test IA: " << test_ia.size() << std::endl;
     // printVector(test_ia);
-    std::cout << "IA: " << ia.size() << std::endl;
+    // std::cout << "IA: " << ia.size() << std::endl;
     // printVector(ia);
     // std::cout << "Test JA: " << test_ja.size() << std::endl;
     // printVector(test_ja);
-    std::cout << "JA: " << ja.size() << std::endl;
+    // std::cout << "JA: " << ja.size() << std::endl;
     // printVector(ja);
 }
 
