@@ -73,7 +73,6 @@ void Com(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bott
 
     int nsreq = 0;
     if (top_halo) {
-        #pragma omp parallel for proc_bind(spread)
         for (int j = 0; j < j_count; j++) {
             send_buf[p] = b[j];
             p++;
@@ -94,7 +93,6 @@ void Com(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bott
     }
 
     if (left_halo) {
-        #pragma omp parallel for proc_bind(spread)
         for (int i = 0; i < i_count; i++) {
             send_buf[p] = b[i * j_count];
             p++;
@@ -106,7 +104,6 @@ void Com(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bott
     }
 
     if (right_halo) {
-        #pragma omp parallel for proc_bind(spread)
         for (int i = 0; i < i_count; i++) {
             send_buf[p] = b[i * j_count + j_count - 1];
             p++;
@@ -127,7 +124,6 @@ void Com(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bott
             nsreq++;
         }
 
-        #pragma omp parallel for proc_bind(spread)
         for (int j = 0; j < j_count; j++) {
             send_buf[p] = b[(i_count - 1) * j_count + j];
             p++;
