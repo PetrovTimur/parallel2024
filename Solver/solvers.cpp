@@ -43,7 +43,7 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
 
     do {
         k++;
-        // #pragma omp parallel for proc_bind(spread)
+        #pragma omp parallel for proc_bind(master)
         for (int i = 0; i < N; i++) {
             z[i] = r[i] / diag[i];
         }
@@ -54,7 +54,7 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
         MPI_Allreduce(&buf, &rho[1], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
         if (k == 1)
-            // #pragma omp parallel for proc_bind(spread)
+            #pragma omp parallel for proc_bind(master)
             for (int i = 0; i < N; i++)
                 p[i] = z[i];
         else {
@@ -77,7 +77,7 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
     }
     while (rho[1] > eps * eps && k < maxit);
 
-    // #pragma omp parallel for proc_bind(spread)
+    #pragma omp parallel for proc_bind(master)
     for (int i = 0; i < N; i++)
         res[i] = x[i];
 

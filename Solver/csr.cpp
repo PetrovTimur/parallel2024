@@ -23,8 +23,8 @@ void makeCSR(int Nx, int Ny, int K1, int K2, int i_start, int i_end, int j_start
     std::vector<std::vector<int>> temp_ia(i_end - i_start + 1, std::vector<int>(j_end - j_start + 1));
     std::vector<std::vector<int>> temp_ja(i_end - i_start + 1, std::vector<int>(7 * (j_end - j_start + 1)));
 
-    int k = 0;
-    #pragma omp parallel for proc_bind(spread)
+    // int k = 0;
+    #pragma omp parallel for proc_bind(master)
     for (int i = i_start; i <= i_end; i++) {
         // std::cout << i << " " << k << std::endl;
         // int k =
@@ -152,7 +152,7 @@ void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<i
 #ifdef USE_MPI
 void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, std::vector<double> &a, std::vector<double> &b,
     std::vector<double> &diag) {
-    // #pragma omp parallel for proc_bind(spread)
+    #pragma omp parallel for proc_bind(master)
     for (int i = 0; i < ia.size() - 1; i++) {
         double sum = 0;
         int k_i = 0;
@@ -171,7 +171,7 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, 
         // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
     }
 
-    // #pragma omp parallel for proc_bind(spread)
+    #pragma omp parallel for proc_bind(master)
     for (int i = 0; i < b.size(); i++)
         b[i] = std::sin(L2G[i]);
 }

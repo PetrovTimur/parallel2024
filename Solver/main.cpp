@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 
     int P0 = Px * Py;
     // std::cout << omp_get_max_threads() << std::endl;
-    omp_set_num_threads(omp_get_max_threads() / P0);
+    // omp_set_num_threads(omp_get_max_threads() / P0);
     // std::cout << omp_get_max_threads() << std::endl;
 
     int MyID_j = MyID % Px;
