@@ -2,7 +2,7 @@ set(MEASURES
     DotMeasure
     AXpYMeasure
     SpMVMeasure
-    CGSolverMeasure
+#    CGSolverMeasure
 )
 
 foreach (MEASURE ${MEASURES})
@@ -12,11 +12,11 @@ foreach (MEASURE ${MEASURES})
     if (${MEASURE} STREQUAL "SpMVMeasure")
         add_executable(${MEASURE} ${MEASURE_SOURCE} ${PROJECT_SOURCE_DIR}/Solver/csr.cpp)
         add_dependencies(${MEASURE} IOs)
-        target_link_libraries(${MEASURE} PUBLIC IOs)
+        target_link_libraries(${MEASURE} PUBLIC IOs Coms)
     elseif (${MEASURE} STREQUAL "CGSolverMeasure")
         add_executable(${MEASURE} ${MEASURE_SOURCE} ${PROJECT_SOURCE_DIR}/Solver/csr.cpp ${PROJECT_SOURCE_DIR}/Solver/solvers.cpp)
         add_dependencies(${MEASURE} IOs)
-        target_link_libraries(${MEASURE} PUBLIC IOs)
+        target_link_libraries(${MEASURE} PUBLIC IOs Coms)
     else ()
         add_executable(${MEASURE} ${MEASURE_SOURCE})
     endif ()

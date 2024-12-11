@@ -6,23 +6,24 @@ set(TESTS
         SpMVCorrectnessTest
 )
 
+if (NOT USE_MPI)
+    foreach (TEST ${TESTS})
+        #    cmake_path(GET MEASURE_SOURCE STEM MEASURE)
+        set(TEST_SOURCE ${TEST}.cpp)
 
-foreach (TEST ${TESTS})
-    #    cmake_path(GET MEASURE_SOURCE STEM MEASURE)
-    set(TEST_SOURCE ${TEST}.cpp)
-
-    add_executable(${TEST} ${TEST_SOURCE})
-    add_dependencies(${TEST} MathFunc)
-    target_link_libraries(${TEST} PUBLIC MathFunc)
-    set_target_properties(${TEST} PROPERTIES FOLDER "Tests")
-    add_test(
-            NAME ${TEST}
-            COMMAND $<TARGET_FILE:${TEST}>
-    )
-    if (${TEST} MATCHES ".*Parallel.*")
-        set_property(TEST ${TEST} PROPERTY ENVIRONMENT "OMP_NUM_THREADS=4")
-    endif ()
-endforeach ()
+        add_executable(${TEST} ${TEST_SOURCE})
+        add_dependencies(${TEST} MathFunc)
+        target_link_libraries(${TEST} PUBLIC MathFunc)
+        set_target_properties(${TEST} PROPERTIES FOLDER "Tests")
+        add_test(
+                NAME ${TEST}
+                COMMAND $<TARGET_FILE:${TEST}>
+        )
+        if (${TEST} MATCHES ".*Parallel.*")
+            set_property(TEST ${TEST} PROPERTY ENVIRONMENT "OMP_NUM_THREADS=4")
+        endif ()
+    endforeach ()
+endif ()
 
 
 #add_executable(SolveTest SolveTest.cpp
