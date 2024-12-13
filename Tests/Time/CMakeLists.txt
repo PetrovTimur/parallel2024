@@ -2,7 +2,7 @@ set(MEASURES
     DotMeasure
     AXpYMeasure
     SpMVMeasure
-#    CGSolverMeasure
+    CGSolverMeasure
 )
 
 foreach (MEASURE ${MEASURES})
