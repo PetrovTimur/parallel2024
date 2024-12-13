@@ -5,16 +5,16 @@
 
 #include "Solver/csr.h"
 #include "Solver/Kernels/mathfunc.h"
-#include "Utilities/coms.h"
 #include "Utilities/input.h"
 
 #ifdef USE_MPI
 #include <mpi.h>
+#include "Utilities/coms.h"
 #endif
 
 int main(int argc, char** argv) {
     #ifdef USE_MPI
-    // omp_set_num_threads(omp_get_max_threads());
+    omp_set_num_threads(omp_get_max_threads());
 
     int mpi_res;
     mpi_res = MPI_Init(&argc, &argv); // первым делом подключаемся к MPI

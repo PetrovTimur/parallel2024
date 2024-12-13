@@ -13,7 +13,7 @@
 
 int main(int argc, char **argv) {
     #ifdef USE_MPI
-    // omp_set_num_threads(omp_get_max_threads());
+    omp_set_num_threads(omp_get_max_threads());
 
     std::vector<double> x;
     std::vector<double> y;
