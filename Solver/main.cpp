@@ -117,7 +117,8 @@ int main(int argc, char** argv) {
     std::vector<double> res(b.size());
 
     double start = MPI_Wtime();
-    solve(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, ia, ja, a, b, diag, res);
+    int iterations = solve(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, ia, ja, a, b, diag, res);
+    std::cout << "Iterations: " << iterations << std::endl;
 
     std::cout << "MyID: " << MyID << ", x[0]: " << res[0] << std::endl;
     // for (double x : res)

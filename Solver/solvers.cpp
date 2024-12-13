@@ -81,7 +81,7 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
     for (int i = 0; i < N; i++)
         res[i] = x[i];
 
-    std::cout << "k = " << k << std::endl;
+    // std::cout << "k = " << k << std::endl;
     return k;
 }
 #else
