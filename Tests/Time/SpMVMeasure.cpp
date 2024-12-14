@@ -37,13 +37,13 @@ int main(int argc, char** argv) {
         exit(mpi_res);
     }
 
-    if (MyID == 0)
+    if (MyID == 0) {
         std::cout << "NumProc = " << NumProc << std::endl;
+        int T  = omp_get_max_threads();
+        std::cout << "T = " << T << std::endl;
+    }
 
-    // int T  = omp_get_max_threads();
-    // std::cout << "T = " << T << std::endl;
-
-    for (int k = 1e5; k <= 1e8; k *= 10) {
+    for (int k = 1e6; k <= 1e8; k *= 10) {
         int K1 = 30;
         int K2 = 23;
         int Nx = 1000;
@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
         double average_time = aggregate_time / runs;
 
         if (MyID == 0)
-            std::cout << 2 * 6 * Nx * Ny / (average_time * 1e9) << ", ";
+            std::cout << 2 * 6 * Nx * Ny / (average_time * 1e9) << ",";
     }
     if (MyID == 0)
         std::cout << std::endl;
