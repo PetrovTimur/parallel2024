@@ -11,12 +11,10 @@
 #include "solvers.h"
 #include "Kernels/mathfunc.h"
 #include "Utilities/argparse.h"
-#ifdef USE_MPI
-#include "Utilities/coms.h"
-#endif
 
 #ifdef USE_MPI
 #include <mpi.h>
+#include "Utilities/coms.h"
 #endif
 
 
