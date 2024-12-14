@@ -24,14 +24,14 @@ def plotSingle(x, y, xlabel=None, ylabel=None, title=''):
 def plotMulti(x, y, xlabel=None, ylabel=None, title=''):
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8, 8), sharey=True)
     colors = 'cmyk'
-    for i in range(1):
-        axs.plot(x, y[-1], marker='.', markeredgecolor=colors[i], c='b')
+    for i in range(4):
+        axs.plot(x, y[i], marker='.', markeredgecolor=colors[i], c=colors[i])
         # axs[i].set_xscale('log')
     # axs.set_xscale('log', base=2)
     axs.set_xlabel(xlabel)
     axs.set_ylabel(ylabel)
     # axs.set_title(title)
-    axs.legend([f'k = 1e{i}' for i in range(8, 9)])
+    axs.legend([f'1e{i}' for i in range(5, 9)])
     axs.xaxis.set_major_formatter(ScalarFormatter())
     axs.set_xticks(x)
 
@@ -92,7 +92,7 @@ def plotSingle2(x, y, xlabel=None, ylabel=None, title=''):
 
 # ---------------------------------------------------------------------------POLUS---------------------------------------------------------------------
 
-single_data_gflops = np.array([[0.151781, 0.151825, 0.151764, 0.149401], [0.111303, 0.1113, 0.111051, 0.105555], [0.0639949, 0.0639803, 0.0638165, 0.063684], [0.0418468, 0.041932, 0.0419215, 0.0419531]])
+# single_data_gflops = np.array([[0.151781, 0.151825, 0.151764, 0.149401], [0.111303, 0.1113, 0.111051, 0.105555], [0.0639949, 0.0639803, 0.0638165, 0.063684], [0.0418468, 0.041932, 0.0419215, 0.0419531]])
 # # plotSingle([1e5, 1e6, 1e7, 1e8], single_data_gflops, xlabel='Размер данных', ylabel='GFLOPS')
 # #
 # multithread_dot_data_gflops = np.array([[0.302481, 0.301435, 0.301008, 0.297214], [0.591624, 0.596378, 0.596087, 0.586329], [1.06538, 1.10087, 1.13066, 1.11105],
@@ -116,39 +116,51 @@ single_data_gflops = np.array([[0.151781, 0.151825, 0.151764, 0.149401], [0.1113
 # plotMulti([2, 4, 8, 16, 32, 40, 60, 80], multithread_cgsolve_data_gflops, xlabel='Threads', ylabel='GFLOPS', title='CGSolve op')
 #
 
-multithread_dot_data_gflops = np.array([[0.300312, 0.300922, 0.300709, 0.296554,], [0.598482, 0.601168, 0.602436, 0.591719], [1.07451, 1.12729, 1.12585, 1.1079,],
-                                        [1.81628, 2.16618, 2.17559, 2.1078,], [2.03445, 3.10261, 3.2463, 3.00299,], [2.41637, 3.81488, 4.08225, 3.80341,],
-                                        [1.95825, 3.82272, 4.42505, 4.34894, ], [1.76719, 4.52494, 5.28819, 5.2221,], [1.35162, 3.71911, 4.99139, 5.60368,], [1.10429, 4.03472, 5.67538, 5.8043,]]).T
-plotMulti([2, 4, 8, 16, 32, 40, 60, 80, 120, 160], multithread_dot_data_gflops, xlabel='Threads', ylabel='GFLOPS', title='Dot op')
-
-multithread_axpy_data_gflops = np.array([[0.221842, 0.220587, 0.220487, 0.209703,], [0.435063, 0.436763, 0.436876, 0.411089,], [0.811505, 0.828372, 0.828339, 0.778485,],
-                                         [1.45428, 1.60079, 1.60646, 1.52092,], [1.85669, 2.39876, 2.42714, 2.19839, ], [2.19982, 2.96329, 3.05072, 2.76473,],
-                                         [2.16292, 3.05818, 3.30163, 3.21257, ], [1.82774, 3.6345, 3.94273, 3.79492,], [1.68805, 3.71407, 4.10764, 4.11398,], [1.22549, 3.29921, 4.13518, 4.24579,]]).T
-plotMulti([2, 4, 8, 16, 32, 40, 60, 80, 120, 160], multithread_axpy_data_gflops, xlabel='Threads', ylabel='GFLOPS', title='AXpY op')
+# multithread_dot_data_gflops = np.array([[0.300312, 0.300922, 0.300709, 0.296554,], [0.598482, 0.601168, 0.602436, 0.591719], [1.07451, 1.12729, 1.12585, 1.1079,],
+#                                         [1.81628, 2.16618, 2.17559, 2.1078,], [2.03445, 3.10261, 3.2463, 3.00299,], [2.41637, 3.81488, 4.08225, 3.80341,],
+#                                         [1.95825, 3.82272, 4.42505, 4.34894, ], [1.76719, 4.52494, 5.28819, 5.2221,], [1.35162, 3.71911, 4.99139, 5.60368,], [1.10429, 4.03472, 5.67538, 5.8043,]]).T
+# plotMulti([2, 4, 8, 16, 32, 40, 60, 80, 120, 160], multithread_dot_data_gflops, xlabel='Threads', ylabel='GFLOPS', title='Dot op')
 #
-multithread_spmv_data_gflops = np.array([[0.126828, 0.127846, 0.127593, 0.127003,], [0.245407, 0.251102, 0.249896, 0.250845,], [0.465388, 0.48134, 0.482144, 0.478431,],
-                                         [0.859945, 0.934143, 0.938284, 0.844518,], [1.21996, 1.40484, 1.4312, 1.41582,], [1.40376, 1.75595, 1.78706, 1.75265,],
-                                         [1.43944, 1.85922, 2.01231, 2.00478,], [1.47216, 2.26789, 2.26497, 2.34695,], [1.49166, 2.36065, 2.5283, 2.52529,], [1.11245, 2.25598, 2.54125, 2.58539,]]).T
-plotMulti([2, 4, 8, 16, 32, 40, 60, 80, 120, 160], multithread_spmv_data_gflops, xlabel='Threads', ylabel='GFLOPS', title='SpMV op')
+# multithread_axpy_data_gflops = np.array([[0.221842, 0.220587, 0.220487, 0.209703,], [0.435063, 0.436763, 0.436876, 0.411089,], [0.811505, 0.828372, 0.828339, 0.778485,],
+#                                          [1.45428, 1.60079, 1.60646, 1.52092,], [1.85669, 2.39876, 2.42714, 2.19839, ], [2.19982, 2.96329, 3.05072, 2.76473,],
+#                                          [2.16292, 3.05818, 3.30163, 3.21257, ], [1.82774, 3.6345, 3.94273, 3.79492,], [1.68805, 3.71407, 4.10764, 4.11398,], [1.22549, 3.29921, 4.13518, 4.24579,]]).T
+# plotMulti([2, 4, 8, 16, 32, 40, 60, 80, 120, 160], multithread_axpy_data_gflops, xlabel='Threads', ylabel='GFLOPS', title='AXpY op')
+# #
+# multithread_spmv_data_gflops = np.array([[0.126828, 0.127846, 0.127593, 0.127003,], [0.245407, 0.251102, 0.249896, 0.250845,], [0.465388, 0.48134, 0.482144, 0.478431,],
+#                                          [0.859945, 0.934143, 0.938284, 0.844518,], [1.21996, 1.40484, 1.4312, 1.41582,], [1.40376, 1.75595, 1.78706, 1.75265,],
+#                                          [1.43944, 1.85922, 2.01231, 2.00478,], [1.47216, 2.26789, 2.26497, 2.34695,], [1.49166, 2.36065, 2.5283, 2.52529,], [1.11245, 2.25598, 2.54125, 2.58539,]]).T
+# plotMulti([2, 4, 8, 16, 32, 40, 60, 80, 120, 160], multithread_spmv_data_gflops, xlabel='Threads', ylabel='GFLOPS', title='SpMV op')
+#
+# multithread_cgsolve_data_gflops = np.array([[0.0826346, 0.0829105, 0.0830233, 0.0829571,], [0.155955, 0.160717, 0.161569, 0.16192,], [0.28055, 0.297274, 0.300877, 0.301486,],
+#                                          [0.463826, 0.535491, 0.560002, 0.563258,], [0.599644, 0.76496, 0.773002, 0.823514,], [0.57977, 0.890344, 0.983785, 0.895145,],
+#                                          [0.505283, 0.898503, 1.05905, 1.09827,], [0.550955, 1.05815, 1.23718, 1.25988,], [0.347093, 0.976246, 1.27145, 1.33129,], [0.313439, 0.955972, 1.28518, 1.354,]]).T
+# plotMulti([2, 4, 8, 16, 32, 40, 60, 80, 120, 160], multithread_cgsolve_data_gflops, xlabel='Threads', ylabel='GFLOPS', title='CGSolve op')
 
-multithread_cgsolve_data_gflops = np.array([[0.0826346, 0.0829105, 0.0830233, 0.0829571,], [0.155955, 0.160717, 0.161569, 0.16192,], [0.28055, 0.297274, 0.300877, 0.301486,],
-                                         [0.463826, 0.535491, 0.560002, 0.563258,], [0.599644, 0.76496, 0.773002, 0.823514,], [0.57977, 0.890344, 0.983785, 0.895145,],
-                                         [0.505283, 0.898503, 1.05905, 1.09827,], [0.550955, 1.05815, 1.23718, 1.25988,], [0.347093, 0.976246, 1.27145, 1.33129,], [0.313439, 0.955972, 1.28518, 1.354,]]).T
-plotMulti([2, 4, 8, 16, 32, 40, 60, 80, 120, 160], multithread_cgsolve_data_gflops, xlabel='Threads', ylabel='GFLOPS', title='CGSolve op')
+
+# dot_speedup = multithread_dot_data_gflops.T / single_data_gflops[0]
+# data = dot_speedup.T[-1]
+# print(*[f"{spdup:.2f}" for spdup in data], sep=' & ')
+#
+# axpy_speedup = multithread_axpy_data_gflops.T / single_data_gflops[1]
+# data = axpy_speedup.T[-1]
+# print(*[f"{spdup:.2f}" for spdup in data], sep=' & ')
+#
+# spmv_speedup = multithread_spmv_data_gflops.T / single_data_gflops[2]
+# data = spmv_speedup.T[-1]
+# print(*[f"{spdup:.2f}" for spdup in data], sep=' & ')
+#
+# cgsolve_speedup = multithread_cgsolve_data_gflops.T / single_data_gflops[3]
+# data = cgsolve_speedup.T[-1]
+# print(*[f"{spdup:.2f}" for spdup in data], sep=' & ')
 
 
-dot_speedup = multithread_dot_data_gflops.T / single_data_gflops[0]
-data = dot_speedup.T[-1]
-print(*[f"{spdup:.2f}" for spdup in data], sep=' & ')
+import pandas as pd
 
-axpy_speedup = multithread_axpy_data_gflops.T / single_data_gflops[1]
-data = axpy_speedup.T[-1]
-print(*[f"{spdup:.2f}" for spdup in data], sep=' & ')
+df = pd.read_csv('mpi_dot.csv', index_col=False, sep=',')
+print(df[df['Op'] == 'Dot'][['1e5', '1e6']].values)
+plotMulti(df[df['Op'] == 'Dot']['NumProc'], np.array(df[df['Op'] == 'Dot'][['1e5', '1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='Dot')
+plotMulti(df[df['Op'] == 'AXpY']['NumProc'], np.array(df[df['Op'] == 'AXpY'][['1e5', '1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='AXpY')
+plotMulti(df[df['Op'] == 'SpMV']['NumProc'], np.array(df[df['Op'] == 'SpMV'][['1e5', '1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='SpMV')
+plotMulti(df[df['Op'] == 'CGSolver']['NumProc'], np.array(df[df['Op'] == 'CGSolver'][['1e5', '1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='CGSolver')
+# plotMulti([2, 4, 8, 16, 32, 40, 60, 80], multithread_dot_data_gflops, xlabel='Threads', ylabel='GFLOPS', title='Dot op')
 
-spmv_speedup = multithread_spmv_data_gflops.T / single_data_gflops[2]
-data = spmv_speedup.T[-1]
-print(*[f"{spdup:.2f}" for spdup in data], sep=' & ')
-
-cgsolve_speedup = multithread_cgsolve_data_gflops.T / single_data_gflops[3]
-data = cgsolve_speedup.T[-1]
-print(*[f"{spdup:.2f}" for spdup in data], sep=' & ')
