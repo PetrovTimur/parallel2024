@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
             // Calculate
             double start = MPI_Wtime();
             dot(x, y, res);
-            MPI_Allreduce(&res, &result, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+            MPI_Allreduce(&res, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             double end = MPI_Wtime();
 
             aggregate_time += end - start;
