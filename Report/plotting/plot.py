@@ -24,7 +24,7 @@ def plotSingle(x, y, xlabel=None, ylabel=None, title=''):
 def plotMulti(x, y, xlabel=None, ylabel=None, title=''):
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8, 8), sharey=True)
     colors = 'cmyk'
-    for i in range(4):
+    for i in range(3):
         axs.plot(x, y[i], marker='.', markeredgecolor=colors[i], c=colors[i])
         # axs[i].set_xscale('log')
     # axs.set_xscale('log', base=2)
@@ -157,10 +157,10 @@ def plotSingle2(x, y, xlabel=None, ylabel=None, title=''):
 import pandas as pd
 
 df = pd.read_csv('mpi_dot.csv', index_col=False, sep=',')
-print(df[df['Op'] == 'Dot'][['1e5', '1e6']].values)
-plotMulti(df[df['Op'] == 'Dot']['NumProc'], np.array(df[df['Op'] == 'Dot'][['1e5', '1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='Dot')
-plotMulti(df[df['Op'] == 'AXpY']['NumProc'], np.array(df[df['Op'] == 'AXpY'][['1e5', '1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='AXpY')
-plotMulti(df[df['Op'] == 'SpMV']['NumProc'], np.array(df[df['Op'] == 'SpMV'][['1e5', '1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='SpMV')
-plotMulti(df[df['Op'] == 'CGSolver']['NumProc'], np.array(df[df['Op'] == 'CGSolver'][['1e5', '1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='CGSolver')
+# print(df[df['Op'] == 'Dot'][['1e5', '1e6']].values)
+plotMulti(df[df['Op'] == 'Dot']['NumProc'], np.array(df[df['Op'] == 'Dot'][['1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='Dot')
+plotMulti(df[df['Op'] == 'AXpY']['NumProc'], np.array(df[df['Op'] == 'AXpY'][['1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='AXpY')
+plotMulti(df[df['Op'] == 'SpMV']['NumProc'], np.array(df[df['Op'] == 'SpMV'][['1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='SpMV')
+plotMulti(df[df['Op'] == 'CGSolver']['NumProc'], np.array(df[df['Op'] == 'CGSolver'][['1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='CGSolver')
 # plotMulti([2, 4, 8, 16, 32, 40, 60, 80], multithread_dot_data_gflops, xlabel='Threads', ylabel='GFLOPS', title='Dot op')
 
