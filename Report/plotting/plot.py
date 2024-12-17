@@ -106,7 +106,7 @@ def plotCompare(x, y, xlabel=None, ylabel=None, title=''):
 
 # ---------------------------------------------------------------------------POLUS---------------------------------------------------------------------
 
-# single_data_gflops = np.array([[0.151781, 0.151825, 0.151764, 0.149401], [0.111303, 0.1113, 0.111051, 0.105555], [0.0639949, 0.0639803, 0.0638165, 0.063684], [0.0418468, 0.041932, 0.0419215, 0.0419531]])
+single_data_gflops = np.array([[0.151781, 0.151825, 0.151764, 0.149401], [0.111303, 0.1113, 0.111051, 0.105555], [0.0639949, 0.0639803, 0.0638165, 0.063684], [0.0418468, 0.041932, 0.0419215, 0.0419531]])
 # # plotSingle([1e5, 1e6, 1e7, 1e8], single_data_gflops, xlabel='Размер данных', ylabel='GFLOPS')
 # #
 # multithread_dot_data_gflops = np.array([[0.302481, 0.301435, 0.301008, 0.297214], [0.591624, 0.596378, 0.596087, 0.586329], [1.06538, 1.10087, 1.13066, 1.11105],
@@ -166,3 +166,8 @@ for i, op in enumerate(['Dot', 'AXpY', 'SpMV', 'CGSolver']):
     # print(y)
     # print(x[0].shape, y[0].shape)
     plotCompare(x, y, xlabel='numProc', ylabel='GFLOPS', title=op)
+
+for i, op in enumerate(['Dot', 'AXpY', 'SpMV', 'CGSolver']):
+    dot_speedup = np.array(df_mpi[df_mpi['Op'] == op][['1e6', '1e7', '1e8']].values) / single_data_gflops[i][1:]
+    data = dot_speedup.T[-1]
+    print(*[f"{spdup:.2f}" for spdup in data], sep=' & ')
