@@ -361,4 +361,33 @@ $ TBP_{Polus, SpMV} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/11) = 14\ GFLOPS $
 	\label{fig:tbps}
 \end{figure}
 
+\section{MPI}
+
+\begin{figure}[H]
+	\center
+	\begin{tabular}{cc}
+		\includegraphics[width=85mm]{mpi_polus_dot} & \includegraphics[width=85mm]{mpi_polus_axpy} \\
+		(a) Dot & (б) AXpY \\
+		\includegraphics[width=85mm]{mpi_polus_spmv} & \includegraphics[width=85mm]{mpi_polus_cgsolver} \\
+		(в) SpMV & (г) CGSolver \\[6pt]
+	\end{tabular}
+	\caption{Зависимость производительности от числа нитей (Polus)}
+	\label{fig:mpi_flops_polus} 
+\end{figure}
+
+\newpage
+
+\begin{figure}[H]
+	\center
+	\begin{tabular}{cc}
+		\includegraphics[width=85mm]{compare_dot} & \includegraphics[width=85mm]{compare_axpy} \\
+		(a) Dot & (б) AXpY \\
+		\includegraphics[width=85mm]{compare_spmv} & \includegraphics[width=85mm]{compare_cgsolver} \\
+		(в) SpMV & (г) CGSolver \\[6pt]
+	\end{tabular}
+	\caption{Зависимость производительности от числа нитей (Polus)}
+	\label{fig:mpi_flops_comapre} 
+\end{figure}
+
+
 \end{document}
