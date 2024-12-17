@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
         std::cout << "K2 = " << K2 << std::endl;
         std::cout << "Px = " << Px << std::endl;
         std::cout << "Py = " << Py << std::endl;
+        std::cout << "M = " << omp_get_max_threads() << std::endl;
     }
 
     if (NumProc != Px * Py) {
