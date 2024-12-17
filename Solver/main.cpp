@@ -75,6 +75,15 @@ int main(int argc, char** argv) {
         std::cout << "Py = " << Py << std::endl;
     }
 
+    if (NumProc != Px * Py) {
+        if (MyID == 0) {
+            std::cout << "Number of processes Px*Py doesn't match MPI config" << std::endl;
+        }
+
+        MPI_Finalize();
+        return 0;
+    }
+
     // std::cout << omp_get_max_threads() << std::endl;
     // omp_set_num_threads(omp_get_max_threads() / P0);
     // std::cout << omp_get_max_threads() << std::endl;
