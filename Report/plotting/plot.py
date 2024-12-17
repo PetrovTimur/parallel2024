@@ -28,31 +28,45 @@ def plotMulti(x, y, xlabel=None, ylabel=None, title=''):
         axs.plot(x, y[i], marker='.', markeredgecolor=colors[i], c=colors[i])
         # axs[i].set_xscale('log')
     # axs.set_xscale('log', base=2)
+    # axs.set_yscale('log', base=2)
     axs.set_xlabel(xlabel)
+    plt.tick_params('x', labelsize=6)
     axs.set_ylabel(ylabel)
-    # axs.set_title(title)
-    axs.legend([f'1e{i}' for i in range(5, 9)])
+    axs.set_title(title)
+    axs.legend([f'1e{i}' for i in range(6, 9)])
     axs.xaxis.set_major_formatter(ScalarFormatter())
+    # axs.yaxis.set_major_formatter(ScalarFormatter())
+    axs.yaxis.set_major_locator(MaxNLocator(integer=True))
     axs.set_xticks(x)
+    fig.tight_layout()
 
     # axs.plot([2, 32], [y[-1][0], 16 * y[-1][0]])
     plt.show()
 
 
-def plotSingle2(x, y, xlabel=None, ylabel=None, title=''):
-    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8, 8), sharey=True)
-    colors='cmyk'
-    for i in range(4):
-        axs.plot(x, y[i], marker='o', markeredgecolor=colors[i], c=colors[i])
-    axs.set_xscale('log')
-    axs.set_yscale('log')
+def plotCompare(x, y, xlabel=None, ylabel=None, title=''):
+    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8, 8))
+    colors = 'rgb'
+    for i in range(2):
+        axs.plot(x[i], y[i], marker='.', markeredgecolor=colors[i], c=colors[i])
+
+    # axs.set_xscale('log', base=2)
+    # axs.set_yscale('log', base=2)
+
     axs.set_xlabel(xlabel)
     axs.set_ylabel(ylabel)
     axs.set_title(title)
-    axs.legend(ops)
-    # axs.xaxis.set_major_formatter(ScalarFormatter(useOffset=True))
-    axs.set_xticks(x)
+    axs.legend(['OpenMP', 'MPI'])
 
+    ticks = set(x[0]) | set(x[1])
+    # print(ticks, x[0], x[1])
+    axs.set_xticks(list(ticks))
+    plt.tick_params('x', labelsize=6)
+    axs.xaxis.set_major_formatter(ScalarFormatter())
+    axs.yaxis.set_major_locator(MaxNLocator(integer=True))
+
+    fig.tight_layout()
+    # plt.grid()
     plt.show()
 
 
@@ -136,25 +150,19 @@ def plotSingle2(x, y, xlabel=None, ylabel=None, title=''):
 
 import pandas as pd
 
-df = pd.read_csv('time.csv', index_col=False, sep=',')
+file_path = 'time.csv'
+df = pd.read_csv(file_path, index_col=False, sep=',')
 df_mpi = df[df['Type'] == 'MPI']
 df_omp = df[df['Type'] == 'OpenMP']
-# print(df[df['Op'] == 'Dot'][['1e5', '1e6']].values)
-for op in ['Dot']:
-    plotMulti(df_mpi[df_mpi['Op'] == op]['NumProc']*df_mpi[df_mpi['Op'] == op]['Threads'], np.array(df_mpi[df_mpi['Op'] == op][['1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='Dot')
-# plotMulti(df[df['Op'] == 'AXpY']['NumProc'], np.array(df[df['Op'] == 'AXpY'][['1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='AXpY')
-# plotMulti(df[df['Op'] == 'SpMV']['NumProc'], np.array(df[df['Op'] == 'SpMV'][['1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='SpMV')
-# plotMulti(df[df['Op'] == 'CGSolver']['NumProc'], np.array(df[df['Op'] == 'CGSolver'][['1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title='CGSolver')
 
-# df.insert(0, 'Type', 'MPI')
-# df.to_csv('time.csv', index=False)
+# fig, axs = plt.subplots(4, 1, sharex=True, figsize=(8, 16))
+for i, op in enumerate(['Dot', 'AXpY', 'SpMV', 'CGSolver']):
+    plotMulti(df_mpi[df_mpi['Op'] == op]['NumProc']*df_mpi[df_mpi['Op'] == op]['Threads'], np.array(df_mpi[df_mpi['Op'] == op][['1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title=op)
 
-# df2 = pd.DataFrame(multithread_cgsolve_data_gflops.T[:, 1:], columns=['1e6', '1e7', '1e8'])
-#
-# threads = [2, 4, 8, 16, 32, 40, 60, 80, 120, 160]
-#
-# df2.insert(0, 'Type', 'OpenMP')
-# df2.insert(1, 'NumProc', 1)
-# df2.insert(2, 'Threads', threads)
-# df2.insert(3, 'Op', 'CGSolver')
-# df2.to_csv('omp.csv', index=False)
+for i, op in enumerate(['Dot', 'AXpY', 'SpMV', 'CGSolver']):
+    # print(type((df_omp[df_omp['Op'] == op]['NumProc']*df_omp[df_omp['Op'] == op]['Threads']).values))
+    x = [(df_omp[df_omp['Op'] == op]['NumProc']*df_omp[df_omp['Op'] == op]['Threads']).values, (df_mpi[df_mpi['Op'] == op]['NumProc']*df_mpi[df_mpi['Op'] == op]['Threads']).values]
+    y = [np.array(df_omp[df_omp['Op'] == op][['1e8']].values).squeeze(1), np.array(df_mpi[df_mpi['Op'] == op][['1e8']].values).squeeze(1)]
+    # print(y)
+    # print(x[0].shape, y[0].shape)
+    plotCompare(x, y, xlabel='numProc', ylabel='GFLOPS', title=op)
