@@ -178,7 +178,7 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, 
 #else
 void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
     std::vector<double> &diag) {
-#pragma omp parallel for proc_bind(spread)
+    #pragma omp parallel for proc_bind(spread)
     for (int i = 0; i < ia.size() - 1; i++) {
         double sum = 0;
         int k_i = 0;
@@ -197,7 +197,7 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
         // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
     }
 
-#pragma omp parallel for proc_bind(spread)
+    #pragma omp parallel for proc_bind(spread)
     for (int i = 0; i < b.size(); i++)
         b[i] = std::sin(i);
 }
@@ -218,4 +218,45 @@ void buildMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<double>
             matrix[i][ja[k]] = a[k];
         }
     }
+}
+
+std::pair<int *, int *> transposeCSR(const int *ia, const int *ja, const int Ne, const int Nn) {
+    const int nnz = ia[Ne];
+    auto ia_new = new int[Nn];
+    auto ja_new = new int[nnz];
+
+    // Zero out ia_new
+    for (int i = 0; i <= Nn; i++) {
+        ia_new[i] = 0;
+    }
+
+    // Count the number of entries in each column
+    for (int i = 0; i < nnz; ++i) {
+        ia_new[ja[i] + 1]++;
+    }
+
+    // Compute the cumulative sum to get the new row pointers
+    for (int i = 1; i <= Nn; ++i) {
+        ia_new[i] += ia_new[i - 1];
+    }
+
+    const auto buf = new int[nnz];
+
+    // Zero out buf
+    for (int i = 0; i <= Nn; ++i) {
+        buf[i] = ia_new[i];
+    }
+
+    // Fill the column indices
+    for (int i = 0; i < Ne; ++i) {
+        for (int k = ia[i]; k < ia[i + 1]; ++k) {
+            const int col = ja[k];
+            const int dest_pos = buf[col]++;
+            ja_new[dest_pos] = i;
+        }
+    }
+
+    delete[] buf;
+
+    return std::make_pair(ia_new, ja_new);
 }

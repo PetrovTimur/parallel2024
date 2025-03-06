@@ -19,4 +19,6 @@ void buildAdjacencyMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vecto
 
 void buildMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<std::vector<double>> &matrix);
 
+std::pair<int*, int*> transposeCSR(const int* ia, const int* ja, int Ne, int Nn);
+
 #endif //CSR_H

@@ -4,6 +4,7 @@ set(TESTS
         AXpYCorrectnessTest
         AXpYParallelTest
         SpMVCorrectnessTest
+        CSRTransposeTest
 )
 
 if (NOT USE_MPI)
@@ -11,7 +12,14 @@ if (NOT USE_MPI)
         #    cmake_path(GET MEASURE_SOURCE STEM MEASURE)
         set(TEST_SOURCE ${TEST}.cpp)
 
-        add_executable(${TEST} ${TEST_SOURCE})
+        if (${TEST} MATCHES ".*Transpose.*")
+            add_executable(${TEST} ${TEST_SOURCE} ${PROJECT_SOURCE_DIR}/Solver/csr.cpp)
+            target_include_directories(${TEST} PRIVATE ${PROJECT_SOURCE_DIR}/Solver)
+        else ()
+            add_executable(${TEST} ${TEST_SOURCE})
+        endif ()
+
+#        add_executable(${TEST} ${TEST_SOURCE})
         add_dependencies(${TEST} MathFunc)
         target_link_libraries(${TEST} PUBLIC MathFunc)
         set_target_properties(${TEST} PROPERTIES FOLDER "Tests")
