@@ -5,6 +5,9 @@
 #include <iostream>
 #include <numeric>
 #include <ostream>
+#include <vector>
+#include <utility>
+#include <unordered_set>
 
 #include "Utilities/input.h"
 
@@ -203,7 +206,7 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
 }
 #endif
 
-void buildAdjacencyMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<std::vector<bool>> &matrix) {
+void buildMatrixFromCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<std::vector<bool>> &matrix) {
     for (int i = 0; i < ia.size() - 1; i++) {
         for (int k = ia[i]; k < ia[i + 1]; k++) {
             matrix[i][ja[k]] = true;
@@ -211,7 +214,7 @@ void buildAdjacencyMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vecto
     }
 }
 
-void buildMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
+void buildFilledMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
     std::vector<std::vector<double>> &matrix) {
     for (int i = 0; i < ia.size() - 1; i++) {
         for (int k = ia[i]; k < ia[i + 1]; k++) {
@@ -222,7 +225,7 @@ void buildMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<double>
 
 std::pair<int *, int *> transposeCSR(const int *ia, const int *ja, const int Ne, const int Nn) {
     const int nnz = ia[Ne];
-    auto ia_new = new int[Nn];
+    auto ia_new = new int[Nn + 1];
     auto ja_new = new int[nnz];
 
     // Zero out ia_new
@@ -259,4 +262,43 @@ std::pair<int *, int *> transposeCSR(const int *ia, const int *ja, const int Ne,
     delete[] buf;
 
     return std::make_pair(ia_new, ja_new);
+}
+
+std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne,
+    const int Ne, const int Nn) {
+    // std::vector<std::unordered_set<int>> adjacency_list(Ne);
+    auto adjacency_list = new std::unordered_set<int>[Ne];
+
+    // Build adjacency list for elements
+    for (int node = 0; node < Nn; ++node) {
+        for (int k = ia_ne[node]; k < ia_ne[node + 1]; ++k) {
+            const int element1 = ja_ne[k];
+            for (int l = ia_ne[node]; l < ia_ne[node + 1]; ++l) {
+                const int element2 = ja_ne[l];
+                if (element1 != element2) {
+                    adjacency_list[element1].insert(element2);
+                }
+            }
+        }
+    }
+
+    // Convert adjacency list to CSR format
+    int nnz = 0;
+    for (const auto& neighbors : adjacency_list) {
+        nnz += neighbors.size();
+    }
+
+    auto ia_adj = new int[Ne + 1];
+    auto ja_adj = new int[nnz];
+
+    ia_adj[0] = 0;
+    int index = 0;
+    for (int i = 0; i < Ne; ++i) {
+        ia_adj[i + 1] = ia_adj[i] + adjacency_list[i].size();
+        for (const int neighbor : adjacency_list[i]) {
+            ja_adj[index++] = neighbor;
+        }
+    }
+
+    return std::make_pair(ia_adj, ja_adj);
 }
