@@ -25,26 +25,31 @@ def plotMulti(x, y, xlabel=None, ylabel=None, title=''):
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8, 8), sharey=True)
     colors = 'cmyk'
     for i in range(3):
-        axs.plot(x, y[i], marker='.', markeredgecolor=colors[i], c=colors[i])
+        axs.plot(x[0]*x[1], y[i], marker='.', markeredgecolor=colors[i], c=colors[i])
         # axs[i].set_xscale('log')
-    # axs.set_xscale('log', base=2)
-    # axs.set_yscale('log', base=2)
+    axs.set_xscale('log', base=2)
+    axs.set_yscale('log', base=2)
     axs.set_xlabel(xlabel)
     plt.tick_params('x', labelsize=6)
     axs.set_ylabel(ylabel)
     axs.set_title(title)
     axs.legend([f'1e{i}' for i in range(6, 9)])
     axs.xaxis.set_major_formatter(ScalarFormatter())
-    # axs.yaxis.set_major_formatter(ScalarFormatter())
-    axs.yaxis.set_major_locator(MaxNLocator(integer=True))
-    axs.set_xticks(x)
-    fig.tight_layout()
+    labels = [f'{proc}x{thread}' for proc, thread in x.T]
+    # print(labels)
+    # axs.xaxis.set_major_formatter(FormatStrFormatter())
+    axs.yaxis.set_major_formatter(ScalarFormatter())
+    # axs.yaxis.set_major_locator(MaxNLocator(integer=True))
+    axs.set_xticks(x[0]*x[1])
+    axs.set_xticklabels(labels)
 
-    # axs.plot([2, 32], [y[-1][0], 16 * y[-1][0]])
+    axs.axvline(x=40, ymin=0.02, ymax=0.98, linestyle='--', label='test', c='red')
+
+    fig.tight_layout()
     plt.show()
 
 
-def plotCompare(x, y, xlabel=None, ylabel=None, title=''):
+def plotCompare(x, y, xlabel=None, ylabel=None, title='', labels=None):
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8, 8))
     colors = 'rgb'
     for i in range(2):
@@ -53,20 +58,37 @@ def plotCompare(x, y, xlabel=None, ylabel=None, title=''):
     # axs.set_xscale('log', base=2)
     # axs.set_yscale('log', base=2)
 
-    axs.set_xlabel(xlabel)
+    axs.set_xlabel('Threads (OpenMP)')
     axs.set_ylabel(ylabel)
     axs.set_title(title)
     axs.legend(['OpenMP', 'MPI'])
 
-    ticks = set(x[0]) | set(x[1])
+    # ticks = set(x[0]) | set(x[1])
     # print(ticks, x[0], x[1])
-    axs.set_xticks(list(ticks))
-    plt.tick_params('x', labelsize=6)
+    axs.set_xticks(x[0])
+    axs.set_xticklabels(x[0])
     axs.xaxis.set_major_formatter(ScalarFormatter())
-    axs.yaxis.set_major_locator(MaxNLocator(integer=True))
+    # axs.yaxis.set_major_locator(MaxNLocator(integer=True))
+    plt.tick_params('x', labelsize=6)
+
+    secax = axs.secondary_xaxis('top')
+    secax.set_xlabel('numProc x Threads (MPI)')
+    secax.minorticks_off()
+    secax.set_xlim(axs.get_xlim())
+    secax.set_xticks(x[1])
+    secax.set_xticklabels(x[1])
+    secax.xaxis.set_major_formatter(ScalarFormatter())
+    secax.tick_params('x', labelsize=6)
+
+    labels = [f'{proc}x{thread}' for proc, thread in labels.T]
+    secax.set_xticklabels(labels)
+
+    labels1, labels2 = axs.xaxis.get_ticklabels(), secax.xaxis.get_ticklabels()
+    for i in [0, 1, 2, 4]:
+        labels1[i].set_visible(False)
+        labels2[i].set_visible(False)
 
     fig.tight_layout()
-    # plt.grid()
     plt.show()
 
 
@@ -157,17 +179,18 @@ df_omp = df[df['Type'] == 'OpenMP']
 
 # fig, axs = plt.subplots(4, 1, sharex=True, figsize=(8, 16))
 for i, op in enumerate(['Dot', 'AXpY', 'SpMV', 'CGSolver']):
-    plotMulti(df_mpi[df_mpi['Op'] == op]['NumProc']*df_mpi[df_mpi['Op'] == op]['Threads'], np.array(df_mpi[df_mpi['Op'] == op][['1e6', '1e7', '1e8']].values).T, xlabel='numProc', ylabel='GFLOPS', title=op)
+    plotMulti(np.stack((df_mpi[df_mpi['Op'] == op]['NumProc'].to_numpy(), df_mpi[df_mpi['Op'] == op]['Threads'].to_numpy())), np.array(df_mpi[df_mpi['Op'] == op][['1e6', '1e7', '1e8']].values).T, xlabel='numProc x Thread', ylabel='GFLOPS', title=op)
 
-for i, op in enumerate(['Dot', 'AXpY', 'SpMV', 'CGSolver']):
-    # print(type((df_omp[df_omp['Op'] == op]['NumProc']*df_omp[df_omp['Op'] == op]['Threads']).values))
-    x = [(df_omp[df_omp['Op'] == op]['NumProc']*df_omp[df_omp['Op'] == op]['Threads']).values, (df_mpi[df_mpi['Op'] == op]['NumProc']*df_mpi[df_mpi['Op'] == op]['Threads']).values]
-    y = [np.array(df_omp[df_omp['Op'] == op][['1e8']].values).squeeze(1), np.array(df_mpi[df_mpi['Op'] == op][['1e8']].values).squeeze(1)]
-    # print(y)
-    # print(x[0].shape, y[0].shape)
-    plotCompare(x, y, xlabel='numProc', ylabel='GFLOPS', title=op)
+# for i, op in enumerate(['Dot', 'AXpY', 'SpMV', 'CGSolver']):
+#     # print(type((df_omp[df_omp['Op'] == op]['NumProc']*df_omp[df_omp['Op'] == op]['Threads']).values))
+#     x = [(df_omp[df_omp['Op'] == op]['NumProc']*df_omp[df_omp['Op'] == op]['Threads']).values, (df_mpi[df_mpi['Op'] == op]['NumProc']*df_mpi[df_mpi['Op'] == op]['Threads']).values]
+#     y = [np.array(df_omp[df_omp['Op'] == op][['1e8']].values).squeeze(1), np.array(df_mpi[df_mpi['Op'] == op][['1e8']].values).squeeze(1)]
+#     # print(y)
+#     # print(x[0].shape, y[0].shape)
+#     labels = np.stack((df_mpi[df_mpi['Op'] == op]['NumProc'].to_numpy(), df_mpi[df_mpi['Op'] == op]['Threads'].to_numpy()))
+#     plotCompare(x, y, xlabel='numProc', ylabel='GFLOPS', title=op, labels=labels)
 
-for i, op in enumerate(['Dot', 'AXpY', 'SpMV', 'CGSolver']):
-    dot_speedup = np.array(df_mpi[df_mpi['Op'] == op][['1e6', '1e7', '1e8']].values) / single_data_gflops[i][1:]
-    data = dot_speedup.T[-1]
-    print(*[f"{spdup:.2f}" for spdup in data], sep=' & ')
+# for i, op in enumerate(['Dot', 'AXpY', 'SpMV', 'CGSolver']):
+#     dot_speedup = np.array(df_mpi[df_mpi['Op'] == op][['1e6', '1e7', '1e8']].values) / single_data_gflops[i][1:]
+#     data = dot_speedup.T[-1]
+#     print(*[f"{spdup:.2f}" for spdup in data], sep=' & ')
