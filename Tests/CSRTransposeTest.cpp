@@ -1,5 +1,4 @@
 #include "Solver/csr.h"
-#include <cassert>
 #include <iostream>
 #include <vector>
 

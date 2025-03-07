@@ -264,8 +264,7 @@ std::pair<int *, int *> transposeCSR(const int *ia, const int *ja, const int Ne,
     return std::make_pair(ia_new, ja_new);
 }
 
-std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne,
-    const int Ne, const int Nn) {
+std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
     // std::vector<std::unordered_set<int>> adjacency_list(Ne);
     auto adjacency_list = new std::unordered_set<int>[Ne];
 
@@ -284,8 +283,8 @@ std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_en, const int *ja_
 
     // Convert adjacency list to CSR format
     int nnz = 0;
-    for (const auto& neighbors : adjacency_list) {
-        nnz += neighbors.size();
+    for (int i = 0; i < Ne; ++i) {
+        nnz += adjacency_list[i].size();
     }
 
     auto ia_adj = new int[Ne + 1];
@@ -295,10 +294,17 @@ std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_en, const int *ja_
     int index = 0;
     for (int i = 0; i < Ne; ++i) {
         ia_adj[i + 1] = ia_adj[i] + adjacency_list[i].size();
-        for (const int neighbor : adjacency_list[i]) {
+        std::vector<int> sorted_neighbors(adjacency_list[i].begin(), adjacency_list[i].end());
+        std::sort(sorted_neighbors.begin(), sorted_neighbors.end());
+        for (const int neighbor : sorted_neighbors) {
             ja_adj[index++] = neighbor;
         }
+        // for (const int neighbor : adjacency_list[i]) {
+        //     ja_adj[index++] = neighbor;
+        // }
     }
+
+    delete[] adjacency_list;
 
     return std::make_pair(ia_adj, ja_adj);
 }
