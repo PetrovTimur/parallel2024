@@ -28,4 +28,12 @@ void printVector(std::vector<T> &a) {
     std::cout << std::endl;
 }
 
+template <typename T>
+void printArray(T* a, const int size) {
+    for (int i = 0; i < size; i++) {
+        std::cout << a[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
 #endif //INPUT_H
