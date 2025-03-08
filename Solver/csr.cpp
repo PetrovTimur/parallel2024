@@ -108,7 +108,7 @@ void makeCSR(int Nx, int Ny, int K1, int K2, int i_start, int i_end, int j_start
 void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<int> &ja) {
     int cycle_length = K1 + K2;
     std::vector<int> extras(Ny + 1);
-#pragma omp parallel for proc_bind(spread)
+    #pragma omp parallel for proc_bind(spread)
     for (int i = 0; i < Ny + 1; i++) {
         extras[i] = i * Nx / cycle_length * K2 + std::max(0, i * Nx % cycle_length - K1);
         // std::cout << extras[i] << " ";
@@ -116,7 +116,7 @@ void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<i
     // std::cout << std::endl;
 
     // int k = 0;
-#pragma omp parallel for proc_bind(spread)
+    #pragma omp parallel for proc_bind(spread)
     for (int i = 0; i < Ny + 1; i++) {
         // std::cout << i << " " << k << std::endl;
         int k = 2 * Nx * i + (Nx + 1) * std::max(0, 2 * i - 1) + i * (Nx + 1) + (i > 0 ? extras[i] + extras[i - 1] : 0);
@@ -150,7 +150,21 @@ void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<i
 }
 
 #endif
+std::pair<int *, int *> makeIncidenceMatrixCSR(int Nx, int Ny, int K1, int K2) {
+    auto ia = new int[Nx * Ny + 1];
+    auto ja = new int[4 * Nx * Ny];
 
+    for (int i = 0; i < Nx * Ny; i++) {
+        ia[i + 1] = 4 * (i + 1);
+
+        ja[4 * i] = i + i / Nx;
+        ja[4 * i + 1] = i + i / Nx + 1;
+        ja[4 * i + 2] = (i + Nx + 1) + i / Nx;
+        ja[4 * i + 3] = (i + Nx + 1) + i / Nx + 1;
+    }
+
+    return std::make_pair(ia, ja);
+}
 
 #ifdef USE_MPI
 void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, std::vector<double> &a, std::vector<double> &b,

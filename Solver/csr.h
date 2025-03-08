@@ -8,6 +8,8 @@ void makeCSR(int Nx, int Ny, int K1, int K2, int i_start, int i_end, int j_start
 void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<int> &ja);
 #endif
 
+std::pair<int*, int*> makeIncidenceMatrixCSR(int Nx, int Ny, int K1, int K2);
+
 #ifdef USE_MPI
 void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, std::vector<double> &a, std::vector<double> &b,
     std::vector<double> &diag);
