@@ -150,18 +150,40 @@ void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<i
 }
 
 #endif
-std::pair<int *, int *> makeIncidenceMatrixCSR(int Nx, int Ny, int K1, int K2) {
-    auto ia = new int[Nx * Ny + 1];
-    auto ja = new int[4 * Nx * Ny];
+std::pair<int *, int *> makeIncidenceMatrixCSR(int Nx, int Ny, int K1, int K2, int Ne, int nnz) {
+    auto ia = new int[Ne + 1];
+    auto ja = new int[nnz];
 
-    for (int i = 0; i < Nx * Ny; i++) {
-        ia[i + 1] = 4 * (i + 1);
+    int offset = 0;
+    for (int cell = 0; cell < Nx * Ny; cell++) {
+        if (cell % (K1 + K2) < K1) {
+            int element_number = cell + offset;
+            ia[element_number + 1] = ia[element_number] + 4;
 
-        ja[4 * i] = i + i / Nx;
-        ja[4 * i + 1] = i + i / Nx + 1;
-        ja[4 * i + 2] = (i + Nx + 1) + i / Nx;
-        ja[4 * i + 3] = (i + Nx + 1) + i / Nx + 1;
+            ja[ia[element_number]] = cell + cell / Nx;
+            ja[ia[element_number] + 1] = cell + cell / Nx + 1;
+            ja[ia[element_number] + 2] = (cell + Nx + 1) + cell / Nx;
+            ja[ia[element_number] + 3] = (cell + Nx + 1) + cell / Nx + 1;
+        } else {
+            int element_number = cell + offset;
+            ia[element_number + 1] = ia[element_number] + 3;
+            ja[ia[element_number]] = cell + cell / Nx;
+            ja[ia[element_number] + 1] = cell + cell / Nx + 1;
+            ja[ia[element_number] + 2] = (cell + Nx + 1) + cell / Nx;
+            // ja[ia[element_number] + 3] = (cell + Nx + 1) + cell / Nx + 1;
+
+            element_number = cell + ++offset;
+            ia[element_number + 1] = ia[element_number] + 3;
+            // ja[ia[element_number]] = cell + cell / Nx;
+            ja[ia[element_number]] = cell + cell / Nx + 1;
+            ja[ia[element_number] + 1] = (cell + Nx + 1) + cell / Nx;
+            ja[ia[element_number] + 2] = (cell + Nx + 1) + cell / Nx + 1;
+
+            // offset++;
+        }
     }
+
+
 
     return std::make_pair(ia, ja);
 }
