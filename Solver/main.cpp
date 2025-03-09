@@ -218,6 +218,7 @@ int main(int argc, char** argv) {
     std::cout << "Convergence required "  << iterations << " iterations\n";
 
     out.close();
+    delete[] stats;
 
     #ifdef USE_DEBUG_MODE
     std::cout << "res: ";

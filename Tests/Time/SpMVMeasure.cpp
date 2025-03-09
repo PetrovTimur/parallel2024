@@ -162,6 +162,8 @@ int main(int argc, char** argv) {
         double average_time = aggregate_time / runs;
 
         std::cout << 2 * a.size() / (average_time * 1e9) << ", ";
+
+        delete[] stats;
     }
     std::cout << std::endl;
     #endif
