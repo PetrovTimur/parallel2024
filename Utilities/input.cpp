@@ -1,4 +1,5 @@
 #include "input.h"
+#include <fstream>
 
 #ifndef USE_MPI
 int *input(int Nx, int Ny, int K1, int K2) {
@@ -25,6 +26,33 @@ int *input(int Nx, int Ny, int K1, int K2) {
     array[4] = nonzero_elements;
 
     return array;
+}
+
+std::tuple<int, int, int, int *> readData(const std::string &elementsTxtPath, const std::string &elementsDatPath) {
+    // Read the first file
+    std::ifstream elementsTxt(elementsTxtPath);
+    if (!elementsTxt.is_open()) {
+        throw std::runtime_error("Failed to open elements.txt");
+    }
+
+    int Nn, Ne, M;
+    std::string dummy;
+    elementsTxt >> dummy >> Nn;
+    elementsTxt >> dummy >> Ne;
+    elementsTxt >> dummy >> M;
+    elementsTxt.close();
+
+    // Read the second file
+    std::ifstream elementsDat(elementsDatPath, std::ios::binary);
+    if (!elementsDat.is_open()) {
+        throw std::runtime_error("Failed to open elements.dat");
+    }
+
+    int *data = new int[Ne * M];
+    elementsDat.read(reinterpret_cast<char*>(data), Ne * M * sizeof(int));
+    elementsDat.close();
+
+    return std::make_tuple(Nn, Ne, M, data);
 }
 #else
 

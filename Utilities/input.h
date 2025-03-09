@@ -10,6 +10,8 @@ std::tuple<int, int, int, int, int, int, int, int, int, int> input(int Nx, int N
 int *input(int Nx, int Ny, int K1, int K2);
 #endif
 
+std::tuple<int, int, int, int*> readData(const std::string &elementsTxtPath, const std::string &elementsDatPath);
+
 template <typename T>
 void printMatrix(std::vector<std::vector<T>> &matrix) {
     for (int i = 0; i < matrix.size(); i++) {
