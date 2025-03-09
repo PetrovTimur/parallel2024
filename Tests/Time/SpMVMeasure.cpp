@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
         res.resize(nodes);
 
         makeCSR(Nx, Ny, K1, K2, ia, ja);
-        fillCSR(ia, ja, a, b, diag);
+        fillCSR(ia.data(), ja.data(), a.data(), b.data(), diag.data(), nodes);
 
         int runs = 1e7 / k + 1;
         double aggregate_time = 0;

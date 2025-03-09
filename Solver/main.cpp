@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
     printMatrix(matrix);
     #endif
 
-    fillCSR(ia, ja, a, b, diag);
+    fillCSR(ia.data(), ja.data(), a.data(), b.data(), diag.data(), nodes);
 
     #ifdef USE_DEBUG_MODE
     std::cout << "IA: ";

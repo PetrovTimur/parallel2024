@@ -215,10 +215,9 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, 
         b[i] = std::sin(L2G[i]);
 }
 #else
-void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
-    std::vector<double> &diag) {
+void fillCSR(const int *ia, const int *ja, double *a, double *b, double *diag, const int size) {
     #pragma omp parallel for proc_bind(spread)
-    for (int i = 0; i < ia.size() - 1; i++) {
+    for (int i = 0; i < size; i++) {
         double sum = 0;
         int k_i = 0;
         for (int k = ia[i]; k < ia[i + 1]; k++) {
@@ -237,7 +236,7 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
     }
 
     #pragma omp parallel for proc_bind(spread)
-    for (int i = 0; i < b.size(); i++)
+    for (int i = 0; i < size; i++)
         b[i] = std::sin(i);
 }
 #endif
