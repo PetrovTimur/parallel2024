@@ -120,9 +120,13 @@ int main(int argc, char **argv) {
         int K2 = 23;
         int Nx = 2000;
         int Ny = k / Nx / 5;
-        std::tuple<int, int> t = input(Nx, Ny, K1, K2);
-        int nodes = std::get<0>(t);
-        int nonzero_elements =std::get<1>(t);
+
+        auto stats = input(Nx, Ny, K1, K2);
+        // std::tuple<int, int> t = input(Nx, Ny, K1, K2);
+        // int nodes = std::get<0>(t);
+        // int nonzero_elements = std::get<1>(t);
+        int nodes = stats[1];
+        int nonzero_elements = stats[4];
 
         ia.resize(nodes + 1);
         ja.resize(nonzero_elements);
