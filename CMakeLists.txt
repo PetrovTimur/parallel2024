@@ -12,14 +12,13 @@ set(TOPLEVEL_INCLUDE_DIR ${PROJECT_SOURCE_DIR})
 add_compile_definitions(PROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\")
 
 option(ENABLE_TESTS "Enable automatic testing" ON)
-
-
 option(USE_DEBUG_MODE "Use debug tools" OFF)
+option(USE_MPI "Use MPI" OFF)
+
 if (USE_DEBUG_MODE)
     add_compile_definitions(USE_DEBUG_MODE)
 endif ()
 
-option(USE_MPI "Use MPI" OFF)
 if (USE_MPI)
     add_compile_definitions(USE_MPI)
 #    set(ENABLE_TESTS OFF)
