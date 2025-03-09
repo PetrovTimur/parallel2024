@@ -6,6 +6,8 @@ set(TESTS
         SpMVCorrectnessTest
         CSRTransposeTest
         CSRBuildAdjacencyMatrixTest
+        CSRIncidenceTest
+        ReadDataTest
 )
 
 if (NOT USE_MPI)
@@ -13,8 +15,8 @@ if (NOT USE_MPI)
         #    cmake_path(GET MEASURE_SOURCE STEM MEASURE)
         set(TEST_SOURCE ${TEST}.cpp)
 
-        if (${TEST} MATCHES ".*CSR.*")
-            add_executable(${TEST} ${TEST_SOURCE} ${PROJECT_SOURCE_DIR}/Solver/csr.cpp)
+        if (${TEST} MATCHES ".*CSR.*" OR ${TEST} MATCHES ".*Data.*")
+            add_executable(${TEST} ${TEST_SOURCE} ${PROJECT_SOURCE_DIR}/Solver/csr.cpp ${PROJECT_SOURCE_DIR}/Utilities/input.cpp)
             target_include_directories(${TEST} PRIVATE ${PROJECT_SOURCE_DIR}/Solver)
         else ()
             add_executable(${TEST} ${TEST_SOURCE})
