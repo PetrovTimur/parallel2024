@@ -1,6 +1,7 @@
 #include "input.h"
 
-std::tuple<int, int> input(int Nx, int Ny, int K1, int K2) {
+#ifndef USE_MPI
+int *input(int Nx, int Ny, int K1, int K2) {
     // std::cout << "Hello, World!" << std::endl;
     // std::cout << Nx << " " << Ny << " " << K1 << " " << K2 << std::endl;
 
@@ -16,9 +17,16 @@ std::tuple<int, int> input(int Nx, int Ny, int K1, int K2) {
     int total_edges = Nx * (Ny + 1) + Ny * (Nx + 1) + total_ones;
     int nonzero_elements = 2 * total_edges + nodes;
 
-    return std::make_tuple(nodes, nonzero_elements);
-}
+    auto array = new int[5];
+    array[0] = total_cells;
+    array[1] = nodes;
+    array[2] = total_ones;
+    array[3] = total_edges;
+    array[4] = nonzero_elements;
 
+    return array;
+}
+#else
 
 std::tuple<int, int, int, int, int, int, int, int, int, int> input(int Nx, int Ny, int Px, int Py, int MyID, std::vector<int> &L2G, std::vector<int> &G2L, std::vector<int> &Part) {
     int MyID_j = MyID % Px;
@@ -120,6 +128,7 @@ std::tuple<int, int, int, int, int, int, int, int, int, int> input(int Nx, int N
         }
     }
 
+
     #ifdef USE_DEBUG_MODE
     if (MyID == 0) {
         std::cout << "Part size: " << Part.size() << std::endl;
@@ -132,3 +141,4 @@ std::tuple<int, int, int, int, int, int, int, int, int, int> input(int Nx, int N
 
     return std::make_tuple(i_start,  i_end, i_count,j_start, j_end, j_count, top_halo, right_halo, bottom_halo, left_halo);
 }
+#endif

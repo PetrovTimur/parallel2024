@@ -169,9 +169,12 @@ int main(int argc, char** argv) {
     std::cout << "K1 = " << K1 << std::endl;
     std::cout << "K2 = " << K2 << std::endl;
 
-    std::tuple<int, int> t = input(Nx, Ny, K1, K2);
-    int nodes = std::get<0>(t);
-    int nonzero_elements =std::get<1>(t);
+    auto stats = input(Nx, Ny, K1, K2);
+    // std::tuple<int, int> t = input(Nx, Ny, K1, K2);
+    // int nodes = std::get<0>(t);
+    // int nonzero_elements = std::get<1>(t);
+    int nodes = stats[1];
+    int nonzero_elements = stats[4];
 
     std::vector<int> ia(nodes + 1);
     std::vector<int> ja(nonzero_elements);
