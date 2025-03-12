@@ -7,9 +7,6 @@
 #include "Kernels/mathfunc.h"
 #ifdef USE_MPI
 #include "Utilities/coms.h"
-#endif
-
-#ifdef USE_MPI
 #include <mpi.h>
 #endif
 
@@ -85,48 +82,56 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
     return k;
 }
 #else
-int solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
-          std::vector<double> &diag, std::vector<double> &res) {
-    int N = ia.size() - 1;
-    double eps = 1e-3;
-    int maxit = 100000;
+int solve(const int *ia, const int *ja, const double *a, const double *b, const double *diag, const int size, double *res) {
+    const int N = size - 1;
+    const double eps = 1e-3;
+    const int maxit = 100000;
 
-    std::vector<double> x(N);
-    std::vector<double> r(b);
-    std::vector<double> z(N);
-    std::vector<double> p(N);
-    std::vector<double> q(N);
-    std::vector<double> rho(2);
+    const auto z = new double[N];
+    const auto p = new double[N];
+
+    const auto q = new double[N];
+    arrInit(q, 0, N);
+
+    const auto x = new double[N];
+    arrInit(x, 0, N);
+
+    const auto r = new double[N];
+    arrCopy(r, b, N);
+
+    auto rho = new double[2];
+
     double buf;
     int k = 0;
 
     do {
         k++;
-        #pragma omp parallel for proc_bind(spread)
+
+        #pragma omp parallel for default(none) shared(z, r, diag, N)
         for (int i = 0; i < N; i++) {
             z[i] = r[i] / diag[i];
         }
 
         rho[0] = rho[1];
 
-        dot(r, z, rho[1]);
+        dot(r, z,N, rho[1]);
 
         if (k == 1)
-            #pragma omp parallel for proc_bind(spread)
+            #pragma omp parallel for default(none) shared(p, z, N)
             for (int i = 0; i < N; i++)
                 p[i] = z[i];
         else {
-            double beta = rho[1] / rho[0];
-            axpy(beta, p, z, p);
+            const double beta = rho[1] / rho[0];
+            axpy(beta, p, z, N, p);
         }
 
-        spMV(ia, ja, a, p, q);
+        spMV(ia, ja, a, p, size, q);
 
-        dot(p, q, buf);
+        dot(p, q, N, buf);
         double alpha = rho[1] / buf;
 
-        axpy(alpha, p, x, x);
-        axpy(-alpha, q, r, r);
+        axpy(alpha, p, x, N, x);
+        axpy(-alpha, q, r, N, r);
 
         #ifdef USE_DEBUG_MODE
         std::cout << " k = " << k << std::endl;
@@ -137,9 +142,16 @@ int solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, st
     }
     while (rho[1] > eps * eps && k < maxit);
 
-    #pragma omp parallel for proc_bind(spread)
+    #pragma omp parallel for default(none) shared(res, x, N)
     for (int i = 0; i < N; i++)
         res[i] = x[i];
+
+    delete[] z;
+    delete[] p;
+    delete[] q;
+    delete[] x;
+    delete[] r;
+    delete[] rho;
 
     // std::cout << "k = " << k << std::endl;
     return k;

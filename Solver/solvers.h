@@ -10,8 +10,8 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
         std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
         std::vector<double> &diag, std::vector<double> &res);
 #else
-int solve(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
-          std::vector<double> &diag, std::vector<double> &res);
+int solve(const int *ia, const int *ja, const double *a, const double *b,
+          const double *diag, int size, double *res);
 #endif
 
 

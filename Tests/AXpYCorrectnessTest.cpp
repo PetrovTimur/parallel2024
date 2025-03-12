@@ -8,8 +8,8 @@ int main() {
     std::vector<double> res(x.size());
     double alpha = -0.5, norm;
 
-    axpy(alpha, x, y, res);
-    dot(res, res, norm);
+    axpy(alpha, x.data(), y.data(), x.size(), res.data());
+    dot(res.data(), res.data(), res.size(), norm);
     bool fl = norm == 0;
 
 
@@ -19,12 +19,12 @@ int main() {
     res.resize(1e6);
     alpha = 373;
 
-    for (int i = 0; i < x.size(); i++) {
+    for (std::size_t i = 0; i < x.size(); i++) {
         x[i] = 1. / (alpha * (i + 1));
         y[i] = i + 1;
     }
-    axpy(-alpha, x, y, res);
-    dot(res, res, norm);
+    axpy(-alpha, x.data(), y.data(), x.size(), res.data());
+    dot(res.data(), res.data(), res.size(), norm);
     fl = fl && norm == 0;
 
     return fl;

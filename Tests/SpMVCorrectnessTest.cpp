@@ -20,12 +20,12 @@ int main() {
     double norm_res, norm_ans;
 
     // SpMV solution
-    spMV(ia, ja, a, x, res);
-    dot(res, res, norm_res);
+    spMV(ia.data(), ja.data(), a.data(), x.data(), ia.size(), res.data());
+    dot(res.data(), res.data(), res.size(), norm_res);
 
     //Correct answer
     std::vector<double> ans = {51, 51, 57, 71, 95};
-    dot(ans, ans, norm_ans);
+    dot(ans.data(), ans.data(), ans.size(), norm_ans);
 
     return norm_res != norm_ans;
 }

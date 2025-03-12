@@ -8,7 +8,7 @@
 #include <mpi.h>
 #endif
 
-int main(int argc, char **argv) {
+int main() {
     #ifdef USE_MPI
     omp_set_num_threads(omp_get_max_threads());
 
@@ -82,7 +82,6 @@ int main(int argc, char **argv) {
 
     std::vector<double> x;
     std::vector<double> y;
-    double res;
 
     int T  = omp_get_max_threads();
     std::cout << "T = " << T << std::endl;
@@ -101,9 +100,10 @@ int main(int argc, char **argv) {
         int runs = 1e9 / k + 1;
         double aggregate_time = 0;
         for (int p = 0; p < runs; ++p) {
+            double res;
             // Calculate
             double start = omp_get_wtime();
-            dot(x, y, res);
+            dot(x.data(), y.data(), x.size(), res);
             double end = omp_get_wtime();
 
             aggregate_time += end - start;

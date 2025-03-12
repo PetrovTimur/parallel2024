@@ -183,8 +183,6 @@ std::pair<int *, int *> makeIncidenceMatrixCSR(int Nx, int Ny, int K1, int K2, i
         }
     }
 
-
-
     return std::make_pair(ia, ja);
 }
 

@@ -11,7 +11,7 @@ int main() {
     double norm_single, norm_multi;
     double alpha = 0.5163;
 
-    for (int i = 0; i < x.size(); i++) {
+    for (std::size_t i = 0; i < x.size(); i++) {
         x[i] = std::sin(i);
         y[i] = std::cos(i);
     }
@@ -20,13 +20,13 @@ int main() {
 
     // Single-thread run
     omp_set_num_threads(1);
-    axpy(alpha, x, y, z);
-    dot(z, z, norm_single);
+    axpy(alpha, x.data(), y.data(), x.size(), z.data());
+    dot(z.data(), z.data(), z.size(), norm_single);
 
     //Multithread run
     omp_set_num_threads(max_threads);
-    axpy(alpha, x, y, z);
-    dot(z, z, norm_multi);
+    axpy(alpha, x.data(), y.data(), x.size(), z.data());
+    dot(z.data(), z.data(), z.size(), norm_multi);
 
     return fabs(norm_single - norm_multi) > 1e-3;
 }

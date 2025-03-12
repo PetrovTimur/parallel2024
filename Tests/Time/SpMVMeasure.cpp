@@ -12,7 +12,7 @@
 #include "Utilities/coms.h"
 #endif
 
-int main(int argc, char** argv) {
+int main() {
     #ifdef USE_MPI
     omp_set_num_threads(omp_get_max_threads());
 
@@ -131,12 +131,9 @@ int main(int argc, char** argv) {
         int Nx = 1000;
         int Ny = k / Nx / 5;
 
-        auto stats = input(Nx, Ny, K1, K2);
-        // std::tuple<int, int> t = input(Nx, Ny, K1, K2);
-        // int nodes = std::get<0>(t);
-        // int nonzero_elements = std::get<1>(t);
-        int nodes = stats[1];
-        int nonzero_elements = stats[4];
+        const auto stats = input(Nx, Ny, K1, K2);
+        const int nodes = stats[1];
+        const int nonzero_elements = stats[4];
 
         ia.resize(nodes + 1);
         ja.resize(nonzero_elements);
@@ -153,7 +150,7 @@ int main(int argc, char** argv) {
         for (int p = 0; p < runs; ++p) {
             // Calculate
             double start = omp_get_wtime();
-            spMV(ia, ja, a, b, res);
+            spMV(ia.data(), ja.data(), a.data(), b.data(), ia.size(), res.data());
             double end = omp_get_wtime();
 
             aggregate_time += end - start;

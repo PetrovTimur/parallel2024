@@ -2,18 +2,18 @@
 #define MATHFUNC_H
 #include <vector>
 
-void dot(std::vector<double> &x, std::vector<double> &y, double &res);
+void dot(const double *x, const double *y, int size, double &res);
 
 #ifdef USE_MPI
 void spMV(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b, std::vector<double> &b_halo, std::vector<double> &res);
 #else
-void spMV(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b, std::vector<double> &res);
+void spMV(const int *ia, const int *ja, const double *a, const double *b, int size, double *res);
 #endif
 
-void axpy(double a, std::vector<double> &x, std::vector<double> &y, std::vector<double> &res);
+void axpy(double a, const double *x, const double *y, int size, double *res);
 
-void vecCopy(std::vector<double> &x, std::vector<double> &y);
+void arrCopy(double *y, const double *x, int size);
 
-void vecInit(std::vector<double> &x, double a);
+void arrInit(double *x, double a, int size);
 
 #endif //MATHFUNC_H

@@ -170,9 +170,6 @@ int main(int argc, char** argv) {
     std::cout << "K2 = " << K2 << std::endl;
 
     auto stats = input(Nx, Ny, K1, K2);
-    // std::tuple<int, int> t = input(Nx, Ny, K1, K2);
-    // int nodes = std::get<0>(t);
-    // int nonzero_elements = std::get<1>(t);
     int nodes = stats[1];
     int nonzero_elements = stats[4];
 
@@ -209,7 +206,7 @@ int main(int argc, char** argv) {
 
     double start = omp_get_wtime();
 
-    int iterations = solve(ia, ja, a, b, diag, res);
+    int iterations = solve(ia.data(), ja.data(), a.data(), b.data(), diag.data(), ia.size(), res.data());
 
     printVector(res);
 

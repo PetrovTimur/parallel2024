@@ -12,7 +12,7 @@
 #include "Utilities/coms.h"
 #endif
 
-int main(int argc, char **argv) {
+int main() {
     #ifdef USE_MPI
     omp_set_num_threads(omp_get_max_threads());
 
@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
         for (int p = 0; p < runs; ++p) {
             // Calculate
             double start = omp_get_wtime();
-            iterations = solve(ia, ja, a, b, diag, res);
+            iterations = solve(ia.data(), ja.data(), a.data(), b.data(), diag.data(), ia.size(), res.data());
             double end = omp_get_wtime();
 
             aggregate_time += end - start;

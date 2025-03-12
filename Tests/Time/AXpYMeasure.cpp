@@ -11,7 +11,7 @@
 #include <mpi.h>
 #endif
 
-int main(int argc, char **argv) {
+int main() {
     #ifdef USE_MPI
     omp_set_num_threads(omp_get_max_threads());
 
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
             double alpha = std::tan(p);
             // Calculate
             double start = omp_get_wtime();
-            axpy(alpha, x, y, res);
+            axpy(alpha, x.data(), y.data(), x.size(), res.data());
             double end = omp_get_wtime();
 
             aggregate_time += end - start;
