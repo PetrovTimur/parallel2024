@@ -8,6 +8,7 @@
 
 #include "csr.h"
 #include "Utilities/input.h"
+#include "Utilities/logger.h"
 #include "solvers.h"
 #include "Kernels/mathfunc.h"
 #include "Utilities/argparse.h"
@@ -153,21 +154,12 @@ int main(int argc, char** argv) {
 
     omp_set_num_threads(omp_get_max_threads());
 
-    std::fstream out;
-    if (arguments.output_file[0] != '-') {
-        out.open(arguments.output_file, std::ios::out);
-        std::cout.rdbuf(out.rdbuf()); //save and redirect
-    }
-
     int Nx = std::stoi(arguments.args[0]);
     int Ny = std::stoi(arguments.args[1]);
     int K1 = std::stoi(arguments.args[2]);
     int K2 = std::stoi(arguments.args[3]);
 
-    std::cout << "Nx = " << Nx << std::endl;
-    std::cout << "Ny = " << Ny << std::endl;
-    std::cout << "K1 = " << K1 << std::endl;
-    std::cout << "K2 = " << K2 << std::endl;
+    LOG_INFO << "Nx = " << Nx << ", Ny = " << Ny << ", K1 = " << K1 << ", K2 = " << K2 << std::endl;
 
     auto stats = input(Nx, Ny, K1, K2);
     int nodes = stats[1];
@@ -205,16 +197,14 @@ int main(int argc, char** argv) {
     std::vector<double> res(nodes);
 
     double start = omp_get_wtime();
-
     int iterations = solve(ia.data(), ja.data(), a.data(), b.data(), diag.data(), ia.size(), res.data());
+    double end = omp_get_wtime();
 
     printVector(res);
+    LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
+    LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
 
-    double end = omp_get_wtime();
-    std::cout << "Work took " << end - start << " seconds\n";
-    std::cout << "Convergence required "  << iterations << " iterations\n";
-
-    out.close();
+    // out.close();
     delete[] stats;
 
     #ifdef USE_DEBUG_MODE
