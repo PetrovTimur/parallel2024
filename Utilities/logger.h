@@ -1,6 +1,9 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 #include <fstream>
 #include <ostream>
 
@@ -30,8 +33,11 @@ private:
     std::ofstream logFile_;
 
     Logger() {
-        logFile_.open("logfile.txt", std::ios::out | std::ios::trunc);
-        // logFile_ << "OPEN";
+        auto t = std::time(nullptr);
+        auto tm = *std::localtime(&t);
+        std::ostringstream oss;
+        oss << LOG_DIR << "/log_" << std::put_time(&tm, "%Y-%m-%d_%H:%M:%S") << ".txt";
+        logFile_.open(oss.str(), std::ios::out | std::ios::trunc);
     }
     ~Logger() {
         logFile_.close();
