@@ -4,18 +4,14 @@
 #include <stdlib.h>
 #include <argp.h>
 
-const char *argp_program_version =
-  "CGSolver 1.0";
-const char *argp_program_bug_address =
-  "<s02240520@stud.cs.msu.ru>";
+const char * argp_program_version = "CGSolver 1.0";
+const char * argp_program_bug_address = "<s02240520@stud.cs.msu.ru>";
 
 /* Program documentation. */
 #ifdef USE_MPI
-static char doc[] =
-  "CGSolver 20 20 5 6 2 2 -- a program with options and arguments";
+static char doc[] = "CGSolver -- a parallel solver using MPI";
 #else
-static char doc[] =
-  "CGSolver 20 20 5 6 -- a program with options and arguments";
+static char doc[] = "CGSolver -- a parallel solver using OpenMP";
 #endif
 
 
@@ -28,22 +24,24 @@ static char args_doc[] = "Nx Ny K1 K2";
 
 /* The options we understand. */
 static struct argp_option options[] = {
-    // {"verbose",  'v', 0,      0,  "Produce verbose output" },
-    // {"quiet",    'q', 0,      0,  "Don't produce any output" },
-    // {"silent",   's', 0,      OPTION_ALIAS },
-    {"output",   'o', "FILE", 0,
-     "Output to FILE instead of standard output" },
-    { 0 }
+    {"output", 'o', "FILE", 0, "Output to FILE instead of standard output"},
+    {"Nx", 1001, "VALUE", 0, "X dimension"},
+    {"Ny", 1002, "VALUE", 0, "Y dimension"},
+    {"K1", 1003, "VALUE", 0, "K1 parameter"},
+    {"K2", 1004, "VALUE", 0, "K2 parameter"},
+#ifdef USE_MPI
+    {"Px", 1005, "VALUE", 0, "X processes"},
+    {"Py", 1006, "VALUE", 0, "Y processes"},
+#endif
+    {0}
 };
 
 /* Used by main to communicate with parse_opt. */
-struct arguments
-{
-    #ifdef USE_MPI
-    char *args[6];                /* Nx & Ny & K1 & K2 & Px & Py */
-    #else
-    char *args[4];                /* Nx & Ny & K1 & K2 */
-    #endif
+struct arguments {
+    int Nx, Ny, K1, K2;
+#ifdef USE_MPI
+    int Px, Py;
+#endif
     const char *output_file;
 };
 
@@ -51,7 +49,7 @@ struct arguments
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     /* Get the input argument from argp_parse, which we
        know is a pointer to our arguments structure. */
-    struct arguments *arguments = (struct arguments *) state->input;
+    auto *arguments = static_cast<struct arguments *>(state->input);
 
     switch (key)
     {
@@ -62,34 +60,38 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
             arguments->output_file = arg;
         break;
 
-        case ARGP_KEY_ARG:
-            #ifdef USE_MPI
-            if (state->arg_num > 6)
-                /* Too many arguments. */
-                    argp_usage (state);
-            #else
-            if (state->arg_num > 4)
-                /* Too many arguments. */
-                    argp_usage (state);
-            #endif
-
-
-        arguments->args[state->arg_num] = arg;
-
+        case 1001:  // Nx
+            arguments->Nx = std::stoi(arg);
         break;
+        case 1002:  // Ny
+            arguments->Ny = std::stoi(arg);
+        break;
+        case 1003:  // K1
+            arguments->K1 = std::stoi(arg);
+        break;
+        case 1004:  // K2
+            arguments->K2 = std::stoi(arg);
+        break;
+        #ifdef USE_MPI
+        case 1005:  // Px
+            arguments->Px = std::stoi(arg);
+        break;
+        case 1006:  // Py
+            arguments->Py = std::stoi(arg);
+        break;
+        #endif
 
         case ARGP_KEY_END:
-            #ifdef USE_MPI
-            if (state->arg_num < 6)
-                /* Not enough arguments. */
-                    argp_usage (state);
-            #else
-            if (state->arg_num < 4)
-                /* Not enough arguments. */
-                    argp_usage (state);
-            #endif
+            // Check that all required arguments were provided
+            if (arguments->Nx == 0 || arguments->Ny == 0 ||
+                arguments->K1 == 0 || arguments->K2 == 0
+                #ifdef USE_MPI
+                || arguments->Px == 0 || arguments->Py == 0
+                #endif
+            ) {
+                argp_usage(state);
+            }
         break;
-
         default:
             return ARGP_ERR_UNKNOWN;
     }

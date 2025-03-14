@@ -1,3 +1,4 @@
+#include <complex>
 #include <iostream>
 #include <string>
 #include <tuple>
@@ -154,10 +155,10 @@ int main(int argc, char** argv) {
 
     omp_set_num_threads(omp_get_max_threads());
 
-    int Nx = std::stoi(arguments.args[0]);
-    int Ny = std::stoi(arguments.args[1]);
-    int K1 = std::stoi(arguments.args[2]);
-    int K2 = std::stoi(arguments.args[3]);
+    int Nx = arguments.Nx;
+    int Ny = arguments.Ny;
+    int K1 = arguments.K1;
+    int K2 = arguments.K2;
 
     LOG_INFO << "Nx = " << Nx << ", Ny = " << Ny << ", K1 = " << K1 << ", K2 = " << K2 << std::endl;
 
