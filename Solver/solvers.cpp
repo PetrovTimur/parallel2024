@@ -3,6 +3,7 @@
 #include <iostream>
 #include <ostream>
 #include <unistd.h>
+#include <Utilities/logger.h>
 
 #include "Kernels/mathfunc.h"
 #ifdef USE_MPI
@@ -134,9 +135,7 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
         axpy(-alpha, q, r, N, r);
 
         #ifdef USE_DEBUG_MODE
-        std::cout << " k = " << k << std::endl;
-        std::cout << " rho = " << rho[0] << ", " << rho[1] << std::endl;
-        std::cout << " alpha = " << alpha << std::endl;
+        LOG_DEBUG << "k = " << k << ", rho = " << rho[0] << ", " << rho[1] << ", alpha = " << alpha << std::endl;
         #endif
 
     }

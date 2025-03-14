@@ -1,17 +1,8 @@
-#include <complex>
-#include <iostream>
-#include <string>
-#include <tuple>
-#include <vector>
-#include <fstream>
-#include <omp.h>
-#include <unistd.h>
-
+#include "omp.h"
 #include "csr.h"
 #include "Utilities/input.h"
 #include "Utilities/logger.h"
 #include "solvers.h"
-#include "Kernels/mathfunc.h"
 #include "Utilities/argparse.h"
 
 #ifdef USE_MPI
@@ -174,26 +165,26 @@ int main(int argc, char** argv) {
 
     makeCSR(Nx, Ny, K1, K2, ia, ja);
 
-    #ifdef USE_DEBUG_MODE
-    std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
-    buildAdjacencyMatrix(ia, ja, matrix);
-    printMatrix(matrix);
-    #endif
+    // #ifdef USE_DEBUG_MODE
+    // std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
+    // buildAdjacencyMatrix(ia, ja, matrix);
+    // printMatrix(matrix);
+    // #endif
 
     fillCSR(ia.data(), ja.data(), a.data(), b.data(), diag.data(), nodes);
 
     #ifdef USE_DEBUG_MODE
-    std::cout << "IA: ";
-    printVector(ia);
+    LOG_DEBUG << "IA:" << std::endl;
+    printVector(ia, LOG_DEBUG);
 
-    std::cout << "JA: ";
-    printVector(ja);
+    LOG_DEBUG << "JA:" << std::endl;
+    printVector(ja, LOG_DEBUG);
 
-    std::cout << "A: ";
-    printVector(a);
+    LOG_DEBUG << "A:" << std::endl;
+    printVector(a, LOG_DEBUG);
 
-    std::cout << "b: ";
-    printVector(b);
+    LOG_DEBUG << "b:" << std::endl;
+    printVector(b, LOG_DEBUG);
     #endif
     std::vector<double> res(nodes);
 
@@ -201,7 +192,7 @@ int main(int argc, char** argv) {
     int iterations = solve(ia.data(), ja.data(), a.data(), b.data(), diag.data(), ia.size(), res.data());
     double end = omp_get_wtime();
 
-    printArray(res.data(), res.size(), LOG_INFO);
+    // printArray(res.data(), res.size(), LOG_INFO);
     LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
     LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
 
@@ -209,8 +200,8 @@ int main(int argc, char** argv) {
     delete[] stats;
 
     #ifdef USE_DEBUG_MODE
-    std::cout << "res: ";
-    printVector(res);
+    LOG_DEBUG << "res:" << std::endl;
+    printVector(res, LOG_DEBUG);
     #endif
 
     #endif
