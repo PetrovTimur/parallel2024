@@ -13,29 +13,29 @@ int *input(int Nx, int Ny, int K1, int K2);
 std::tuple<int, int, int, int*> readData(const std::string &elementsTxtPath, const std::string &elementsDatPath);
 
 template <typename T>
-void printMatrix(std::vector<std::vector<T>> &matrix) {
+void printMatrix(std::vector<std::vector<T>> &matrix, std::ostream& os = std::cout) {
     for (int i = 0; i < matrix.size(); i++) {
         for (int j = 0; j < matrix[i].size(); j++) {
-            std::cout << matrix[i][j] << " ";
+            os << matrix[i][j] << " ";
         }
-        std::cout << std::endl;
+        os << std::endl;
     }
 }
 
 template <typename T>
-void printVector(std::vector<T> &a) {
+void printVector(std::vector<T> &a, std::ostream& os = std::cout) {
     for (int i = 0; i < a.size(); i++) {
-        std::cout << a[i] << " ";
+        os << a[i] << " ";
     }
-    std::cout << std::endl;
+    os << std::endl;
 }
 
 template <typename T>
-void printArray(T* a, const int size) {
+void printArray(T* a, const int size, std::ostream& os = std::cout) {
     for (int i = 0; i < size; i++) {
-        std::cout << a[i] << " ";
+        os << a[i] << " ";
     }
-    std::cout << std::endl;
+    os << std::endl;
 }
 
 #endif //INPUT_H

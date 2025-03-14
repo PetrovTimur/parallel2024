@@ -29,6 +29,11 @@ public:
         return *this;
     }
 
+    // Add this conversion operator
+    operator std::ostream&() {
+        return logFile_;
+    }
+
 private:
     std::ofstream logFile_;
 

@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
     int iterations = solve(ia.data(), ja.data(), a.data(), b.data(), diag.data(), ia.size(), res.data());
     double end = omp_get_wtime();
 
-    printVector(res);
+    printArray(res.data(), res.size(), LOG_INFO);
     LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
     LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
 
