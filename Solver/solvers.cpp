@@ -1,6 +1,7 @@
 #include "solvers.h"
 
 #include <iostream>
+#include <omp.h>
 #include <ostream>
 #include <unistd.h>
 #include <Utilities/logger.h>
@@ -108,6 +109,10 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
     do {
         k++;
 
+        LOG_INFO << "Iteration " << k << std::endl;
+
+        auto start = omp_get_wtime();
+
         #pragma omp parallel for default(none) shared(z, r, diag, N)
         for (int i = 0; i < N; i++) {
             z[i] = r[i] / diag[i];
@@ -134,9 +139,9 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
         axpy(alpha, p, x, N, x);
         axpy(-alpha, q, r, N, r);
 
-        #ifdef USE_DEBUG_MODE
-        LOG_DEBUG << "k = " << k << ", rho = " << rho[0] << ", " << rho[1] << ", alpha = " << alpha << std::endl;
-        #endif
+        LOG_INFO << "Time " << omp_get_wtime() - start << std::endl;
+        LOG_INFO << "rho = " << rho[0] << ", " << rho[1] << ", alpha = " << alpha << std::endl;
+        LOG_INFO << "---------------" << std::endl << std::endl;
 
     }
     while (rho[1] > eps * eps && k < maxit);
@@ -152,7 +157,6 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
     delete[] r;
     delete[] rho;
 
-    // std::cout << "k = " << k << std::endl;
     return k;
 }
 #endif

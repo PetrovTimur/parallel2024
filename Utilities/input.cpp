@@ -3,9 +3,6 @@
 
 #ifndef USE_MPI
 int *input(int Nx, int Ny, int K1, int K2) {
-    // std::cout << "Hello, World!" << std::endl;
-    // std::cout << Nx << " " << Ny << " " << K1 << " " << K2 << std::endl;
-
     int total_cells = Nx * Ny;
     int cycle_length = K1 + K2;
     int full_cycles = total_cells / cycle_length;
@@ -48,7 +45,7 @@ std::tuple<int, int, int, int *> readData(const std::string &elementsTxtPath, co
         throw std::runtime_error("Failed to open elements.dat");
     }
 
-    int *data = new int[Ne * M];
+    auto data = new int[Ne * M];
     elementsDat.read(reinterpret_cast<char*>(data), Ne * M * sizeof(int));
     elementsDat.close();
 

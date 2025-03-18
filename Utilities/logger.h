@@ -52,7 +52,8 @@ private:
     Logger& operator=(const Logger&) = delete;
 };
 
-#define LOG_INFO Logger::getInstance() << "[INFO]  "
-#define LOG_DEBUG Logger::getInstance() << "[DEBUG] "
+#define LOG Logger::getInstance()
+#define LOG_INFO Logger::getInstance() << "[INFO]  \t"
+#define LOG_DEBUG Logger::getInstance() << "[DEBUG] \t"
 
 #endif // LOGGER_H

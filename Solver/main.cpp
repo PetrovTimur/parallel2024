@@ -140,8 +140,6 @@ int main(int argc, char** argv) {
     /* Default values. */
     arguments.output_file = "-";
 
-    /* Parse our arguments; every option seen by parse_opt will
-       be reflected in arguments. */
     argp_parse (&argp, argc, argv, 0, nullptr, &arguments);
 
     omp_set_num_threads(omp_get_max_threads());
@@ -165,43 +163,44 @@ int main(int argc, char** argv) {
 
     makeCSR(Nx, Ny, K1, K2, ia, ja);
 
-    // #ifdef USE_DEBUG_MODE
-    // std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
-    // buildAdjacencyMatrix(ia, ja, matrix);
-    // printMatrix(matrix);
-    // #endif
+    #ifdef USE_DEBUG_MODE
+    std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
+    buildMatrixFromCSR(ia, ja, matrix);
+    LOG_DEBUG << "Matrix:" << std::endl;
+    printMatrix(matrix, LOG);
+    #endif
 
     fillCSR(ia.data(), ja.data(), a.data(), b.data(), diag.data(), nodes);
 
     #ifdef USE_DEBUG_MODE
     LOG_DEBUG << "IA:" << std::endl;
-    printVector(ia, LOG_DEBUG);
+    printVector(ia, LOG);
 
     LOG_DEBUG << "JA:" << std::endl;
-    printVector(ja, LOG_DEBUG);
+    printVector(ja, LOG);
 
     LOG_DEBUG << "A:" << std::endl;
-    printVector(a, LOG_DEBUG);
+    printVector(a, LOG);
 
     LOG_DEBUG << "b:" << std::endl;
-    printVector(b, LOG_DEBUG);
+    printVector(b, LOG);
     #endif
     std::vector<double> res(nodes);
+
+    LOG << std::endl;
 
     double start = omp_get_wtime();
     int iterations = solve(ia.data(), ja.data(), a.data(), b.data(), diag.data(), ia.size(), res.data());
     double end = omp_get_wtime();
 
-    // printArray(res.data(), res.size(), LOG_INFO);
     LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
     LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
 
-    // out.close();
     delete[] stats;
 
     #ifdef USE_DEBUG_MODE
     LOG_DEBUG << "res:" << std::endl;
-    printVector(res, LOG_DEBUG);
+    printVector(res, LOG);
     #endif
 
     #endif
