@@ -153,55 +153,97 @@ int main(int argc, char** argv) {
 
     auto stats = input(Nx, Ny, K1, K2);
     int nodes = stats[1];
-    int nonzero_elements = stats[4];
 
-    std::vector<int> ia(nodes + 1);
-    std::vector<int> ja(nonzero_elements);
-    std::vector<double> a(nonzero_elements);
-    std::vector<double> b(nodes);
-    std::vector<double> diag(nodes);
+    int Nn = nodes;
+    int Ne = stats[0] + stats[2];
+    int nnz = 4 * stats[0] + 2 * stats[2];
 
-    makeCSR(Nx, Ny, K1, K2, ia, ja);
+    LOG_DEBUG << "Nn = " << Nn << ", Ne = " << Ne << ", nnz = " << nnz << std::endl;
 
-    #ifdef USE_DEBUG_MODE
-    std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
-    buildMatrixFromCSR(ia, ja, matrix);
-    LOG_DEBUG << "Matrix:" << std::endl;
-    printMatrix(matrix, LOG);
-    #endif
-
-    fillCSR(ia.data(), ja.data(), a.data(), b.data(), diag.data(), nodes);
+    auto matrix = makeIncidenceMatrixCSR(Nx, Ny, K1, K2, Ne, nnz);
+    int *ia_en = std::get<0>(matrix);
+    int *ja_en = std::get<1>(matrix);
 
     #ifdef USE_DEBUG_MODE
-    LOG_DEBUG << "IA:" << std::endl;
-    printVector(ia, LOG);
-
-    LOG_DEBUG << "JA:" << std::endl;
-    printVector(ja, LOG);
-
-    LOG_DEBUG << "A:" << std::endl;
-    printVector(a, LOG);
-
-    LOG_DEBUG << "b:" << std::endl;
-    printVector(b, LOG);
+    LOG_DEBUG << "IA_EN:\t";
+    printArray(ia_en, Ne + 1, LOG);
+    LOG_DEBUG << "JA_EN:\t";
+    printArray(ja_en, ia_en[Ne], LOG);
     #endif
-    std::vector<double> res(nodes);
+
+    auto matrix_transposed = transposeCSR(ia_en, ja_en, Ne, Nn);
+    int *ia_ne = std::get<0>(matrix_transposed);
+    int *ja_ne = std::get<1>(matrix_transposed);
+
+    #ifdef USE_DEBUG_MODE
+    LOG_DEBUG << "IA_NE:\t";
+    printArray(ia_ne, Nn + 1, LOG);
+    LOG_DEBUG << "JA_NE:\t";
+    printArray(ja_ne, ia_ne[Nn], LOG);
+    #endif
+
+    auto matrix_nn = buildAdjacencyMatrixCSR(ia_ne, ja_ne, Ne, Nn);
+    int *ia_nn = std::get<0>(matrix_nn);
+    int *ja_nn = std::get<1>(matrix_nn);
+
+    int *ia = ia_nn;
+    int *ja = ja_nn;
+
+    #ifdef USE_DEBUG_MODE
+    // std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
+    // buildMatrixFromCSR(ia, ja, matrix);
+    // LOG_DEBUG << "Matrix:" << std::endl;
+    // printMatrix(matrix, LOG);
+    #endif
+
+    auto a = new double[ia[Ne]];
+    auto b = new double[Ne];
+    auto diag = new double[Ne];
+
+    fillCSR(ia, ja, a, b, diag, Ne);
+
+    #ifdef USE_DEBUG_MODE
+    LOG_DEBUG << "IA:\t\t";
+    printArray(ia, Ne + 1, LOG);
+
+    LOG_DEBUG << "JA:\t\t";
+    printArray(ja, ia[Ne],LOG);
+
+    LOG_DEBUG << "A:\t\t";
+    printArray(a, ia[Ne], LOG);
+
+    LOG_DEBUG << "b:\t\t";
+    printArray(b, Ne, LOG);
+    #endif
 
     LOG << std::endl;
 
+    auto res = new double[Ne];
+
     double start = omp_get_wtime();
-    int iterations = solve(ia.data(), ja.data(), a.data(), b.data(), diag.data(), ia.size(), res.data());
+    int iterations = solve(ia, ja, a, b, diag, Ne + 1, res);
     double end = omp_get_wtime();
 
     LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
     LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
 
     delete[] stats;
+    delete[] ia_en;
+    delete[] ja_en;
+    delete[] ia_ne;
+    delete[] ja_ne;
+    delete[] ia;
+    delete[] ja;
+    delete[] a;
+    delete[] b;
+    delete[] diag;
 
     #ifdef USE_DEBUG_MODE
-    LOG_DEBUG << "res:" << std::endl;
-    printVector(res, LOG);
+    LOG_DEBUG << "res:\t";
+    printArray(res, Ne, LOG);
     #endif
+
+    delete[] res;
 
     #endif
 

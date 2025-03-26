@@ -1,5 +1,6 @@
 #include "solvers.h"
 
+#include <complex>
 #include <iostream>
 #include <omp.h>
 #include <ostream>
@@ -101,9 +102,9 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
     const auto r = new double[N];
     arrCopy(r, b, N);
 
-    auto rho = new double[2];
+    const auto rho = new double[2];
 
-    double buf;
+    double buf, norm;
     int k = 0;
 
     do {
@@ -111,7 +112,7 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
 
         LOG_INFO << "Iteration " << k << std::endl;
 
-        auto start = omp_get_wtime();
+        const auto start = omp_get_wtime();
 
         #pragma omp parallel for default(none) shared(z, r, diag, N)
         for (int i = 0; i < N; i++) {
@@ -120,7 +121,7 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
 
         rho[0] = rho[1];
 
-        dot(r, z,N, rho[1]);
+        dot(r, z, N, rho[1]);
 
         if (k == 1)
             #pragma omp parallel for default(none) shared(p, z, N)
@@ -140,8 +141,10 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
         axpy(-alpha, q, r, N, r);
 
         LOG_INFO << "Time " << omp_get_wtime() - start << std::endl;
-        LOG_INFO << "rho = " << rho[0] << ", " << rho[1] << ", alpha = " << alpha << std::endl;
-        LOG_INFO << "---------------" << std::endl << std::endl;
+        // LOG_INFO << "rho = " << rho[0] << ", " << rho[1] << ", alpha = " << alpha << std::endl;
+        dot(x, x, N, norm);
+        LOG_INFO << "L2 norm: " << std::sqrt(norm) << std::endl;
+        LOG << "--------------------------------------------------" << std::endl << std::endl;
 
     }
     while (rho[1] > eps * eps && k < maxit);

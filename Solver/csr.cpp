@@ -153,6 +153,7 @@ void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<i
 std::pair<int *, int *> makeIncidenceMatrixCSR(int Nx, int Ny, int K1, int K2, int Ne, int nnz) {
     auto ia = new int[Ne + 1];
     auto ja = new int[nnz];
+    ia[0] = 0;
 
     int offset = 0;
     for (int cell = 0; cell < Nx * Ny; cell++) {
@@ -276,7 +277,7 @@ std::pair<int *, int *> transposeCSR(const int *ia, const int *ja, const int Ne,
         ia_new[i] += ia_new[i - 1];
     }
 
-    const auto buf = new int[nnz];
+    const auto buf = new int[Nn + 1];
 
     // Zero out buf
     for (int i = 0; i <= Nn; ++i) {
@@ -307,9 +308,7 @@ std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_ne, const int *ja_
             const int element1 = ja_ne[k];
             for (int l = ia_ne[node]; l < ia_ne[node + 1]; ++l) {
                 const int element2 = ja_ne[l];
-                if (element1 != element2) {
-                    adjacency_list[element1].insert(element2);
-                }
+                adjacency_list[element1].insert(element2);
             }
         }
     }
@@ -332,9 +331,6 @@ std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_ne, const int *ja_
         for (const int neighbor : sorted_neighbors) {
             ja_adj[index++] = neighbor;
         }
-        // for (const int neighbor : adjacency_list[i]) {
-        //     ja_adj[index++] = neighbor;
-        // }
     }
 
     delete[] adjacency_list;
