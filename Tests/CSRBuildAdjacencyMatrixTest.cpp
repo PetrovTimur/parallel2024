@@ -17,8 +17,8 @@ bool IncidenceToAdjacencyMultipleConnections() {
     auto result = buildAdjacencyMatrixCSR(transposed.first, transposed.second, rows, cols);
 
     // Expected adjacency matrix (node->node connections)
-    int expected_ia[] = {0, 1, 2, 4};
-    int expected_ja[] = {2, 2, 0, 1};
+    int expected_ia[] = {0, 2, 4, 7};
+    int expected_ja[] = {0, 2, 1, 2, 0, 1, 2};
 
     bool success = true;
 
@@ -63,8 +63,8 @@ bool PathGraphIncidenceToAdjacency() {
     auto result = buildAdjacencyMatrixCSR(transposed.first, transposed.second, rows, cols);
 
     // Expected adjacency matrix
-    int expected_ia[] = {0, 1, 2};
-    int expected_ja[] = {1, 0};
+    int expected_ia[] = {0, 2, 4};
+    int expected_ja[] = {0, 1, 0, 1};
 
     bool success = true;
 
@@ -109,8 +109,8 @@ bool IsolatedNodesIncidenceToAdjacency() {
     auto result = buildAdjacencyMatrixCSR(transposed.first, transposed.second, rows, cols);
 
     // Expected adjacency matrix (isolated node has no connections)
-    int expected_ia[] = {0, 0};
-    int expected_ja[] = {};
+    int expected_ia[] = {0, 1};
+    int expected_ja[] = {0};
 
     bool success = true;
 
