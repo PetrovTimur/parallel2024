@@ -12,8 +12,20 @@ void spMV(const int *ia, const int *ja, const double *a, const double *b, int si
 
 void axpy(double a, const double *x, const double *y, int size, double *res);
 
-void arrCopy(double *y, const double *x, int size);
+template <typename T>
+void arrCopy(T *y, const T *x, const int size) {
+    #pragma omp parallel for default(none) shared(x, y, size)
+    for (int i = 0; i < size; i++) {
+        y[i] = x[i];
+    }
+}
 
-void arrInit(double *x, double a, int size);
+template <typename T>
+void arrInit(T *x, const T a, const int size) {
+    #pragma omp parallel for default(none) shared(x, a, size)
+    for (int i = 0; i < size; i++) {
+        x[i] = a;
+    }
+}
 
 #endif //MATHFUNC_H

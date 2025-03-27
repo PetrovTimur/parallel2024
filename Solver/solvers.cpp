@@ -94,10 +94,10 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
     const auto p = new double[N];
 
     const auto q = new double[N];
-    arrInit(q, 0, N);
+    arrInit(q, 0., N);
 
     const auto x = new double[N];
-    arrInit(x, 0, N);
+    arrInit(x, 0., N);
 
     const auto r = new double[N];
     arrCopy(r, b, N);

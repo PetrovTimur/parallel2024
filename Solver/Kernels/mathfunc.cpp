@@ -68,17 +68,3 @@ void axpy(const double a, const double *x, const double *y, const int size, doub
 }
 
 #endif
-
-void arrCopy(double *y, const double *x, const int size) {
-    #pragma omp parallel for default(none) shared(x, y, size)
-    for (int i = 0; i < size; i++) {
-        y[i] = x[i];
-    }
-}
-
-void arrInit(double *x, const double a, const int size) {
-    #pragma omp parallel for default(none) shared(x, a, size)
-    for (int i = 0; i < size; i++) {
-        x[i] = a;
-    }
-}
