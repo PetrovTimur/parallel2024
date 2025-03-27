@@ -5,7 +5,7 @@
 #include "Solver/csr.h"
 #include "omp.h"
 
-int main(int argc, char *argv[]) {
+int main() {
     const std::string elementsTxtPath = PROJECT_SOURCE_DIR "/Data/mesh100K/elements.txt";
     const std::string elementsDatPath = PROJECT_SOURCE_DIR "/Data/mesh100K/elements.dat";
     int Nn, Ne, M;
@@ -58,10 +58,10 @@ int main(int argc, char *argv[]) {
     // Clean up dynamically allocated arrays.
     delete[] ia_ne;
     delete[] ja_ne;
-    // delete[] adj_sets.first;
-    // delete[] adj_sets.second;
-    // delete[] adj_sort.first;
-    // delete[] adj_sort.second;
+    delete[] adj_sets.first;
+    delete[] adj_sets.second;
+    delete[] adj_sort.first;
+    delete[] adj_sort.second;
 
     return 0;
 }

@@ -1,16 +1,12 @@
 #include "csr.h"
+#include "Kernels/mathfunc.h"
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
-#include <numeric>
-#include <ostream>
 #include <set>
 #include <vector>
 #include <utility>
 #include <unordered_set>
-
-#include "Utilities/input.h"
 
 #ifdef USE_MPI
 void makeCSR(int Nx, int Ny, int K1, int K2, int i_start, int i_end, int j_start, int j_end, std::vector<int> &G2L, std::vector<int> &ia, std::vector<int> &ja) {
@@ -361,7 +357,14 @@ std::pair<int *, int *> buildAdjacencyMatrixCSRusingSets(const int *ia_en, const
         }
     }
 
-    return std::make_pair(ia_adj.data(), ja_adj.data());
+    auto ia_adj_new = new int[ia_adj.size()];
+    auto ja_adj_new = new int[ja_adj.size()];
+    for (int i = 0; i < ia_adj.size(); ++i)
+        ia_adj_new[i] = ia_adj[i];
+    for (int i = 0; i < ja_adj.size(); ++i)
+        ja_adj_new[i] = ja_adj[i];
+
+    return std::make_pair(ia_adj_new, ja_adj_new);
 }
 
 
@@ -392,5 +395,12 @@ std::pair<int*, int*> buildAdjacencyMatrixCSRusingSort(const int *ia_en, const i
         ia_adj[element1 + 1] = ia_adj[element1] + count;
     }
 
-    return std::make_pair(ia_adj.data(), ja_adj.data());
+    auto ia_adj_new = new int[ia_adj.size()];
+    auto ja_adj_new = new int[ja_adj.size()];
+    for (int i = 0; i < ia_adj.size(); ++i)
+        ia_adj_new[i] = ia_adj[i];
+    for (int i = 0; i < ja_adj.size(); ++i)
+        ja_adj_new[i] = ja_adj[i];
+
+    return std::make_pair(ia_adj_new, ja_adj_new);
 }
