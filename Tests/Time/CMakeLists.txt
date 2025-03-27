@@ -3,13 +3,14 @@ set(MEASURES
     AXpYMeasure
     SpMVMeasure
     CGSolverMeasure
+    CSRAdjacencyMeasure
 )
 
 foreach (MEASURE ${MEASURES})
 #    cmake_path(GET MEASURE_SOURCE STEM MEASURE)
     set(MEASURE_SOURCE ${MEASURE}.cpp)
 
-    if (${MEASURE} STREQUAL "SpMVMeasure")
+    if ((${MEASURE} STREQUAL "SpMVMeasure") OR (${MEASURE} STREQUAL "CSRAdjacencyMeasure"))
         add_executable(${MEASURE} ${MEASURE_SOURCE} ${PROJECT_SOURCE_DIR}/Solver/csr.cpp)
         add_dependencies(${MEASURE} IOs)
         target_link_libraries(${MEASURE} PUBLIC IOs)

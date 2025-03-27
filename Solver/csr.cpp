@@ -5,6 +5,7 @@
 #include <iostream>
 #include <numeric>
 #include <ostream>
+#include <set>
 #include <vector>
 #include <utility>
 #include <unordered_set>
@@ -336,4 +337,60 @@ std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_ne, const int *ja_
     delete[] adjacency_list;
 
     return std::make_pair(ia_adj, ja_adj);
+}
+
+std::pair<int *, int *> buildAdjacencyMatrixCSRusingSets(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
+    std::vector<int> ia_adj(Ne + 1);
+    std::vector<int> ja_adj;
+
+    for (int element1 = 0; element1 < Ne; ++element1) {
+        std::set<int> adjacent;
+        for (int k = ia_en[element1]; k < ia_en[element1 + 1]; ++k) {
+            const int node = ja_en[k];
+
+            for (int l = ia_ne[node]; l < ia_ne[node + 1]; ++l) {
+                const int element2 = ja_ne[l];
+                adjacent.insert(element2);
+            }
+        }
+        adjacent.insert(element1);
+
+        ia_adj[element1 + 1] = ia_adj[element1] + adjacent.size();
+        for (auto element: adjacent) {
+            ja_adj.push_back(element);
+        }
+    }
+
+    return std::make_pair(ia_adj.data(), ja_adj.data());
+}
+
+
+std::pair<int*, int*> buildAdjacencyMatrixCSRusingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
+    std::vector<int> ia_adj(Ne + 1);
+    std::vector<int> ja_adj;
+
+    for (int element1 = 0; element1 < Ne; ++element1) {
+        std::vector<int> adjacent;
+        for (int k = ia_en[element1]; k < ia_en[element1 + 1]; ++k) {
+            const int node = ja_en[k];
+
+            for (int l = ia_ne[node]; l < ia_ne[node + 1]; ++l) {
+                const int element2 = ja_ne[l];
+                adjacent.push_back(element2);
+            }
+        }
+        adjacent.push_back(element1);
+
+        int count = 0;
+        ja_adj.push_back(adjacent[0]);
+        for (int i = 1; i < adjacent.size(); ++i) {
+            if (adjacent[i] != adjacent[i - 1]) {
+                ja_adj.push_back(adjacent[i]);
+                count++;
+            }
+        }
+        ia_adj[element1 + 1] = ia_adj[element1] + count;
+    }
+
+    return std::make_pair(ia_adj.data(), ja_adj.data());
 }
