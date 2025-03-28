@@ -359,10 +359,8 @@ std::pair<int *, int *> buildAdjacencyMatrixCSRusingSets(const int *ia_en, const
 
     auto ia_adj_new = new int[ia_adj.size()];
     auto ja_adj_new = new int[ja_adj.size()];
-    for (int i = 0; i < ia_adj.size(); ++i)
-        ia_adj_new[i] = ia_adj[i];
-    for (int i = 0; i < ja_adj.size(); ++i)
-        ja_adj_new[i] = ja_adj[i];
+    arrCopy(ia_adj_new, ia_adj.data(), ia_adj.size());
+    arrCopy(ja_adj_new, ja_adj.data(), ja_adj.size());
 
     return std::make_pair(ia_adj_new, ja_adj_new);
 }
@@ -397,10 +395,8 @@ std::pair<int*, int*> buildAdjacencyMatrixCSRusingSort(const int *ia_en, const i
 
     auto ia_adj_new = new int[ia_adj.size()];
     auto ja_adj_new = new int[ja_adj.size()];
-    for (int i = 0; i < ia_adj.size(); ++i)
-        ia_adj_new[i] = ia_adj[i];
-    for (int i = 0; i < ja_adj.size(); ++i)
-        ja_adj_new[i] = ja_adj[i];
+    arrCopy(ia_adj_new, ia_adj.data(), ia_adj.size());
+    arrCopy(ja_adj_new, ja_adj.data(), ja_adj.size());
 
     return std::make_pair(ia_adj_new, ja_adj_new);
 }
