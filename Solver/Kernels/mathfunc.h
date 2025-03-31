@@ -1,6 +1,8 @@
 #ifndef MATHFUNC_H
 #define MATHFUNC_H
 
+#include <vector>
+
 void dot(const double *x, const double *y, int size, double &res);
 
 #ifdef USE_MPI

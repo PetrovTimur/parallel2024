@@ -103,6 +103,7 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
     arrCopy(r, b, N);
 
     const auto rho = new double[2];
+    rho[0] = rho[1] = 0;
 
     double buf, norm;
     int k = 0;
