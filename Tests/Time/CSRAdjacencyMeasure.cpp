@@ -43,17 +43,24 @@ int main() {
 
     // Measure time for building adjacency matrix using sets variant.
     double start_sets = omp_get_wtime();
-    auto adj_sets = buildAdjacencyMatrixCSRusingSets(ia_en.data(), ja_en.data(), ia_ne, ja_ne, Ne, Nn);
+    auto adj_sets = buildAdjacencyMatrixCSRUsingSets(ia_en.data(), ja_en.data(), ia_ne, ja_ne, Ne, Nn);
     double end_sets = omp_get_wtime();
     double duration_sets = (end_sets - start_sets) * 1000; // convert to milliseconds
     std::cout << "Time (using sets): " << duration_sets << " ms" << std::endl;
 
     // Measure time for building adjacency matrix using sort variant.
     double start_sort = omp_get_wtime();
-    auto adj_sort = buildAdjacencyMatrixCSRusingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, Ne, Nn);
+    auto adj_sort = buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, Ne, Nn);
     double end_sort = omp_get_wtime();
     double duration_sort = (end_sort - start_sort) * 1000; // convert to milliseconds
     std::cout << "Time (using sort): " << duration_sort << " ms" << std::endl;
+
+    // Measure time for building adjacency matrix using single CSR variant.
+    double start_single = omp_get_wtime();
+    auto adj_single = buildAdjacencyMatrixCSR(ia_ne, ja_ne, Ne, Nn);
+    double end_single = omp_get_wtime();
+    double duration_single = (end_single - start_single) * 1000; // convert to milliseconds
+    std::cout << "Time (using single): " << duration_single << " ms" << std::endl;
 
     // Clean up dynamically allocated arrays.
     delete[] ia_ne;
@@ -62,6 +69,8 @@ int main() {
     delete[] adj_sets.second;
     delete[] adj_sort.first;
     delete[] adj_sort.second;
+    delete[] adj_single.first;
+    delete[] adj_single.second;
 
     return 0;
 }
