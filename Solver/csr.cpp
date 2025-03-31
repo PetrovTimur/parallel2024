@@ -335,7 +335,7 @@ std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_ne, const int *ja_
     return std::make_pair(ia_adj, ja_adj);
 }
 
-std::pair<int *, int *> buildAdjacencyMatrixCSRusingSets(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
+std::pair<int *, int *> buildAdjacencyMatrixCSRUsingSets(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
     std::vector<int> ia_adj(Ne + 1);
     std::vector<int> ja_adj;
 
@@ -366,7 +366,7 @@ std::pair<int *, int *> buildAdjacencyMatrixCSRusingSets(const int *ia_en, const
 }
 
 
-std::pair<int*, int*> buildAdjacencyMatrixCSRusingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
+std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
     std::vector<int> ia_adj(Ne + 1);
     std::vector<int> ja_adj;
 
@@ -382,8 +382,10 @@ std::pair<int*, int*> buildAdjacencyMatrixCSRusingSort(const int *ia_en, const i
         }
         adjacent.push_back(element1);
 
-        int count = 0;
+        std::sort(adjacent.begin(), adjacent.end());
+
         ja_adj.push_back(adjacent[0]);
+        int count = 1;
         for (int i = 1; i < adjacent.size(); ++i) {
             if (adjacent[i] != adjacent[i - 1]) {
                 ja_adj.push_back(adjacent[i]);
