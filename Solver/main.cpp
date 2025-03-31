@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
     printArray(ja_ne, ia_ne[Nn], LOG);
     #endif
 
-    auto matrix_nn = buildAdjacencyMatrixCSR(ia_ne, ja_ne, Ne, Nn);
+    auto matrix_nn = buildAdjacencyMatrixCSRUsingSort(ia_en, ja_en, ia_ne, ja_ne, Ne, Nn);
     int *ia_nn = std::get<0>(matrix_nn);
     int *ja_nn = std::get<1>(matrix_nn);
 
