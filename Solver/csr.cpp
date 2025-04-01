@@ -6,7 +6,7 @@
 #include <set>
 #include <vector>
 #include <utility>
-#include <unordered_set>
+// #include <unordered_set>
 
 #ifdef USE_MPI
 void makeCSR(int Nx, int Ny, int K1, int K2, int i_start, int i_end, int j_start, int j_end, std::vector<int> &G2L, std::vector<int> &ia, std::vector<int> &ja) {
@@ -296,8 +296,7 @@ std::pair<int *, int *> transposeCSR(const int *ia, const int *ja, const int Ne,
 }
 
 std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
-    // std::vector<std::unordered_set<int>> adjacency_list(Ne);
-    auto adjacency_list = new std::unordered_set<int>[Ne];
+    auto adjacency_list = new std::set<int>[Ne];
 
     // Build adjacency list for elements
     for (int node = 0; node < Nn; ++node) {
@@ -324,7 +323,7 @@ std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_ne, const int *ja_
     for (int i = 0; i < Ne; ++i) {
         ia_adj[i + 1] = ia_adj[i] + adjacency_list[i].size();
         std::vector<int> sorted_neighbors(adjacency_list[i].begin(), adjacency_list[i].end());
-        std::sort(sorted_neighbors.begin(), sorted_neighbors.end());
+        // std::sort(sorted_neighbors.begin(), sorted_neighbors.end());
         for (const int neighbor : sorted_neighbors) {
             ja_adj[index++] = neighbor;
         }

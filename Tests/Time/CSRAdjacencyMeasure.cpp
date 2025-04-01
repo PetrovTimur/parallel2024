@@ -4,6 +4,7 @@
 #include "Utilities/input.h"
 #include "Solver/csr.h"
 #include "omp.h"
+#include "Solver/Kernels/mathfunc.h"
 
 int main() {
     const std::string elementsTxtPath = PROJECT_SOURCE_DIR "/Data/mesh100K/elements.txt";
@@ -18,39 +19,44 @@ int main() {
     }
 
     // Build element-to-node CSR (ia_en and ja_en) by filtering out -1 entries.
-    std::vector<int> ia_en;
-    std::vector<int> ja_en;
-    ia_en.push_back(0); // starting pointer
+    std::vector<int> ia_en_vector;
+    std::vector<int> ja_en_vector;
+    ia_en_vector.push_back(0); // starting pointer
     for (int elem = 0; elem < Ne; elem++) {
         int count = 0;
         for (int j = 0; j < M; j++) {
             int node = rawData[elem * M + j];
             if (node != -1) {
-                ja_en.push_back(node);
+                ja_en_vector.push_back(node);
                 count++;
             }
         }
-        ia_en.push_back(ia_en.back() + count);
+        ia_en_vector.push_back(ia_en_vector.back() + count);
     }
     // Free the raw data as it is no longer needed.
     delete[] rawData;
 
+    // auto ia_en = new int[ia_en_vector.size()];
+    // arrCopy(ia_en, ia_en_vector.data(), ia_en_vector.size());
+    // auto ja_en = new int[ja_en_vector.size()];
+    // arrCopy(ja_en, ja_en_vector.data(), ja_en_vector.size());
+
     // Transpose the CSR matrix to obtain node-to-element connectivity (ia_ne, ja_ne).
     // The transpose function treats the original CSR as a matrix with Ne rows and Nn columns.
-    auto transposed = transposeCSR(ia_en.data(), ja_en.data(), Ne, Nn);
+    auto transposed = transposeCSR(ia_en_vector.data(), ja_en_vector.data(), Ne, Nn);
     int* ia_ne = transposed.first;
     int* ja_ne = transposed.second;
 
     // Measure time for building adjacency matrix using sets variant.
     double start_sets = omp_get_wtime();
-    auto adj_sets = buildAdjacencyMatrixCSRUsingSets(ia_en.data(), ja_en.data(), ia_ne, ja_ne, Ne, Nn);
+    auto adj_sets = buildAdjacencyMatrixCSRUsingSets(ia_en_vector.data(), ja_en_vector.data(), ia_ne, ja_ne, Ne, Nn);
     double end_sets = omp_get_wtime();
     double duration_sets = (end_sets - start_sets) * 1000; // convert to milliseconds
     std::cout << "Time (using sets): " << duration_sets << " ms" << std::endl;
 
     // Measure time for building adjacency matrix using sort variant.
     double start_sort = omp_get_wtime();
-    auto adj_sort = buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, Ne, Nn);
+    auto adj_sort = buildAdjacencyMatrixCSRUsingSort(ia_en_vector.data(), ja_en_vector.data(), ia_ne, ja_ne, Ne, Nn);
     double end_sort = omp_get_wtime();
     double duration_sort = (end_sort - start_sort) * 1000; // convert to milliseconds
     std::cout << "Time (using sort): " << duration_sort << " ms" << std::endl;

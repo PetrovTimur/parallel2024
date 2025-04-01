@@ -25,9 +25,9 @@ std::pair<int*, int*> transposeCSR(const int* ia, const int* ja, int Ne, int Nn)
 
 std::pair<int*, int*> buildAdjacencyMatrixCSR(const int* ia_ne, const int* ja_ne, int Ne, int Nn);
 
-std::pair<int *, int *> buildAdjacencyMatrixCSRUsingSets(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn);
+std::pair<int *, int *> buildAdjacencyMatrixCSRUsingSets(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, int Ne, int Nn);
 
-std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn);
+std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, int Ne, int Nn);
 
 
 #endif //CSR_H
