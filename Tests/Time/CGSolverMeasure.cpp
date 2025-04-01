@@ -144,7 +144,7 @@ int main() {
         for (int p = 0; p < runs; ++p) {
             // Calculate
             double start = omp_get_wtime();
-            iterations = solve(ia.data(), ja.data(), a.data(), b.data(), diag.data(), ia.size(), res.data());
+            iterations = solve(ia.data(), ja.data(), a.data(), b.data(), diag.data(), ia.size(), res.data(), 1e-3, 1000);
             double end = omp_get_wtime();
 
             aggregate_time += end - start;

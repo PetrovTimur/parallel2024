@@ -11,7 +11,7 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
         std::vector<double> &diag, std::vector<double> &res);
 #else
 int solve(const int *ia, const int *ja, const double *a, const double *b,
-          const double *diag, int size, double *res);
+          const double *diag, int size, double *res, double eps, int maxit);
 #endif
 
 

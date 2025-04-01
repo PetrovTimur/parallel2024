@@ -85,10 +85,8 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
     return k;
 }
 #else
-int solve(const int *ia, const int *ja, const double *a, const double *b, const double *diag, const int size, double *res) {
+int solve(const int *ia, const int *ja, const double *a, const double *b, const double *diag, const int size, double *res, const double eps, const int maxit) {
     const int N = size - 1;
-    const double eps = 1e-3;
-    const int maxit = 100000;
 
     const auto z = new double[N];
     const auto p = new double[N];
