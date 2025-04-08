@@ -1,8 +1,9 @@
 #ifndef ARGPARSE_H
 #define ARGPARSE_H
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <argp.h>
+#include <string>
 
 const char * argp_program_version = "CGSolver 1.0";
 const char * argp_program_bug_address = "<s02240520@stud.cs.msu.ru>";
@@ -25,6 +26,8 @@ static char args_doc[] = "Nx Ny K1 K2";
 /* The options we understand. */
 static struct argp_option options[] = {
     {"output", 'o', "FILE", 0, "Output to FILE instead of standard output"},
+    {"eps", 'e', "VALUE", 0, "Precision of calculations"},
+    {"maxit", 'i', "VALUE", 0, "Maximum iterations"},
     {"Nx", 1001, "VALUE", 0, "X dimension"},
     {"Ny", 1002, "VALUE", 0, "Y dimension"},
     {"K1", 1003, "VALUE", 0, "K1 parameter"},
@@ -42,6 +45,8 @@ struct arguments {
 #ifdef USE_MPI
     int Px, Py;
 #endif
+    float eps;
+    int maxit;
     const char *output_file;
 };
 
@@ -58,6 +63,14 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         // break;
         case 'o':
             arguments->output_file = arg;
+        break;
+
+        case 'e':
+            arguments->eps = std::stod(arg);
+        break;
+
+        case 'i':
+            arguments->maxit = std::stoi(arg);
         break;
 
         case 1001:  // Nx

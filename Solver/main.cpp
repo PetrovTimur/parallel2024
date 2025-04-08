@@ -139,6 +139,8 @@ int main(int argc, char** argv) {
 
     /* Default values. */
     arguments.output_file = "-";
+    arguments.eps = 1e-3;
+    arguments.maxit = 1000;
 
     argp_parse (&argp, argc, argv, 0, nullptr, &arguments);
 
@@ -148,6 +150,9 @@ int main(int argc, char** argv) {
     int Ny = arguments.Ny;
     int K1 = arguments.K1;
     int K2 = arguments.K2;
+
+    double eps = arguments.eps;
+    int maxit = arguments.maxit;
 
     LOG_INFO << "Nx = " << Nx << ", Ny = " << Ny << ", K1 = " << K1 << ", K2 = " << K2 << std::endl;
 
@@ -221,7 +226,7 @@ int main(int argc, char** argv) {
     auto res = new double[Ne];
 
     double start = omp_get_wtime();
-    int iterations = solve(ia, ja, a, b, diag, Ne + 1, res, 1e-3, 1000);
+    int iterations = solve(ia, ja, a, b, diag, Ne + 1, res, eps, maxit);
     double end = omp_get_wtime();
 
     LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
