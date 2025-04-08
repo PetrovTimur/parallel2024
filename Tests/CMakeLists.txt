@@ -22,7 +22,7 @@ if (NOT USE_MPI)
             add_executable(${TEST} ${TEST_SOURCE})
         endif ()
 
-#        add_executable(${TEST} ${TEST_SOURCE})
+        # add_executable(${TEST} ${TEST_SOURCE})
         add_dependencies(${TEST} MathFunc)
         target_link_libraries(${TEST} PUBLIC MathFunc)
         set_target_properties(${TEST} PROPERTIES FOLDER "Tests")
@@ -36,18 +36,20 @@ if (NOT USE_MPI)
     endforeach ()
 endif ()
 
+if (USE_CUDA)
+    set(CUDA_TESTS
+            AXpYCUDATest
+    )
 
-#add_executable(SolveTest SolveTest.cpp
-#        ${PROJECT_SOURCE_DIR}/Solver/solvers.h ${TOPLEVEL_INCLUDE_DIR}/solvers.cpp
-#        ${TOPLEVEL_INCLUDE_DIR}/csr.h ${TOPLEVEL_INCLUDE_DIR}/csr.cpp
-#        ${TOPLEVEL_INCLUDE_DIR}/Utilities/input.h ${TOPLEVEL_INCLUDE_DIR}/Utilities/input.cpp)
+    foreach (TEST ${CUDA_TESTS})
+        set(TEST_SOURCE ${TEST}.cu)
+        add_executable(${TEST} ${TEST_SOURCE})
+        add_dependencies(${TEST} MathFuncCUDA)
+        target_link_libraries(${TEST} PUBLIC MathFuncCUDA OpenMP::OpenMP_CXX)
+        set_target_properties(${TEST} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+        target_compile_options(${TEST} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -Xcompiler=-fopenmp>)
+        target_compile_features(${TEST} PRIVATE cxx_std_17 cuda_std_17)
+    endforeach ()
 
-#add_dependencies(SolveTest MathFunc)
-#target_link_libraries(SolveTest PRIVATE MathFunc)
-#set_target_properties(SolveTest PROPERTIES FOLDER "Tests")
-#add_test(
-#        NAME Test2
-#        COMMAND $<TARGET_FILE:SolveTest>
-#)
-
-add_subdirectory(Time)
+    add_subdirectory(Time)
+endif ()

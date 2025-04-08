@@ -30,5 +30,6 @@ foreach (MEASURE ${MEASURES})
 
     add_dependencies(${MEASURE} MathFunc)
     target_link_libraries(${MEASURE} PUBLIC MathFunc)
+    target_include_directories(${MEASURE} PUBLIC ${PROJECT_SOURCE_DIR})
 
 endforeach ()

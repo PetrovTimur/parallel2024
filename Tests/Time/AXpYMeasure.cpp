@@ -3,7 +3,7 @@
 #include <omp.h>
 #include <iostream>
 #include <ostream>
-#include <unistd.h>
+#include <vector>
 
 #include "Solver/Kernels/mathfunc.h"
 
@@ -120,6 +120,7 @@ int main() {
         double average_time = aggregate_time / runs;
 
         std::cout << 2 * k / (average_time * 1e9) << ", ";
+        std::cout << average_time << std::endl;
     }
     std::cout << std::endl;
     #endif

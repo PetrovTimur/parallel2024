@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.12)
 project(parallel2024_task1)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+find_package(OpenMP)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" CACHE INTERNAL "Where to place executables")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib" CACHE INTERNAL "Where to place libraries")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib" CACHE INTERNAL "Where to place libraries")
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/log")      # Where to place logs
 
 #set(TOPLEVEL_INCLUDE_DIR ${PROJECT_SOURCE_DIR})
@@ -15,6 +18,7 @@ add_compile_definitions(LOG_DIR=\"${PROJECT_BINARY_DIR}/log\")
 option(ENABLE_TESTS "Enable automatic testing" ON)
 option(USE_DEBUG_MODE "Use debug tools" OFF)
 option(USE_MPI "Use MPI" OFF)
+option(USE_CUDA "Use CUDA" OFF)
 
 if (USE_DEBUG_MODE)
     add_compile_definitions(USE_DEBUG_MODE)
@@ -25,7 +29,13 @@ if (USE_MPI)
 #    set(ENABLE_TESTS OFF)
     find_package(MPI REQUIRED)
     link_libraries(MPI::MPI_CXX)
-#    message(${MPI_CXX_VERSION_MAJOR})
+endif ()
+
+if (USE_CUDA)
+    set(CMAKE_CUDA_ARCHITECTURES 89)
+    add_compile_definitions(USE_CUDA)
+    enable_language(CUDA)
+#    find_package(CUDAToolkit REQUIRED)
 endif ()
 
 if (ENABLE_TESTS)
