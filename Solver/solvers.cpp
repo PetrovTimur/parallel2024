@@ -32,17 +32,33 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
     double eps = 1e-3;
     int maxit = 20;
 
-    std::vector<double> x(N);
-    std::vector<double> r(b);
-    std::vector<double> z(N);
-    std::vector<double> p(N);
-    std::vector<double> q(N);
-    std::vector<double> rho(2);
-    double buf, total;
+    const auto z = new double[N];
+    const auto p = new double[N];
+
+    const auto q = new double[N];
+    arrInit(q, 0., N);
+
+    const auto x = new double[N];
+    arrInit(x, 0., N);
+
+    const auto r = new double[N];
+    arrCopy(r, b.data(), N);
+
+    const auto rho = new double[2];
+    rho[0] = rho[1] = 0;
+
+    double buf, total, norm;
     int k = 0;
 
     do {
         k++;
+
+        if (MyID == 0) {
+            LOG_INFO << "Iteration " << k << std::endl;
+        }
+
+        double start = MPI_Wtime();
+
         #pragma omp parallel for proc_bind(master)
         for (int i = 0; i < N; i++) {
             z[i] = r[i] / diag[i];
@@ -50,7 +66,7 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
 
         rho[0] = rho[1];
 
-        dot(r, z, buf);
+        dot(r, z, N, buf);
         MPI_Allreduce(&buf, &rho[1], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
         if (k == 1)
@@ -59,21 +75,32 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
                 p[i] = z[i];
         else {
             double beta = rho[1] / rho[0];
-            axpy(beta, p, z, p);
+            axpy(beta, p, z, N, p);
         }
 
         Com(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count,
         p, recv_offset, send_offset,
         recv_buf, send_buf);
 
-        spMV(ia, ja, a, p, recv_buf, q);
+        spMV(ia, ja, a, p, N, recv_buf, q);
 
-        dot(p, q, buf);
+        dot(p, q, N, buf);
         MPI_Allreduce(&buf, &total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         double alpha = rho[1] / total;
 
-        axpy(alpha, p, x, x);
-        axpy(-alpha, q, r, r);
+        axpy(alpha, p, x, N, x);
+        axpy(-alpha, q, r, N, r);
+
+        double end = MPI_Wtime();
+        dot(x, x, N, norm);
+        MPI_Allreduce(&norm, &total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+        if (MyID == 0) {
+            LOG_INFO << "Time " << end - start << std::endl;
+            // LOG_INFO << "rho = " << rho[0] << ", " << rho[1] << ", alpha = " << alpha << std::endl;
+            LOG_INFO << "L2 norm: " << std::sqrt(total) << std::endl;
+            LOG << "--------------------------------------------------" << std::endl << std::endl;
+        }
     }
     while (rho[1] > eps * eps && k < maxit);
 
@@ -81,7 +108,13 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
     for (int i = 0; i < N; i++)
         res[i] = x[i];
 
-    // std::cout << "k = " << k << std::endl;
+    delete[] z;
+    delete[] p;
+    delete[] q;
+    delete[] x;
+    delete[] r;
+    delete[] rho;
+
     return k;
 }
 #else

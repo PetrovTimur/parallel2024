@@ -17,6 +17,8 @@ int main(int argc, char** argv) {
 
     /* Default values. */
     arguments.output_file = "-";
+    arguments.eps = 1e-3;
+    arguments.maxit = 1000;
 
     /* Parse our arguments; every option seen by parse_opt will
        be reflected in arguments. */
@@ -24,21 +26,17 @@ int main(int argc, char** argv) {
 
     // omp_set_num_threads(omp_get_max_threads());
 
-    std::fstream out;
-    if (arguments.output_file[0] != '-') {
-        out.open(arguments.output_file, std::ios::out);
-        std::cout.rdbuf(out.rdbuf()); //save and redirect
-    }
+    const int Nx = arguments.Nx;
+    const int Ny = arguments.Ny;
+    const int K1 = arguments.K1;
+    const int K2 = arguments.K2;
+    const int Px = arguments.Px;
+    const int Py = arguments.Py;
 
-    int Nx = std::stoi(arguments.args[0]);
-    int Ny = std::stoi(arguments.args[1]);
-    int K1 = std::stoi(arguments.args[2]);
-    int K2 = std::stoi(arguments.args[3]);
-    int Px = std::stoi(arguments.args[4]);
-    int Py = std::stoi(arguments.args[5]);
+    double eps = arguments.eps;
+    int maxit = arguments.maxit;
 
-    int mpi_res;
-    mpi_res = MPI_Init(&argc, &argv); // первым делом подключаемся к MPI
+    int mpi_res = MPI_Init(&argc, &argv); // первым делом подключаемся к MPI
     if(mpi_res != MPI_SUCCESS) {
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(mpi_res);
@@ -46,27 +44,21 @@ int main(int argc, char** argv) {
 
     int NumProc;
     mpi_res = MPI_Comm_size(MPI_COMM_WORLD,&NumProc); // узнаем число процессов
-    if(mpi_res!= MPI_SUCCESS){
+    if(mpi_res != MPI_SUCCESS){
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(mpi_res);
     }
 
     int MyID;
     mpi_res = MPI_Comm_rank(MPI_COMM_WORLD,&MyID); // узнаем номер данного процесса
-    if(mpi_res!= MPI_SUCCESS){
+    if(mpi_res != MPI_SUCCESS){
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(mpi_res);
     }
 
 
     if (MyID == 0) {
-        std::cout << "Nx = " << Nx << std::endl;
-        std::cout << "Ny = " << Ny << std::endl;
-        std::cout << "K1 = " << K1 << std::endl;
-        std::cout << "K2 = " << K2 << std::endl;
-        std::cout << "Px = " << Px << std::endl;
-        std::cout << "Py = " << Py << std::endl;
-        std::cout << "M = " << omp_get_max_threads() << std::endl;
+        LOG_INFO << "Nx = " << Nx << ", Ny = " << Ny << ", K1 = " << K1 << ", K2 = " << K2 << ", Px = " << Px << ", Py = " << Py << std::endl;
     }
 
     if (NumProc != Px * Py) {
@@ -119,19 +111,20 @@ int main(int argc, char** argv) {
 
     double start = MPI_Wtime();
     int iterations = solve(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, ia, ja, a, b, diag, res);
-    std::cout << "Iterations: " << iterations << std::endl;
 
-    std::cout << "MyID: " << MyID << ", x[0]: " << res[0] << std::endl;
+
+    // std::cout << "MyID: " << MyID << ", x[0]: " << res[0] << std::endl;
     // for (double x : res)
     //     std::cout << x << " ";
     // std::cout << std::endl;
 
-    out.close();
+    // out.close();
     MPI_Finalize();
+    double end = MPI_Wtime();
 
     if (MyID == 0) {
-        double end = MPI_Wtime();
-        std::cout << end - start << " sec" << std::endl;
+        LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
+        LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
     }
 
     #else

@@ -6,6 +6,7 @@
 #include <set>
 #include <vector>
 #include <utility>
+#include <numeric>
 // #include <unordered_set>
 
 #ifdef USE_MPI

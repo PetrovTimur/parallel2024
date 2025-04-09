@@ -6,7 +6,8 @@
 void dot(const double *x, const double *y, int size, double &res);
 
 #ifdef USE_MPI
-void spMV(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b, std::vector<double> &b_halo, std::vector<double> &res);
+void spMV(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, const double *b, int N, std::vector<double> &b_halo, double
+          *res);
 #else
 void spMV(const int *ia, const int *ja, const double *a, const double *b, int size, double *res);
 #endif

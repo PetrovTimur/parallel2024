@@ -23,8 +23,8 @@ void ComInitOffsets(int top_halo, int left_halo, int right_halo, int bottom_halo
 
 
 void Com(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bottom_halo, int i_count, int j_count,
-        std::vector<double> &b, std::vector<int> &recv_offset, std::vector<int> &send_offset,
-        std::vector<double> &recv_buf, std::vector<double> &send_buf) {
+         const double *b, std::vector<int> &recv_offset, std::vector<int> &send_offset,
+         std::vector<double> &recv_buf, std::vector<double> &send_buf) {
     int nrreq = 0;
     int mpires;
 
