@@ -102,6 +102,14 @@ void makeCSR(int Nx, int Ny, int K1, int K2, int i_start, int i_end, int j_start
     // printVector(ja);
 }
 
+void localizeCSR(const int *ia, const int size, double *ja, const double *G2L) {
+    for (int i = 0; i < size; i++) {
+        for (int j = ia[i]; j < ia[i + 1]; j++) {
+            ja[j] = G2L[j];
+        }
+    }
+}
+
 #else
 void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<int> &ja) {
     int cycle_length = K1 + K2;

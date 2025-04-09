@@ -4,18 +4,18 @@
 
 #ifdef USE_MPI
 void makeCSR(int Nx, int Ny, int K1, int K2, int i_start, int i_end, int j_start, int j_end, std::vector<int> &G2L, std::vector<int> &ia, std::vector<int> &ja);
-#else
-void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<int> &ja);
-#endif
 
-std::pair<int*, int*> makeIncidenceMatrixCSR(int Nx, int Ny, int K1, int K2, int Ne, int nnz);
+void localizeCSR(const int *ia, const int size, double *ja, const double *G2L);
 
-#ifdef USE_MPI
 void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, std::vector<double> &a, std::vector<double> &b,
     std::vector<double> &diag);
 #else
+void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<int> &ja);
+
 void fillCSR(const int *ia, const int *ja, double *a, double *b, double *diag, int size);
 #endif
+
+std::pair<int*, int*> makeIncidenceMatrixCSR(int Nx, int Ny, int K1, int K2, int Ne, int nnz);
 
 void buildMatrixFromCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<std::vector<bool>> &matrix);
 
