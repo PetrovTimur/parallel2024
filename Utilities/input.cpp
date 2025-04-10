@@ -54,21 +54,20 @@ std::tuple<int, int, int, int *> readData(const std::string &elementsTxtPath, co
 #else
 
 std::tuple<int, int, int, int, int, int, int, int, int, int> input(int Nx, int Ny, int Px, int Py, int MyID, std::vector<int> &L2G, std::vector<int> &G2L, std::vector<int> &Part) {
-    int MyID_j = MyID % Px;
-    int MyID_i = MyID / Px;
+    const int MyID_j = MyID % Px;
+    const int MyID_i = MyID / Px;
 
-    int i_start, i_end, i_count, j_start, j_end, j_count;
-    j_start = MyID_j * ((Nx + 1) / Px) + std::min((Nx + 1) % Px, MyID_j);
-    j_count = (Nx + 1) / Px + ((Nx + 1) % Px > MyID_j);
-    j_end = j_start + j_count - 1;
+    int j_start = MyID_j * ((Nx + 1) / Px) + std::min((Nx + 1) % Px, MyID_j);
+    int j_count = (Nx + 1) / Px + ((Nx + 1) % Px > MyID_j);
+    int j_end = j_start + j_count - 1;
     int left_halo = MyID_j > 0; // Halo
     j_start -= left_halo;
     int right_halo = MyID_j < Px - 1; // Halo
     j_end += right_halo;
 
-    i_start = MyID_i * ((Ny + 1) / Py) + std::min((Ny + 1) % Py, MyID_i);
-    i_count = (Ny + 1) / Py + ((Ny + 1) % Py > MyID_i);
-    i_end = i_start + i_count - 1;
+    int i_start = MyID_i * ((Ny + 1) / Py) + std::min((Ny + 1) % Py, MyID_i);
+    int i_count = (Ny + 1) / Py + ((Ny + 1) % Py > MyID_i);
+    int i_end = i_start + i_count - 1;
     int top_halo = MyID_i > 0; // Halo
     i_start -= top_halo;
     int bottom_halo = MyID_i < Py - 1; // Halo
@@ -78,15 +77,15 @@ std::tuple<int, int, int, int, int, int, int, int, int, int> input(int Nx, int N
     // std::cout << "i_start: " << i_start << ", i_end: " << i_end << std::endl;
     // std::cout << "j_start: " << j_start << ", j_end: " << j_end << std::endl;
 
-    int k = 0, N0;
-    // std::vector<int> L2G((i_end - i_start + 1) * (j_end - j_start + 1));
+    int k = 0;
     L2G.resize((i_end - i_start + 1) * (j_end - j_start + 1));
     for (int i = i_start + top_halo; i <= i_end - bottom_halo; i++) {
         for (int j = j_start + left_halo; j <= j_end - right_halo; j++) {
             L2G[k++] = i * (Nx + 1) + j;
         }
     }
-    N0 = k;
+
+    int N_local = k;
     if (top_halo) {
         for (int j = j_start + left_halo; j <= j_end - right_halo; j++) {
             L2G[k++] = i_start * (Nx + 1) + j;
