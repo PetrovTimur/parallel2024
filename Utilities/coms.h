@@ -3,10 +3,13 @@
 #include <mpi.h>
 #include <vector>
 
-void ComInitOffsets(int top_halo, int left_halo, int right_halo, int bottom_halo, int i_count, int j_count, std::vector<int> &recv_offset, std::vector<int> &send_offset);
+void ComInit(const std::vector<int> &ia, const std::vector<int> &ja, const std::vector<int> &Part, const std::vector<int> &L2G, int
+                    MyID, std::vector<int> &RecvOffset, std::vector<int> &SendOffset, std::vector<int> &Send, std::vector<int> &Recv, std
+                    ::vector<int> &Neighbors);
 
-void Com(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bottom_halo, int i_count, int j_count,
-         const double *b, std::vector<int> &recv_offset, std::vector<int> &send_offset,
-         std::vector<double> &recv_buf, std::vector<double> &send_buf);
+void ComUpdate(
+    double *b, const std::vector<int> &RecvOffset, const std::vector<int> &SendOffset,
+    const std::vector<int> &Neighbors, const std::vector<int> &Send, const
+    std::vector<int> &Recv);
 
 #endif //COMS_H

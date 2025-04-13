@@ -1,164 +1,126 @@
 #include "coms.h"
+
+#include <algorithm>
+#include <cassert>
 #include <mpi.h>
+#include <unordered_map>
 #include <vector>
 
+#include "input.h"
 
-void ComInitOffsets(int top_halo, int left_halo, int right_halo, int bottom_halo, int i_count, int j_count, std::vector<int> &recv_offset, std::vector<int> &send_offset) {
-    recv_offset[0] = 0;
-    recv_offset[1] = top_halo * j_count;
-    recv_offset[2] = recv_offset[1] + top_halo * right_halo;
-    recv_offset[3] = recv_offset[2] + left_halo * i_count;
-    recv_offset[4] = recv_offset[3] + right_halo * i_count;
-    recv_offset[5] = recv_offset[4] + left_halo * bottom_halo;
-    recv_offset[6] = recv_offset[5] + bottom_halo * j_count;
 
-    send_offset[0] = 0;
-    send_offset[1] = top_halo * j_count;
-    send_offset[2] = send_offset[1] + top_halo * right_halo;
-    send_offset[3] = send_offset[2] + left_halo * i_count;
-    send_offset[4] = send_offset[3] + right_halo * i_count;
-    send_offset[5] = send_offset[4] + left_halo * bottom_halo;
-    send_offset[6] = send_offset[5] + bottom_halo * j_count;
+void ComInit(const std::vector<int> &ia, const std::vector<int> &ja, const std::vector<int> &Part, const std::vector<int> &L2G, const int
+             MyID, std::vector<int> &RecvOffset, std::vector<int> &SendOffset, std::vector<int> &Send, std::vector<int> &Recv, std::vector<int> &Neighbors) {
+
+    std::vector<std::vector<int>> SendToProcess(8);
+    std::vector<std::vector<int>> RecvFromProcess(8);
+    // TODO: change 8 to num neighbors
+
+    std::unordered_map<int, int> P2N;
+
+    for (int i = 0; i < ia.size() - 1; i++) {
+        for (int col = ia[i]; col < ia[i + 1]; col++) {
+            const int j = ja[col];
+            if (Part[j] != MyID) {
+                if (P2N.find(Part[j]) == P2N.end()) {
+                    P2N[Part[j]] = P2N.size();
+                }
+
+                SendToProcess[P2N[Part[j]]].push_back(i);
+                RecvFromProcess[P2N[Part[j]]].push_back(j);
+            }
+        }
+    }
+
+    SendOffset.push_back(0);
+    RecvOffset.push_back(0);
+
+    Neighbors.resize(P2N.size());
+    for (const auto p : P2N) {
+        Neighbors[p.second] = p.first;
+    }
+
+    for (int p = 0; p < Neighbors.size(); p++) {
+        std::sort(SendToProcess[p].begin(), SendToProcess[p].end(),
+            [L2G](const int i, const int j) {
+                return L2G[i] < L2G[j];
+            });
+
+        int k = 1;
+        Send.push_back(SendToProcess[p][0]);
+        for (int i = 1; i < SendToProcess[p].size(); i++) {
+            if (SendToProcess[p][i] != SendToProcess[p][i - 1]) {
+                Send.push_back(SendToProcess[p][i]);
+                k++;
+            }
+        }
+        SendOffset.push_back(SendOffset.back() + k);
+    }
+
+    for (int p = 0; p < Neighbors.size(); p++) {
+        std::sort(RecvFromProcess[p].begin(), RecvFromProcess[p].end(),
+        [L2G](const int i, const int j) {
+            return L2G[i] < L2G[j];
+        });
+
+        int k = 1;
+        Recv.push_back(RecvFromProcess[p][0]);
+        for (int i = 1; i < RecvFromProcess[p].size(); i++) {
+            if (RecvFromProcess[p][i] != RecvFromProcess[p][i - 1]) {
+                Recv.push_back(RecvFromProcess[p][i]);
+                k++;
+            }
+        }
+        RecvOffset.push_back(RecvOffset.back() + k);
+    }
 }
 
 
-void Com(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bottom_halo, int i_count, int j_count,
-         const double *b, std::vector<int> &recv_offset, std::vector<int> &send_offset,
-         std::vector<double> &recv_buf, std::vector<double> &send_buf) {
-    int nrreq = 0;
-    int mpires;
+void ComUpdate(double *b, const std::vector<int> &RecvOffset, const std::vector<int> &SendOffset,
+               const std::vector<int> &Neighbors, const std::vector<int> &Send, const
+               std::vector<int> &Recv) {
 
-    std::vector<MPI_Request> recv_req(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
-    std::vector<MPI_Status> recv_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
-    std::vector<MPI_Request> send_req(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
-    std::vector<MPI_Status> send_stat(top_halo + top_halo*right_halo + left_halo + right_halo + left_halo*bottom_halo + bottom_halo);
+    std::vector<double> SendBuf, RecvBuf;
+    SendBuf.resize(Send.size());
+    RecvBuf.resize(Recv.size());
 
-    if (top_halo) {
-        int size = recv_offset[1]-recv_offset[0];
-        MPI_Irecv(&recv_buf[recv_offset[0]], size, MPI_DOUBLE, MyID - Px, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-        nrreq++;
+    // TODO: Add size asserts
+    assert(Recv.size() == RecvOffset.back() && "Recv size incorrect");
+    assert(Send.size() == SendOffset.back() && "Send size incorrect");
 
-        if (right_halo) {
-            int size = recv_offset[2]-recv_offset[1];
-            MPI_Irecv(&recv_buf[recv_offset[1]], size, MPI_DOUBLE, MyID - Px + 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-            nrreq++;
-        }
+    std::vector<MPI_Request> Request;
+    std::vector<MPI_Status> Status;
+    Request.resize(2 * Neighbors.size());
+    Status.resize(2 * Neighbors.size());
+
+    int nreq = 0;
+
+    for (int p = 0; p < Neighbors.size(); p++) {
+        const int size = RecvOffset[p + 1] - RecvOffset[p];
+        const int neighbor_id = Neighbors[p];
+        const int mpires = MPI_Irecv(&RecvBuf[RecvOffset[p]], size, MPI_DOUBLE, neighbor_id, 0, MPI_COMM_WORLD, &(Request[nreq]));
+        assert(mpires == MPI_SUCCESS && "MPI_Irecv failed");
+        nreq++;
     }
 
-    if (left_halo) {
-        int size = recv_offset[3]-recv_offset[2];
-        MPI_Irecv(&recv_buf[recv_offset[2]], size, MPI_DOUBLE, MyID - 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-        nrreq++;
+    for (int i = 0; i < Send.size(); i++) {
+        SendBuf[i] = b[Send[i]];
     }
 
-    if (right_halo) {
-        int size = recv_offset[4]-recv_offset[3];
-        MPI_Irecv(&recv_buf[recv_offset[3]], size, MPI_DOUBLE, MyID + 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-        nrreq++;
+    for (int p = 0; p < Neighbors.size(); p++) {
+        const int size = SendOffset[p + 1] - SendOffset[p];
+        const int neighbor_id = Neighbors[p];
+        const int mpires = MPI_Isend(&SendBuf[SendOffset[p]], size, MPI_DOUBLE, neighbor_id, 0, MPI_COMM_WORLD, &(Request[nreq]));
+        assert(mpires == MPI_SUCCESS && "MPI_Isend failed");
+        nreq++;
     }
 
-    if (bottom_halo) {
-        if (left_halo) {
-            int size = recv_offset[5]-recv_offset[4];
-            MPI_Irecv(&recv_buf[recv_offset[4]], size, MPI_DOUBLE, MyID + Px - 1, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-            nrreq++;
-        }
-
-        int size = recv_offset[6]-recv_offset[5];
-        MPI_Irecv(&recv_buf[recv_offset[5]], size, MPI_DOUBLE, MyID + Px, 0, MPI_COMM_WORLD, &recv_req[nrreq]);
-        nrreq++;
+    if (nreq > 0) {
+        const int mpires = MPI_Waitall(nreq, &Request[0], &Status[0]);
+        assert(mpires == MPI_SUCCESS && "MPI_Waitall failed");
     }
 
-    int p = 0;
-
-    int nsreq = 0;
-    if (top_halo) {
-        for (int j = 0; j < j_count; j++) {
-            send_buf[p] = b[j];
-            p++;
-        }
-
-        int size = send_offset[1]-send_offset[0];
-        MPI_Isend(&send_buf[send_offset[0]], size, MPI_DOUBLE, MyID - Px, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-        nsreq++;
-
-        if (right_halo) {
-            send_buf[p] = b[j_count - 1];
-            p++;
-
-            int size = send_offset[2]-send_offset[1];
-            MPI_Isend(&send_buf[send_offset[1]], size, MPI_DOUBLE, MyID - Px + 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-            nsreq++;
-        }
+    for (int i = 0; i < Recv.size(); i++) {
+        b[Recv[i]] = RecvBuf[i];
     }
-
-    if (left_halo) {
-        for (int i = 0; i < i_count; i++) {
-            send_buf[p] = b[i * j_count];
-            p++;
-        }
-
-        int size = send_offset[3]-send_offset[2];
-        MPI_Isend(&send_buf[send_offset[2]], size, MPI_DOUBLE, MyID - 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-        nsreq++;
-    }
-
-    if (right_halo) {
-        for (int i = 0; i < i_count; i++) {
-            send_buf[p] = b[i * j_count + j_count - 1];
-            p++;
-        }
-
-        int size = send_offset[4]-send_offset[3];
-        MPI_Isend(&send_buf[send_offset[3]], size, MPI_DOUBLE, MyID + 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-        nsreq++;
-    }
-
-    if (bottom_halo) {
-        if (left_halo) {
-            send_buf[p] = b[(i_count - 1) * j_count];
-            p++;
-
-            int size = send_offset[5]-send_offset[4];
-            MPI_Isend(&send_buf[send_offset[4]], size, MPI_DOUBLE, MyID + Px - 1, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-            nsreq++;
-        }
-
-        for (int j = 0; j < j_count; j++) {
-            send_buf[p] = b[(i_count - 1) * j_count + j];
-            p++;
-        }
-
-        int size = send_offset[6]-send_offset[5];
-        MPI_Isend(&send_buf[send_offset[5]], size, MPI_DOUBLE, MyID + Px, 0, MPI_COMM_WORLD, &send_req[nsreq]);
-        nsreq++;
-    }
-
-    // if (MyID == 9) {
-    //     std::cout << "Offsets for send" << std::endl;
-    //     for (int i : send_offset)
-    //         std::cout << i << " ";
-    //     std::cout << std::endl;
-    // }
-
-
-
-    if (nrreq>0){ // ждем завершения получения
-        mpires = MPI_Waitall(nrreq, &recv_req[0], &recv_stat[0]);
-        // ASSERT(mpires==MPI_SUCCESS, "MPI_Waitall (recv) failed");
-        // std::cout << (mpires == MPI_SUCCESS) << std::endl;
-    }
-
-    if (nsreq>0){ // ждем завершения отправок
-        mpires = MPI_Waitall(nsreq, &send_req[0], &send_stat[0]);
-        // ASSERT(mpires==MPI_SUCCESS, "MPI_Waitall (recv) failed");
-        // std::cout << (mpires == MPI_SUCCESS) << std::endl;
-    }
-
-    // std::cout << "After recv: MyID: " << MyID << std::endl;
-    // std::cout << "rec buf size: " << recv_buf.size() << std::endl;
-    // for (double x : recv_buf) {
-    //     std::cout << x << std::endl;
-    // }
-    // std::cout << std::endl;
 }
