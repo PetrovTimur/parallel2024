@@ -50,6 +50,8 @@ if (USE_CUDA)
         target_compile_options(${TEST} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -Xcompiler=-fopenmp>)
         target_compile_features(${TEST} PRIVATE cxx_std_17 cuda_std_17)
     endforeach ()
+endif ()
 
+if (NOT USE_MPI)
     add_subdirectory(Time)
 endif ()
