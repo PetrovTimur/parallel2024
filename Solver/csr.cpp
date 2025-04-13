@@ -7,107 +7,73 @@
 #include <vector>
 #include <utility>
 #include <numeric>
+#include <unordered_map>
 // #include <unordered_set>
 
 #ifdef USE_MPI
-void makeCSR(int Nx, int Ny, int K1, int K2, int i_start, int i_end, int j_start, int j_end, std::vector<int> &G2L, std::vector<int> &ia, std::vector<int> &ja) {
-    int cycle_length = K1 + K2;
-    // std::vector<int> extras(i_end - i_start + 1);
-
-    // #pragma omp parallel for proc_bind(spread)
-    // for (int i = i_start; i <= i_end; i++) {
-    //     extras[i - i_start] = i * Nx / cycle_length * K2 + std::max(0, i * Nx % cycle_length - K1);
-        // std::cout << extras[i] << " ";
-    // }
-    // std::cout << std::endl;
-
-    std::vector<std::vector<int>> temp_ia(i_end - i_start + 1, std::vector<int>(j_end - j_start + 1));
-    std::vector<std::vector<int>> temp_ja(i_end - i_start + 1, std::vector<int>(7 * (j_end - j_start + 1)));
-
-    // int k = 0;
-    #pragma omp parallel for proc_bind(master)
-    for (int i = i_start; i <= i_end; i++) {
-        // std::cout << i << " " << k << std::endl;
-        // int k =
-        // int k = 2 * Nx * i + (Nx + 1) * std::max(0, 2 * i - 1) + i * (Nx + 1) + (i > 0 ? extras[i] + extras[i - 1] : 0);
-        // std::cout << i << " " << k << std::endl;
-        int temp_k = 0;
-        for (int j = j_start; j <= j_end; j++) {
-            int ttemp_k = temp_k;;
-            int flat_idx = i * (Nx + 1) + j;
-            // std::cout << i << " " << j << " " << k << " " << flat_idx << " " << G2L[flat_idx] << std::endl;
-            // int top_idx = (i - 1) * (Nx + 1) + j;
-            // int right_idx = i * (Nx + 1) + j + 1;
-            // int bottom_idx = (i + 1) * (Nx + 1) + j;
-            // int left_idx = i * (Nx + 1) + j - 1;
-            // ia[G2L[flat_idx]] = k;
-
-            if (i != 0) {
-                // ja[k++] = G2L[(i - 1) * (Nx + 1) + j];
-                temp_ja[i - i_start][temp_k++] = G2L[(i - 1) * (Nx + 1) + j];
-            }
-            if (i != 0 && j != Nx && ((i - 1) * Nx + j) % cycle_length >= K1) {
-                // ja[k++] = G2L[(i - 1) * (Nx + 1) + j + 1];
-                temp_ja[i - i_start][temp_k++] = G2L[(i - 1) * (Nx + 1) + j + 1];
-            }
-            if (j != 0) {
-                // ja[k++] = G2L[i * (Nx + 1) + j - 1];
-                temp_ja[i - i_start][temp_k++] = G2L[i * (Nx + 1) + j - 1];
-            }
-
-            // ja[k++] = G2L[flat_idx];
-            temp_ja[i - i_start][temp_k++] = G2L[flat_idx];
-
-            if (j != Nx) {
-                // ja[k++] = G2L[i * (Nx + 1) + j + 1];
-                temp_ja[i - i_start][temp_k++] = G2L[i * (Nx + 1) + j + 1];
-            }
-            if  (j != 0 && i != Ny && (i * Nx + j - 1) % cycle_length >= K1) {
-                // ja[k++] = G2L[(i + 1) * (Nx + 1) + j - 1];
-                temp_ja[i - i_start][temp_k++] = G2L[(i + 1) * (Nx + 1) + j - 1];
-            }
-            if (i != Ny) {
-                // ja[k++] = G2L[(i + 1) * (Nx + 1) + j];
-                temp_ja[i - i_start][temp_k++] = G2L[(i + 1) * (Nx + 1) + j];
-            }
-
-            temp_ia[i - i_start][j - j_start] = temp_k - ttemp_k;
-        }
-        temp_ja[i - i_start].resize(temp_k);
-    }
-    // printMatrix(temp_ia);
-    // std::vector<int> test_ia = {0};
-    // std::vector<int> test_ja;
-
-    for (const auto& row : temp_ia) {
-        ia.insert(ia.end(), row.begin(), row.end());
-    }
-
-    for (const auto& row : temp_ja) {
-        ja.insert(ja.end(), row.begin(), row.end());
-    }
-
-
-    // ia[ia.size() - 1] = k;
-    // ja.resize(k);
-
-    std::partial_sum(ia.begin(), ia.end(), ia.begin());
-    // std::cout << "Test IA: " << test_ia.size() << std::endl;
-    // printVector(test_ia);
-    // std::cout << "IA: " << ia.size() << std::endl;
-    // printVector(ia);
-    // std::cout << "Test JA: " << test_ja.size() << std::endl;
-    // printVector(test_ja);
-    // std::cout << "JA: " << ja.size() << std::endl;
-    // printVector(ja);
-}
-
-void localizeCSR(const int *ia, const int size, double *ja, const double *G2L) {
+void localizeCSR(const int *ia, const int size, int *ja, std::unordered_map<int, int> G2L) {
     for (int i = 0; i < size; i++) {
         for (int j = ia[i]; j < ia[i + 1]; j++) {
-            ja[j] = G2L[j];
+            ja[j] = G2L[ja[j]];
         }
     }
+}
+
+void constructG2L(std::vector<int> &ia_en, std::vector<int> &ja_en, std::unordered_map<int, int> &G2L) {
+    int k = 0;
+    for (int i = 0; i < ja_en.size(); i++) {
+        if (!G2L.count(ja_en[i])) {
+            G2L[ja_en[i]] = k++;
+        }
+    }
+}
+
+void fillG2L(std::vector<int> &L2G, std::unordered_map<int, int> &G2L) {
+    for (int j = 0; j < L2G.size(); j++) {
+        G2L[L2G[j]] = j;
+    }
+}
+
+void makeIncidenceMatrixCSR(const int Nx, int Ny, const int K1, const int K2, std::vector<int> &L2G, std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &Part) {
+    ia.push_back(0);
+
+    std::vector<int> new_L2G;
+    std::vector<int> new_Part;
+
+    for (int i = 0; i < L2G.size(); i++) {
+        int cell = L2G[i];
+        int global_idx = cell / (K1 + K2) * K2 + std::max(0, cell % (K1 + K2) - K1);
+
+        if (cell % (K1 + K2) < K1) {
+            ja.push_back(cell + cell / Nx);
+            ja.push_back(cell + cell / Nx + 1);
+            ja.push_back((cell + Nx + 1) + cell / Nx);
+            ja.push_back((cell + Nx + 1) + cell / Nx + 1);
+            ia.push_back(ia[ia.size() - 1] + 4);
+            new_L2G.push_back(global_idx);
+            new_Part.push_back(Part[i]);
+        } else {
+            ja.push_back(cell + cell / Nx);
+            ja.push_back(cell + cell / Nx + 1);
+            ja.push_back((cell + Nx + 1) + cell / Nx);
+            ia.push_back(ia[ia.size() - 1] + 3);
+            new_L2G.push_back(global_idx);
+            new_Part.push_back(Part[i]);
+
+            ja.push_back(cell + cell / Nx + 1);
+            ja.push_back((cell + Nx + 1) + cell / Nx);
+            ja.push_back((cell + Nx + 1) + cell / Nx + 1);
+            ia.push_back(ia[ia.size() - 1] + 3);
+            new_L2G.push_back(global_idx + 1);
+            new_Part.push_back(Part[i]);
+        }
+    }
+
+    L2G.clear();
+    L2G.insert(L2G.end(), new_L2G.begin(), new_L2G.end());
+
+    Part.clear();
+    Part.insert(Part.end(), new_Part.begin(), new_Part.end());
 }
 
 #else
@@ -155,43 +121,34 @@ void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<i
     ia[(Nx + 1) * (Ny + 1)] = ja.size();
 }
 
-#endif
-std::pair<int *, int *> makeIncidenceMatrixCSR(int Nx, int Ny, int K1, int K2, int Ne, int nnz) {
-    auto ia = new int[Ne + 1];
-    auto ja = new int[nnz];
-    ia[0] = 0;
 
-    int offset = 0;
-    for (int cell = 0; cell < Nx * Ny; cell++) {
-        if (cell % (K1 + K2) < K1) {
-            int element_number = cell + offset;
-            ia[element_number + 1] = ia[element_number] + 4;
+void makeIncidenceMatrixCSR(const int Nx, int Ny, const int K1, const int K2, const int i_start, const int i_end, const int j_start, const int j_end, std::vector<int> &ia, std::vector<int> &ja) {
+    ia.push_back(0);
 
-            ja[ia[element_number]] = cell + cell / Nx;
-            ja[ia[element_number] + 1] = cell + cell / Nx + 1;
-            ja[ia[element_number] + 2] = (cell + Nx + 1) + cell / Nx;
-            ja[ia[element_number] + 3] = (cell + Nx + 1) + cell / Nx + 1;
-        } else {
-            int element_number = cell + offset;
-            ia[element_number + 1] = ia[element_number] + 3;
-            ja[ia[element_number]] = cell + cell / Nx;
-            ja[ia[element_number] + 1] = cell + cell / Nx + 1;
-            ja[ia[element_number] + 2] = (cell + Nx + 1) + cell / Nx;
-            // ja[ia[element_number] + 3] = (cell + Nx + 1) + cell / Nx + 1;
+    for (int i = i_start; i <= i_end; i++) {
+        for (int j = j_start; j <= j_end; j++) {
+            const int cell = i * Nx + j;
+            if (cell % (K1 + K2) < K1) {
+                ja.push_back(cell + cell / Nx);
+                ja.push_back(cell + cell / Nx + 1);
+                ja.push_back((cell + Nx + 1) + cell / Nx);
+                ja.push_back((cell + Nx + 1) + cell / Nx + 1);
+                ia.push_back(ia[ia.size() - 1] + 4);
+            } else {
+                ja.push_back(cell + cell / Nx);
+                ja.push_back(cell + cell / Nx + 1);
+                ja.push_back((cell + Nx + 1) + cell / Nx);
+                ia.push_back(ia[ia.size() - 1] + 3);
 
-            element_number = cell + ++offset;
-            ia[element_number + 1] = ia[element_number] + 3;
-            // ja[ia[element_number]] = cell + cell / Nx;
-            ja[ia[element_number]] = cell + cell / Nx + 1;
-            ja[ia[element_number] + 1] = (cell + Nx + 1) + cell / Nx;
-            ja[ia[element_number] + 2] = (cell + Nx + 1) + cell / Nx + 1;
-
-            // offset++;
+                ja.push_back(cell + cell / Nx + 1);
+                ja.push_back((cell + Nx + 1) + cell / Nx);
+                ja.push_back((cell + Nx + 1) + cell / Nx + 1);
+                ia.push_back(ia[ia.size() - 1] + 3);
+            }
         }
     }
-
-    return std::make_pair(ia, ja);
 }
+#endif
 
 #ifdef USE_MPI
 void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, std::vector<double> &a, std::vector<double> &b,
@@ -263,10 +220,13 @@ void buildFilledMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<d
     }
 }
 
-std::pair<int *, int *> transposeCSR(const int *ia, const int *ja, const int Ne, const int Nn) {
-    const int nnz = ia[Ne];
-    auto ia_new = new int[Nn + 1];
-    auto ja_new = new int[nnz];
+void transposeCSR(std::vector<int> &ia, std::vector<int> &ja, const int Nn, std::vector<int> &ia_new,
+                  std::vector<int> &ja_new) {
+    const int nnz = ia[ia.size() - 1];
+    // auto ia_new = new int[Nn + 1];
+    // auto ja_new = new int[nnz];
+    ia_new.resize(Nn + 1);
+    ja_new.resize(nnz);
 
     // Zero out ia_new
     for (int i = 0; i <= Nn; i++) {
@@ -291,7 +251,7 @@ std::pair<int *, int *> transposeCSR(const int *ia, const int *ja, const int Ne,
     }
 
     // Fill the column indices
-    for (int i = 0; i < Ne; ++i) {
+    for (int i = 0; i < ia.size() - 1; ++i) {
         for (int k = ia[i]; k < ia[i + 1]; ++k) {
             const int col = ja[k];
             const int dest_pos = buf[col]++;
@@ -300,8 +260,6 @@ std::pair<int *, int *> transposeCSR(const int *ia, const int *ja, const int Ne,
     }
 
     delete[] buf;
-
-    return std::make_pair(ia_new, ja_new);
 }
 
 std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
@@ -373,7 +331,7 @@ std::pair<int *, int *> buildAdjacencyMatrixCSRUsingSets(const int *ia_en, const
     return std::make_pair(ia_adj_new, ja_adj_new);
 }
 
-
+#ifndef USE_MPI
 std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
     std::vector<int> ia_adj(Ne + 1);
     std::vector<int> ja_adj;
@@ -410,3 +368,37 @@ std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const i
 
     return std::make_pair(ia_adj_new, ja_adj_new);
 }
+#else
+void buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, std::vector<int> &ia_adj, std::vector<int> &
+                                      ja_adj, const int Ne, std::vector<int> &Part, const int MyID) {
+    ia_adj.push_back(0);
+
+    for (int element1 = 0; element1 < Ne; ++element1) {
+        if (Part[element1] != MyID)
+            continue;
+
+        std::vector<int> adjacent;
+        for (int k = ia_en[element1]; k < ia_en[element1 + 1]; ++k) {
+            const int node = ja_en[k];
+
+            for (int l = ia_ne[node]; l < ia_ne[node + 1]; ++l) {
+                const int element2 = ja_ne[l];
+                adjacent.push_back(element2);
+            }
+        }
+        adjacent.push_back(element1);
+
+        std::sort(adjacent.begin(), adjacent.end());
+
+        ja_adj.push_back(adjacent[0]);
+        int count = 1;
+        for (int i = 1; i < adjacent.size(); ++i) {
+            if (adjacent[i] != adjacent[i - 1]) {
+                ja_adj.push_back(adjacent[i]);
+                count++;
+            }
+        }
+        ia_adj.push_back(ia_adj.back() + count);
+    }
+}
+#endif
