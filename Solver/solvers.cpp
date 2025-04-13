@@ -29,8 +29,8 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
     send_buf.resize(send_offset[send_offset.size() - 1]);
 
     int N = ia.size() - 1;
-    double eps = 1e-3;
-    int maxit = 20;
+    const double eps = 1e-3;
+    const int maxit = 20;
 
     const auto z = new double[N];
     const auto p = new double[N];

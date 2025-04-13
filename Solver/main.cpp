@@ -1,3 +1,5 @@
+#include <unordered_map>
+
 #include "omp.h"
 #include "csr.h"
 #include "Utilities/input.h"
@@ -75,10 +77,10 @@ int main(int argc, char** argv) {
     // std::cout << omp_get_max_threads() << std::endl;
 
     std::vector<int> L2G;
-    std::vector<int> G2L((Nx + 1) * (Ny + 1), -1);
-    std::vector<int> Part((Nx + 1) * (Ny + 1));
+    // std::vector<int> G2L;
+    std::vector<int> Part;
 
-    std::tuple<int, int, int, int, int, int, int, int, int, int> t = input(Nx, Ny, Px, Py, MyID, L2G, G2L, Part);
+    auto t = input(Nx, Ny, Px, Py, MyID, L2G, Part);
     int i_start = std::get<0>(t);
     int i_end = std::get<1>(t);
     int i_count = std::get<2>(t);
@@ -89,18 +91,63 @@ int main(int argc, char** argv) {
     int right_halo = std::get<7>(t);
     int bottom_halo = std::get<8>(t);
     int left_halo = std::get<9>(t);
+    int N_local = std::get<10>(t);
+
+
+    std::cout << "My ID = " << MyID << ", i_start " << i_start << ", i_count " << i_count << ", i_end " << i_end << ", j_start " << j_start << ", j_count " << j_count << ", j_end " << j_end << std::endl;
+    std::cout << "My ID = " << MyID << ", top_halo " << top_halo << ", right_halo " << right_halo << ", bottom_halo " << bottom_halo << ", left_halo " << left_halo << std::endl;
+
 
     // std::vector<int> ia(N0 + 1);
-    std::vector<int> ia = {0};
+    std::vector<int> ia_en;
     // std::vector<int> ja(7 * (N0 + 1));
-    std::vector<int> ja;
+    std::vector<int> ja_en;
 
-    makeCSR(Nx, Ny, K1, K2, i_start + top_halo, i_end - bottom_halo, j_start + left_halo, j_end - right_halo, G2L, ia, ja);
+    makeIncidenceMatrixCSR(Nx, Ny, K1, K2, L2G, ia_en, ja_en, Part);
 
-    std::vector<double> a(ja.size());
-    std::vector<double> b(ia.size() - 1);
-    std::vector<double> diag(ia.size() - 1);
-    fillCSR(ia, ja, L2G, a, b, diag);
+    std::cout << "My ID = " << MyID << std::endl;
+    std::cout << "L2G size = " << L2G.size() << std::endl;
+    printVector(ja_en, std::cout);
+
+    std::unordered_map<int, int> G2L;
+    fillG2L(L2G, G2L);
+
+    std::unordered_map<int, int> G2L_nodes;
+    constructG2L(ia_en, ja_en, G2L_nodes);
+
+    localizeCSR(ia_en.data(), ia_en.size(), ja_en.data(), G2L_nodes);
+
+    // printVector(L2G, std::cout);
+    std::cout << "G2L_nodes size = " << G2L_nodes.size() << std::endl;
+    printVector(ja_en, std::cout);
+
+    std::vector<int> ia_ne, ja_ne;
+    transposeCSR(ia_en, ja_en, G2L_nodes.size(), ia_ne, ja_ne);
+
+    printVector(ja_ne, std::cout);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    std::cout << "My ID = " << MyID << ", Part size " << Part.size() << ", Ne = " << ia_en.size() - 1 << std::endl;
+    // printVector(Part, std::cout);
+
+    std::vector<int> ia_ee, ja_ee;
+    buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne.data(), ja_ne.data(), ia_ee, ja_ee, ia_en.size() - 1, Part, MyID);
+    // auto ia_ee = std::get<0>(matrix);
+    // auto ja_ee = std::get<1>(matrix);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    std::cout << "My ID = " << MyID << std::endl;
+    printVector(ja_ee, std::cout);
+
+    MPI_Finalize();
+    return 0;
+
+    // makeCSR(Nx, Ny, K1, K2, i_start + top_halo, i_end - bottom_halo, j_start + left_halo, j_end - right_halo, G2L, ia, ja);
+
+    std::vector<double> a(0);
+    std::vector<double> b(0);
+    std::vector<double> diag(0);
+    // fillCSR(ia_ee, ja_ee, L2G, a, b, diag);
 
     // printVector(ia);
     // printVector(ja);
@@ -110,7 +157,7 @@ int main(int argc, char** argv) {
     std::vector<double> res(b.size());
 
     double start = MPI_Wtime();
-    int iterations = solve(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, ia, ja, a, b, diag, res);
+    // int iterations = solve(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, ia_ee, ja_ee, a, b, diag, res);
 
 
     // std::cout << "MyID: " << MyID << ", x[0]: " << res[0] << std::endl;
@@ -124,7 +171,7 @@ int main(int argc, char** argv) {
 
     if (MyID == 0) {
         LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
-        LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
+        // LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
     }
 
     #else
@@ -158,29 +205,35 @@ int main(int argc, char** argv) {
 
     LOG_DEBUG << "Nn = " << Nn << ", Ne = " << Ne << ", nnz = " << nnz << std::endl;
 
-    auto matrix = makeIncidenceMatrixCSR(Nx, Ny, K1, K2, Ne, nnz);
-    int *ia_en = std::get<0>(matrix);
-    int *ja_en = std::get<1>(matrix);
+    std::vector<int> ia_en;
+    std::vector<int> ja_en;
+    makeIncidenceMatrixCSR(Nx, Ny, K1, K2, 0, Ny - 1, 0, Nx - 1, ia_en, ja_en);
+    // int *ia_en = std::get<0>(matrix);
+    // int *ja_en = std::get<1>(matrix);
 
     #ifdef USE_DEBUG_MODE
     LOG_DEBUG << "IA_EN:\t";
-    printArray(ia_en, Ne + 1, LOG);
+    printVector(ia_en, LOG);
     LOG_DEBUG << "JA_EN:\t";
-    printArray(ja_en, ia_en[Ne], LOG);
+    printVector(ja_en, LOG);
     #endif
 
-    auto matrix_transposed = transposeCSR(ia_en, ja_en, Ne, Nn);
-    int *ia_ne = std::get<0>(matrix_transposed);
-    int *ja_ne = std::get<1>(matrix_transposed);
+    std::vector<int> ia_ne;
+    std::vector<int> ja_ne;
+    transposeCSR(ia_en, ja_en, Nn, ia_ne, ja_ne);
+    // int *ia_ne = std::get<0>(matrix_transposed);
+    // int *ja_ne = std::get<1>(matrix_transposed);
 
     #ifdef USE_DEBUG_MODE
     LOG_DEBUG << "IA_NE:\t";
-    printArray(ia_ne, Nn + 1, LOG);
+    printArray(ia_ne.data(), Nn + 1, LOG);
     LOG_DEBUG << "JA_NE:\t";
-    printArray(ja_ne, ia_ne[Nn], LOG);
+    printArray(ja_ne.data(), ia_ne[Nn], LOG);
     #endif
 
-    auto matrix_nn = buildAdjacencyMatrixCSRUsingSort(ia_en, ja_en, ia_ne, ja_ne, Ne, Nn);
+    auto matrix_nn = buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne.data(), ja_ne.data(), Ne, Nn);
+    // Ne = Nn;
+    // auto matrix_nn = buildAdjacencyMatrixCSRUsingSort(ia_ne.data(), ja_ne.data(), ia_en.data(), ja_en.data(), Ne, Nn);
     int *ia_nn = std::get<0>(matrix_nn);
     int *ja_nn = std::get<1>(matrix_nn);
 
@@ -226,10 +279,10 @@ int main(int argc, char** argv) {
     LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
 
     delete[] stats;
-    delete[] ia_en;
-    delete[] ja_en;
-    delete[] ia_ne;
-    delete[] ja_ne;
+    // delete[] ia_en;
+    // delete[] ja_en;
+    // delete[] ia_ne;
+    // delete[] ja_ne;
     delete[] ia;
     delete[] ja;
     delete[] a;
