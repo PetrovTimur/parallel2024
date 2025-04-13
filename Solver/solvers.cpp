@@ -14,26 +14,23 @@
 #endif
 
 #ifdef USE_MPI
-int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bottom_halo, int i_count, int j_count,
-        std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<double> &b,
-        std::vector<double> &diag, std::vector<double> &res) {
+int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &L2G, const std::vector<int> &ia, const std::vector<int> &ja,
+          const std::vector<double> &a, const std::vector<double> &b, const std::vector<double> &diag, std::vector<double> &res) {
 
-    std::vector<double> recv_buf;
-    std::vector<int> recv_offset(7);
+    std::vector<int> RecvOffset, SendOffset;
+    std::vector<int> Recv, Send;
+    std::vector<int> Neighbors;
 
-    std::vector<double> send_buf;
-    std::vector<int> send_offset(7);
+    ComInit(ia, ja, Part, L2G, MyID, RecvOffset, SendOffset, Send, Recv, Neighbors);
 
-    ComInitOffsets(top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, recv_offset, send_offset);
-    recv_buf.resize(recv_offset[recv_offset.size() - 1]);
-    send_buf.resize(send_offset[send_offset.size() - 1]);
+    // std::cout << "My ID: " << MyID << ", Neighbors size: " << Neighbors.size() << std::endl;
 
     int N = ia.size() - 1;
     const double eps = 1e-3;
     const int maxit = 20;
 
     const auto z = new double[N];
-    const auto p = new double[N];
+    const auto p = new double[N + Recv.size()];
 
     const auto q = new double[N];
     arrInit(q, 0., N);
@@ -78,11 +75,9 @@ int solve(int MyID, int Px, int top_halo, int left_halo, int right_halo, int bot
             axpy(beta, p, z, N, p);
         }
 
-        Com(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count,
-        p, recv_offset, send_offset,
-        recv_buf, send_buf);
+        ComUpdate(p, RecvOffset, SendOffset, Neighbors, Send, Recv);
 
-        spMV(ia, ja, a, p, N, recv_buf, q);
+        spMV(ia, ja, a, p, q);
 
         dot(p, q, N, buf);
         MPI_Allreduce(&buf, &total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
