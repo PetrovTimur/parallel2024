@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
        be reflected in arguments. */
     argp_parse (&argp, argc, argv, 0, nullptr, &arguments);
 
-    // omp_set_num_threads(omp_get_max_threads());
+    omp_set_num_threads(1);
 
     const int Nx = arguments.Nx;
     const int Ny = arguments.Ny;
@@ -81,21 +81,21 @@ int main(int argc, char** argv) {
     std::vector<int> Part;
 
     auto t = input(Nx, Ny, Px, Py, MyID, L2G, Part);
-    int i_start = std::get<0>(t);
-    int i_end = std::get<1>(t);
-    int i_count = std::get<2>(t);
-    int j_start = std::get<3>(t);
-    int j_end = std::get<4>(t);
-    int j_count = std::get<5>(t);
-    int top_halo = std::get<6>(t);
-    int right_halo = std::get<7>(t);
-    int bottom_halo = std::get<8>(t);
-    int left_halo = std::get<9>(t);
-    int N_local = std::get<10>(t);
+    // int i_start = std::get<0>(t);
+    // int i_end = std::get<1>(t);
+    // int i_count = std::get<2>(t);
+    // int j_start = std::get<3>(t);
+    // int j_end = std::get<4>(t);
+    // int j_count = std::get<5>(t);
+    // int top_halo = std::get<6>(t);
+    // int right_halo = std::get<7>(t);
+    // int bottom_halo = std::get<8>(t);
+    // int left_halo = std::get<9>(t);
+    // int N_local = std::get<10>(t);
 
 
-    std::cout << "My ID = " << MyID << ", i_start " << i_start << ", i_count " << i_count << ", i_end " << i_end << ", j_start " << j_start << ", j_count " << j_count << ", j_end " << j_end << std::endl;
-    std::cout << "My ID = " << MyID << ", top_halo " << top_halo << ", right_halo " << right_halo << ", bottom_halo " << bottom_halo << ", left_halo " << left_halo << std::endl;
+    // std::cout << "My ID = " << MyID << ", i_start " << i_start << ", i_count " << i_count << ", i_end " << i_end << ", j_start " << j_start << ", j_count " << j_count << ", j_end " << j_end << std::endl;
+    // std::cout << "My ID = " << MyID << ", top_halo " << top_halo << ", right_halo " << right_halo << ", bottom_halo " << bottom_halo << ", left_halo " << left_halo << std::endl;
 
 
     // std::vector<int> ia(N0 + 1);
@@ -103,11 +103,14 @@ int main(int argc, char** argv) {
     // std::vector<int> ja(7 * (N0 + 1));
     std::vector<int> ja_en;
 
+    // std::cout << "My ID = " << MyID << std::endl;
+    // std::cout << "L2G size = " << L2G.size() << std::endl;
+    // printVector(L2G, std::cout);
+    //
+    // MPI_Barrier(MPI_COMM_WORLD);
+
     makeIncidenceMatrixCSR(Nx, Ny, K1, K2, L2G, ia_en, ja_en, Part);
 
-    std::cout << "My ID = " << MyID << std::endl;
-    std::cout << "L2G size = " << L2G.size() << std::endl;
-    printVector(ja_en, std::cout);
 
     std::unordered_map<int, int> G2L;
     fillG2L(L2G, G2L);
@@ -118,16 +121,16 @@ int main(int argc, char** argv) {
     localizeCSR(ia_en.data(), ia_en.size(), ja_en.data(), G2L_nodes);
 
     // printVector(L2G, std::cout);
-    std::cout << "G2L_nodes size = " << G2L_nodes.size() << std::endl;
-    printVector(ja_en, std::cout);
+    // std::cout << "G2L_nodes size = " << G2L_nodes.size() << std::endl;
+    // printVector(ja_en, std::cout);
 
     std::vector<int> ia_ne, ja_ne;
     transposeCSR(ia_en, ja_en, G2L_nodes.size(), ia_ne, ja_ne);
 
-    printVector(ja_ne, std::cout);
+    // printVector(ja_ne, std::cout);
 
-    MPI_Barrier(MPI_COMM_WORLD);
-    std::cout << "My ID = " << MyID << ", Part size " << Part.size() << ", Ne = " << ia_en.size() - 1 << std::endl;
+    // MPI_Barrier(MPI_COMM_WORLD);
+    // std::cout << "My ID = " << MyID << ", Part size " << Part.size() << ", Ne = " << ia_en.size() - 1 << std::endl;
     // printVector(Part, std::cout);
 
     std::vector<int> ia_ee, ja_ee;
@@ -135,29 +138,32 @@ int main(int argc, char** argv) {
     // auto ia_ee = std::get<0>(matrix);
     // auto ja_ee = std::get<1>(matrix);
 
-    MPI_Barrier(MPI_COMM_WORLD);
-    std::cout << "My ID = " << MyID << std::endl;
-    printVector(ja_ee, std::cout);
+    // MPI_Barrier(MPI_COMM_WORLD);
+    // std::cout << "My ID = " << MyID << std::endl;
+    // printVector(L2G, std::cout);
 
-    MPI_Finalize();
-    return 0;
+    std::vector<double> a(ja_ee.size());
+    std::vector<double> b(ia_ee.size() - 1);
+    std::vector<double> diag(ia_ee.size() - 1);
+    fillCSR(ia_ee, ja_ee, L2G, a, b, diag);
 
-    // makeCSR(Nx, Ny, K1, K2, i_start + top_halo, i_end - bottom_halo, j_start + left_halo, j_end - right_halo, G2L, ia, ja);
-
-    std::vector<double> a(0);
-    std::vector<double> b(0);
-    std::vector<double> diag(0);
-    // fillCSR(ia_ee, ja_ee, L2G, a, b, diag);
+    // std::cout << "My ID = " << MyID << std::endl;
+    // printVector(ja_ee, std::cout);
 
     // printVector(ia);
     // printVector(ja);
-    // printVector(a);
+    // if (MyID == 0) {
+    //     LOG_INFO << "My ID = " << MyID << ", b size: " << b.size() << std::endl;
+    //     printVector(ia_ee, LOG);
+    //     printVector(a, LOG);
+    //     printVector(b, LOG);
+    // }
     // printVector(b);
 
-    std::vector<double> res(b.size());
+    std::vector<double> res(ia_ee.size() - 1);
 
     double start = MPI_Wtime();
-    // int iterations = solve(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, ia_ee, ja_ee, a, b, diag, res);
+    int iterations = solve(MyID, Part, L2G, ia_ee, ja_ee, a, b, diag, res);
 
 
     // std::cout << "MyID: " << MyID << ", x[0]: " << res[0] << std::endl;
@@ -171,7 +177,8 @@ int main(int argc, char** argv) {
 
     if (MyID == 0) {
         LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
-        // LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
+        LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
+        LOG_INFO << res[0] << std::endl;
     }
 
     #else
