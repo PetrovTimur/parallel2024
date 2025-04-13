@@ -4,12 +4,14 @@
 
 // Test transpose of a square matrix
 bool TestSquareMatrixTranspose() {
-    int ia[] = {0, 2, 3, 5};  // Row pointers
-    int ja[] = {0, 1, 2, 0, 2};  // Column indices
+    std::vector<int> ia = {0, 2, 3, 5};  // Row pointers
+    std::vector<int> ja = {0, 1, 2, 0, 2};  // Column indices
     int rows = 3;
     int cols = 3;
 
-    auto result = transposeCSR(ia, ja, rows, cols);
+    std::vector<int> ia_ne, ja_ne;
+    transposeCSR(ia, ja, cols, ia_ne, ja_ne);
+    auto result = std::make_pair(ia_ne.data(), ja_ne.data());
 
     int expected_ia[] = {0, 2, 3, 5};
     int expected_ja[] = {0, 2, 0, 1, 2};
@@ -34,20 +36,22 @@ bool TestSquareMatrixTranspose() {
         }
     }
 
-    delete[] result.first;
-    delete[] result.second;
+    // delete[] result.first;
+    // delete[] result.second;
 
     return success;
 }
 
 // Test transpose of a rectangular matrix
 bool TestRectangularMatrixTranspose() {
-    int ia[] = {0, 2, 4};  // Row pointers
-    int ja[] = {0, 2, 1, 2};  // Column indices
+    std::vector<int> ia = {0, 2, 4};  // Row pointers
+    std::vector<int> ja = {0, 2, 1, 2};  // Column indices
     int rows = 2;
     int cols = 3;
 
-    auto result = transposeCSR(ia, ja, rows, cols);
+    std::vector<int> ia_ne, ja_ne;
+    transposeCSR(ia, ja, cols, ia_ne, ja_ne);
+    auto result = std::make_pair(ia_ne.data(), ja_ne.data());
 
     int expected_ia[] = {0, 1, 2, 4};
     int expected_ja[] = {0, 1, 0, 1};
@@ -72,20 +76,22 @@ bool TestRectangularMatrixTranspose() {
         }
     }
 
-    delete[] result.first;
-    delete[] result.second;
+    // delete[] result.first;
+    // delete[] result.second;
 
     return success;
 }
 
 // Test transpose of an empty matrix
 bool TestEmptyMatrixTranspose() {
-    int ia[] = {0, 0};  // Empty matrix
-    int ja[] = {};      // No elements
+    std::vector<int> ia = {0, 0};  // Empty matrix
+    std::vector<int> ja = {};      // No elements
     int rows = 1;
     int cols = 1;
 
-    auto result = transposeCSR(ia, ja, rows, cols);
+    std::vector<int> ia_ne, ja_ne;
+    transposeCSR(ia, ja, cols, ia_ne, ja_ne);
+    auto result = std::make_pair(ia_ne.data(), ja_ne.data());
 
     bool success = true;
 
@@ -96,20 +102,22 @@ bool TestEmptyMatrixTranspose() {
         success = false;
     }
 
-    delete[] result.first;
-    delete[] result.second;
+    // delete[] result.first;
+    // delete[] result.second;
 
     return success;
 }
 
 // Test transpose of a diagonal matrix
 bool TestDiagonalMatrixTranspose() {
-    int ia[] = {0, 1, 2, 3};
-    int ja[] = {0, 1, 2};
+    std::vector<int> ia = {0, 1, 2, 3};
+    std::vector<int> ja = {0, 1, 2};
     int rows = 3;
     int cols = 3;
 
-    auto result = transposeCSR(ia, ja, rows, cols);
+    std::vector<int> ia_ne, ja_ne;
+    transposeCSR(ia, ja, cols, ia_ne, ja_ne);
+    auto result = std::make_pair(ia_ne.data(), ja_ne.data());
 
     int expected_ia[] = {0, 1, 2, 3};
     int expected_ja[] = {0, 1, 2};
@@ -134,8 +142,8 @@ bool TestDiagonalMatrixTranspose() {
         }
     }
 
-    delete[] result.first;
-    delete[] result.second;
+    // delete[] result.first;
+    // delete[] result.second;
 
     return success;
 }

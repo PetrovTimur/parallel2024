@@ -5,13 +5,15 @@
 // Test adjacency matrix from incidence matrix with multiple connections
 bool IncidenceToAdjacencyMultipleConnections() {
     // Incidence matrix: Elements as rows, nodes as columns
-    int ia[] = {0, 2, 3, 5};  // Row pointers for elements
-    int ja[] = {0, 1, 2, 0, 2};  // Column indices (nodes)
+    std::vector<int> ia = {0, 2, 3, 5};  // Row pointers for elements
+    std::vector<int> ja = {0, 1, 2, 0, 2};  // Column indices (nodes)
     int rows = 3;  // Number of elements
     int cols = 3;  // Number of nodes
 
     // First transpose to get nodes as rows
-    auto transposed = transposeCSR(ia, ja, rows, cols);
+    std::vector<int> ia_ne, ja_ne;
+    transposeCSR(ia, ja, cols, ia_ne, ja_ne);
+    auto transposed = std::make_pair(ia_ne.data(), ja_ne.data());
 
     // Now build adjacency matrix
     auto result = buildAdjacencyMatrixCSR(transposed.first, transposed.second, rows, cols);
@@ -42,8 +44,8 @@ bool IncidenceToAdjacencyMultipleConnections() {
 
     delete[] result.first;
     delete[] result.second;
-    delete[] transposed.first;
-    delete[] transposed.second;
+    // delete[] transposed.first;
+    // delete[] transposed.second;
 
     return success;
 }
@@ -51,13 +53,15 @@ bool IncidenceToAdjacencyMultipleConnections() {
 // Test simple path graph incidence to adjacency conversion
 bool PathGraphIncidenceToAdjacency() {
     // Incidence matrix for path graph with 3 nodes and 2 edges
-    int ia[] = {0, 2, 4};  // Row pointers for elements
-    int ja[] = {0, 1, 1, 2};  // Column indices (nodes)
+    std::vector<int> ia = {0, 2, 4};  // Row pointers for elements
+    std::vector<int> ja = {0, 1, 1, 2};  // Column indices (nodes)
     int rows = 2;  // Number of elements
     int cols = 3;  // Number of nodes
 
     // First transpose to get nodes as rows
-    auto transposed = transposeCSR(ia, ja, rows, cols);
+    std::vector<int> ia_ne, ja_ne;
+    transposeCSR(ia, ja, cols, ia_ne, ja_ne);
+    auto transposed = std::make_pair(ia_ne.data(), ja_ne.data());
 
     // Now build adjacency matrix
     auto result = buildAdjacencyMatrixCSR(transposed.first, transposed.second, rows, cols);
@@ -88,8 +92,8 @@ bool PathGraphIncidenceToAdjacency() {
 
     delete[] result.first;
     delete[] result.second;
-    delete[] transposed.first;
-    delete[] transposed.second;
+    // delete[] transposed.first;
+    // delete[] transposed.second;
 
     return success;
 }
@@ -97,13 +101,15 @@ bool PathGraphIncidenceToAdjacency() {
 // Test isolated nodes in incidence matrix
 bool IsolatedNodesIncidenceToAdjacency() {
     // Incidence matrix with isolated node
-    int ia[] = {0, 2};  // Row pointers for elements
-    int ja[] = {0, 2};  // Column indices (nodes) - node 1 is isolated
+    std::vector<int> ia = {0, 2};  // Row pointers for elements
+    std::vector<int> ja = {0, 2};  // Column indices (nodes) - node 1 is isolated
     int rows = 1;  // Number of elements
     int cols = 3;  // Number of nodes
 
     // First transpose to get nodes as rows
-    auto transposed = transposeCSR(ia, ja, rows, cols);
+    std::vector<int> ia_ne, ja_ne;
+    transposeCSR(ia, ja, cols, ia_ne, ja_ne);
+    auto transposed = std::make_pair(ia_ne.data(), ja_ne.data());
 
     // Now build adjacency matrix
     auto result = buildAdjacencyMatrixCSR(transposed.first, transposed.second, rows, cols);
@@ -134,8 +140,8 @@ bool IsolatedNodesIncidenceToAdjacency() {
 
     delete[] result.first;
     delete[] result.second;
-    delete[] transposed.first;
-    delete[] transposed.second;
+    // delete[] transposed.first;
+    // delete[] transposed.second;
 
     return success;
 }
@@ -143,13 +149,15 @@ bool IsolatedNodesIncidenceToAdjacency() {
 // Test completely disconnected graph
 bool DisconnectedGraphIncidenceToAdjacency() {
     // Incidence matrix with no connections
-    int ia[] = {0, 0, 0};  // Row pointers for elements - no elements
-    int ja[] = {};  // No connections
+    std::vector<int> ia = {0, 0, 0};  // Row pointers for elements - no elements
+    std::vector<int> ja = {};  // No connections
     int rows = 2;  // Number of elements (dummy)
     int cols = 3;  // Number of nodes
 
     // First transpose to get nodes as rows
-    auto transposed = transposeCSR(ia, ja, rows, cols);
+    std::vector<int> ia_ne, ja_ne;
+    transposeCSR(ia, ja, cols, ia_ne, ja_ne);
+    auto transposed = std::make_pair(ia_ne.data(), ja_ne.data());
 
     // Now build adjacency matrix
     auto result = buildAdjacencyMatrixCSR(transposed.first, transposed.second, rows, cols);
@@ -171,8 +179,8 @@ bool DisconnectedGraphIncidenceToAdjacency() {
 
     delete[] result.first;
     delete[] result.second;
-    delete[] transposed.first;
-    delete[] transposed.second;
+    // delete[] transposed.first;
+    // delete[] transposed.second;
 
     return success;
 }

@@ -20,28 +20,29 @@ int main() {
     int Nn = stats[1];
     int nnz = (stats[0] - stats[2]) * 4 + 2 * stats[2] * 3;
 
-    auto csr = makeIncidenceMatrixCSR(Nx, Ny, 1, 1, Ne, nnz);
-    auto ia_en = csr.first;
-    auto ja_en = csr.second;
+    std::vector<int> ia_en;
+    std::vector<int> ja_en;
+    makeIncidenceMatrixCSR(Nx, Ny, 1, 1, 0, Ny, 0, Nx, ia_en, ja_en);
 
-    printArray(ia_en, Ne + 1);
-    printArray(ja_en, nnz);
+    printArray(ia_en.data(), Ne + 1);
+    printArray(ja_en.data(), nnz);
 
-    auto csr_transposed = transposeCSR(ia_en, ja_en, Ne, Nn);
-    auto ia_ne = csr_transposed.first;
-    auto ja_ne = csr_transposed.second;
+    std::vector<int> ia_ne, ja_ne;
+    transposeCSR(ia_en, ja_en, Nn, ia_ne, ja_ne);
+    // auto ia_ne = csr_transposed.first;
+    // auto ja_ne = csr_transposed.second;
 
-    auto csr_adjacent = buildAdjacencyMatrixCSR(ia_ne, ja_ne, Ne, Nn);
+    auto csr_adjacent = buildAdjacencyMatrixCSR(ia_ne.data(), ja_ne.data(), Ne, Nn);
     auto ia_adj = csr_adjacent.first;
     auto ja_adj = csr_adjacent.second;
 
     printArray(ia_adj, Ne + 1);
     printArray(ja_adj, ia_adj[Ne]);
 
-    delete[] ia_en;
-    delete[] ja_en;
-    delete[] ia_ne;
-    delete[] ja_ne;
+    // delete[] ia_en;
+    // delete[] ja_en;
+    // delete[] ia_ne;
+    // delete[] ja_ne;
     delete[] ia_adj;
     delete[] ja_adj;
 
