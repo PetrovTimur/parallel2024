@@ -42,7 +42,7 @@ void makeIncidenceMatrixCSR(const int Nx, int Ny, const int K1, const int K2, st
 
     for (int i = 0; i < L2G.size(); i++) {
         int cell = L2G[i];
-        int global_idx = cell / (K1 + K2) * K2 + std::max(0, cell % (K1 + K2) - K1);
+        int global_idx = cell + cell / (K1 + K2) * K2 + std::max(0, cell % (K1 + K2) - K1);
 
         if (cell % (K1 + K2) < K1) {
             ja.push_back(cell + cell / Nx);
