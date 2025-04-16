@@ -59,3 +59,18 @@ __global__ void reduce1(const float *g_idata, float *g_odata, const unsigned int
     // write result for this block to global mem
     if (tid == 0) g_odata[blockIdx.x] = sdata[0];
 }
+
+__global__ void spMV(const int *ia, const int *ja, const double *a, const double *x, double *y, const int size) {
+    const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < size) {
+        double sum = 0.0;
+        for (unsigned int k = ia[i]; k < ia[i + 1]; k++) {
+            const unsigned int j = ja[k];
+            const double a_ij = a[k];
+            sum += x[j] * a_ij;
+        }
+
+        y[i] = sum;
+    }
+}
+
