@@ -37,8 +37,10 @@ if (NOT USE_MPI)
 endif ()
 
 if (USE_CUDA)
+    message("CUDA TESTING")
     set(CUDA_TESTS
             AXpYCUDATest
+            ReduceCUDATest
     )
 
     foreach (TEST ${CUDA_TESTS})
