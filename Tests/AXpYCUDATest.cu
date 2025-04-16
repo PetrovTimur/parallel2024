@@ -2,7 +2,6 @@
 #include "thrust/device_vector.h"
 #include "Solver/Kernels/mathfunc.cuh"
 #include <iostream>
-#include <omp.h>
 #include <vector>
 
 
@@ -18,11 +17,23 @@ void axpy_gpu(double a, double *x, double *y, int size, double *res) {
     cudaMemcpy(d_x, x, size * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_y, y, size * sizeof(double), cudaMemcpyHostToDevice);
 
-    double start = omp_get_wtime();
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    cudaEventRecord(start);
     axpy<<<blocksPerGrid, threadsPerBlock>>>(a, d_x, d_y, size, d_res);
+    cudaEventRecord(stop);
+
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    std::cout << 2 * size / 1e9 / (milliseconds / 1000.0) << ", " << milliseconds / 1000.0 << std::endl;
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+
     cudaMemcpy(res, d_res, size * sizeof(double), cudaMemcpyDeviceToHost);
-    double end = omp_get_wtime();
-    std::cout << 2 * size / 1e9 / (end - start)  << ", " << end - start << std::endl;
 
     cudaFree(d_x);
     cudaFree(d_y);
