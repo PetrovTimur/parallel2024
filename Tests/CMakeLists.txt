@@ -41,6 +41,7 @@ if (USE_CUDA)
     set(CUDA_TESTS
             AXpYCUDATest
             ReduceCUDATest
+            DotCUDATest
     )
 
     foreach (TEST ${CUDA_TESTS})
