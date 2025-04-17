@@ -9,4 +9,6 @@ __global__ void reduce1(const float *g_idata, float *g_odata, unsigned int n);
 
 __global__ void spMV(const int *ia, const int *ja, const double *a, const double *x, double *y, int size);
 
+__global__ void dot(const float *x, const float *y, float *z, int N);
+
 #endif //KERNELS_CUH

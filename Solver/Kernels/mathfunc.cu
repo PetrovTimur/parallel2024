@@ -74,3 +74,30 @@ __global__ void spMV(const int *ia, const int *ja, const double *a, const double
     }
 }
 
+__global__ void dot(const float *x, const float *y, float *z, const int N) {
+    extern __shared__ float tsum[];
+
+    const unsigned int id = threadIdx.x;
+    const unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = gridDim.x * blockDim.x;
+
+    tsum[id] = 0.0f;
+
+    for (unsigned int k = tid; k < N; k += stride) {
+        tsum[id] += x[k] * y[k];
+    }
+
+    __syncthreads();
+
+    for (unsigned int k = blockDim.x / 2; k > 0; k /= 2) {
+        if (id < k) {
+            tsum[id] += tsum[id + k];
+        }
+        __syncthreads();
+    }
+
+    if (id == 0) {
+        z[blockIdx.x] = tsum[0];
+    }
+}
+
