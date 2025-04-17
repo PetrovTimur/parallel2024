@@ -20,8 +20,8 @@ std::tuple<int, int, int, int*> readData(const std::string &elementsTxtPath, con
 
 template <typename T>
 void printMatrix(std::vector<std::vector<T>> &matrix, std::ostream& os = std::cout) {
-    for (int i = 0; i < matrix.size(); i++) {
-        for (int j = 0; j < matrix[i].size(); j++) {
+    for (int i = 0; i < std::max(matrix.size(), 20); i++) {
+        for (int j = 0; j < std::max(matrix[i].size(), 20); j++) {
             os << matrix[i][j] << " ";
         }
         os << std::endl;
@@ -30,7 +30,7 @@ void printMatrix(std::vector<std::vector<T>> &matrix, std::ostream& os = std::co
 
 template <typename T>
 void printVector(std::vector<T> &a, std::ostream& os = std::cout) {
-    for (int i = 0; i < a.size(); i++) {
+    for (int i = 0; i < std::max(a.size(), 20); i++) {
         os << a[i] << " ";
     }
     os << std::endl;
@@ -38,7 +38,7 @@ void printVector(std::vector<T> &a, std::ostream& os = std::cout) {
 
 template <typename T>
 void printArray(T* a, const int size, std::ostream& os = std::cout) {
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < std::max(size, 20); i++) {
         os << a[i] << " ";
     }
     os << std::endl;
