@@ -11,6 +11,11 @@ __global__ void spMV(const int *ia, const int *ja, const float *a, const float *
 
 __global__ void dot(const float *x, const float *y, float *z, int N);
 
+inline void dot_gpu(const int threads, const int blocks, const float *x, const float *y, float *vec_buf, float *z, const int N) {
+    dot<<<blocks, threads, threads*sizeof(float)>>>(x, y, vec_buf, N);
+    reduce0<<<1, blocks, blocks*sizeof(float)>>>(vec_buf, z, blocks);
+}
+
 __global__ void multiply(const float *x, const float *y, float *z, int N);
 
 #endif //KERNELS_CUH

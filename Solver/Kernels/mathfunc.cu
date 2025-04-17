@@ -3,34 +3,36 @@
 
 __global__ void axpy(const float a, const float *x, const float *y, const int size, float *res) {
     const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < size) {
-        res[i] = a * x[i] + y[i];
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int k = i; k < size; k += stride) {
+        res[k] = a * x[k] + y[k];
     }
 }
 
 __global__ void reduce0(const float *x, float *y, const int N) {
     extern __shared__ float tsum[];
 
-    const unsigned int id = threadIdx.x;
-    const unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int tid = threadIdx.x;
+    const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = gridDim.x * blockDim.x;
 
-    tsum[id] = 0.0f;
+    tsum[tid] = 0.0f;
 
-    for (unsigned int k = tid; k < N; k += stride) {
-        tsum[id] += x[k];
+    for (unsigned int k = i; k < N; k += stride) {
+        tsum[tid] += x[k];
     }
 
     __syncthreads();
 
     for (unsigned int k = blockDim.x / 2; k > 0; k /= 2) {
-        if (id < k) {
-            tsum[id] += tsum[id + k];
+        if (tid < k) {
+            tsum[tid] += tsum[tid + k];
         }
         __syncthreads();
     }
 
-    if (id == 0) {
+    if (tid == 0) {
         y[blockIdx.x] = tsum[0];
     }
 }
@@ -62,45 +64,46 @@ __global__ void reduce1(const float *g_idata, float *g_odata, const unsigned int
 
 __global__ void spMV(const int *ia, const int *ja, const float *a, const float *x, float *y, const int size) {
     const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < size) {
+    const unsigned int stride = gridDim.x * blockDim.x;
+
+    for (unsigned int k = i; k < size; k += stride) {
         float sum = 0.0;
-        for (unsigned int k = ia[i]; k < ia[i + 1]; k++) {
-            const unsigned int j = ja[k];
-            const float a_ij = a[k];
+        for (unsigned int p = ia[k]; p < ia[k + 1]; p++) {
+            const unsigned int j = ja[p];
+            const float a_ij = a[p];
             sum += x[j] * a_ij;
         }
 
-        y[i] = sum;
+        y[k] = sum;
     }
 }
 
 __global__ void dot(const float *x, const float *y, float *z, const int N) {
-    extern __shared__ float tsum[256];
+    extern __shared__ float tsum[];
 
-    const unsigned int id = threadIdx.x;
-    const unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int tid = threadIdx.x;
+    const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = gridDim.x * blockDim.x;
 
-    tsum[id] = 0.0f;
+    tsum[tid] = 0.0f;
 
-    for (unsigned int k = tid; k < N; k += stride) {
-        tsum[id] += x[k] * y[k];
+    for (unsigned int k = i; k < N; k += stride) {
+        tsum[tid] += x[k] * y[k];
     }
 
     __syncthreads();
 
     for (unsigned int k = blockDim.x / 2; k > 0; k /= 2) {
-        if (id < k) {
-            tsum[id] += tsum[id + k];
+        if (tid < k) {
+            tsum[tid] += tsum[tid + k];
         }
         __syncthreads();
     }
 
-    if (id == 0) {
+    if (tid == 0) {
         z[blockIdx.x] = tsum[0];
     }
 }
-
 
 __global__ void multiply(const float *x, const float *y, float *z, const int N) {
     const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
