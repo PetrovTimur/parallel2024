@@ -143,7 +143,7 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
 
         #pragma omp parallel for default(none) shared(z, r, diag, N)
         for (int i = 0; i < N; i++) {
-            z[i] = r[i] / diag[i];
+            z[i] = r[i] * diag[i];
         }
 
         rho[0] = rho[1];
