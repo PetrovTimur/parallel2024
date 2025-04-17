@@ -1,11 +1,8 @@
-#include "solvers.cuh"
-
-#include <thrust/host_vector.h>
-
 #include "cuda_runtime.h"
-#include "Solver/Kernels/mathfunc.cuh"
 #include "thrust/device_vector.h"
+#include "Solver/Kernels/mathfunc.cuh"
 #include <Utilities/logger.h>
+#include "solvers.cuh"
 #include "omp.h"
 
 
@@ -39,25 +36,19 @@ inline void checkLast(const char *errorMessage, const char *file,
     }
 }
 
-void dot_gpu(const int threads, const int blocks, const float *x, const float *y, float *vec_buf, float *z, int N) {
-
-    dot<<<blocks, threads, threads*sizeof(float)>>>(x, y, vec_buf, N);
-    reduce0<<<1, blocks, blocks*sizeof(float)>>>(vec_buf, z, blocks);
-}
-
 int solve(const int *ia, const int *ja, const float *a, const float *b, const float *diag, int size, float *res, const double eps, const int maxit) {
     const int N = size - 1;
-    const int blocks = 256;
+    const int blocks = 128;
     const int threads = 256;
 
     thrust::device_vector<float> z(N);
     thrust::device_vector<float> p(N);
-    thrust::device_vector<float> q(N, 0);
-    thrust::device_vector<float> x(N, 0);
+    thrust::device_vector<float> q(N);
+    thrust::device_vector<float> x(N);
     thrust::device_vector<float> r(b, b + N);
     thrust::device_vector<float> diag_gpu(diag, diag + N);
 
-    thrust::device_vector<float> rho(2, 0);
+    thrust::device_vector<float> rho(2);
     thrust::device_vector<int> ia_gpu(ia, ia + N + 1);
     thrust::device_vector<int> ja_gpu(ja, ja + ia[N]);
     thrust::device_vector<float> a_gpu(a, a + ia[N]);
@@ -65,8 +56,8 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
     thrust::device_vector<float> vec_buf(blocks);
 
     float *buf_gpu, *norm_gpu;
-    cudaMalloc((void**)&buf_gpu, sizeof(float));
-    cudaMalloc((void**)&norm_gpu, sizeof(float));
+    cudaMalloc(&buf_gpu, sizeof(float));
+    cudaMalloc(&norm_gpu, sizeof(float));
     int k = 0;
     float buf, norm;
 
@@ -97,8 +88,13 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
 
         rho[0] = rho[1];
 
+        // std::cout << r.size() << std::endl << z.size() << std::endl << N << std::endl;
+
+        assert(r.size() == z.size() && r.size() == N && "Size mismatch");
         dot_gpu(threads, blocks, r.data().get(), z.data().get(), vec_buf.data().get(), rho.data().get() + 1, N);
         getLastCudaError("Kernel execution failed");
+
+        // rho[1] = *buf_gpu;
 
         if (k == 1)
             p = z;
@@ -114,7 +110,7 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
         spMV<<<blocks, threads>>>(ia_gpu.data().get(), ja_gpu.data().get(), a_gpu.data().get(), p.data().get(), q.data().get(), N);
         getLastCudaError("Kernel execution failed");
 
-
+        assert(p.size() == q.size() && p.size() == N && "Size mismatch");
         dot_gpu(threads, blocks, p.data().get(), q.data().get(), vec_buf.data().get(), buf_gpu, N);
         getLastCudaError("Kernel execution failed");
 
@@ -130,7 +126,8 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
 
         LOG_INFO << "Time " << omp_get_wtime() - start << std::endl;
         // LOG_INFO << "rho = " << rho[0] << ", " << rho[1] << ", alpha = " << alpha << std::endl;
-        dot<<<blocks, threads>>>(x.data().get(), x.data().get(), norm_gpu, N);
+        dot_gpu(threads, blocks, x.data().get(), x.data().get(), vec_buf.data().get(), norm_gpu, N);
+        // dot<<<blocks, threads>>>(x.data().get(), x.data().get(), norm_gpu, N);
         cudaMemcpy(&norm, norm_gpu, sizeof(float), cudaMemcpyDeviceToHost);
         LOG_INFO << "L2 norm: " << std::sqrt(norm) << std::endl;
         LOG << "--------------------------------------------------" << std::endl << std::endl;
@@ -139,8 +136,8 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
     while (rho[1] > eps * eps && k < maxit);
 
     // #pragma omp parallel for default(none) shared(res, x, N)
-    for (int i = 0; i < N; i++)
-        res[i] = x[i];
+    cudaMemcpy(res, x.data().get(), N * sizeof(float), cudaMemcpyDeviceToHost);
+    std::cout << x[0] << x[1] << std::endl;
 
     // delete[] z;
     // delete[] p;
@@ -148,6 +145,9 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
     // delete[] x;
     // delete[] r;
     // delete[] rho;
+
+    cudaFree(buf_gpu);
+    cudaFree(norm_gpu);
 
     return k;
 }
