@@ -4,8 +4,13 @@
 #include "csr.h"
 #include "Utilities/input.h"
 #include "Utilities/logger.h"
-#include "solvers.h"
 #include "Utilities/argparse.h"
+
+#ifdef USE_CUDA
+#include "solvers.cuh"
+#else
+#include "solvers.h"
+#endif
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -187,7 +192,7 @@ int main(int argc, char** argv) {
     /* Default values. */
     arguments.output_file = "-";
     arguments.eps = 1e-3;
-    arguments.maxit = 1000;
+    arguments.maxit = 100;
 
     argp_parse (&argp, argc, argv, 0, nullptr, &arguments);
 
@@ -244,6 +249,8 @@ int main(int argc, char** argv) {
     int *ia_nn = std::get<0>(matrix_nn);
     int *ja_nn = std::get<1>(matrix_nn);
 
+    std::cout << "Built adj matrix" << std::endl;
+
     int *ia = ia_nn;
     int *ja = ja_nn;
 
@@ -254,9 +261,15 @@ int main(int argc, char** argv) {
     // printMatrix(matrix, LOG);
     #endif
 
+    #ifdef USE_CUDA
+    auto a = new float[ia[Ne]];
+    auto b = new float[Ne];
+    auto diag = new float[Ne];
+    #else
     auto a = new double[ia[Ne]];
     auto b = new double[Ne];
     auto diag = new double[Ne];
+    #endif
 
     fillCSR(ia, ja, a, b, diag, Ne);
 
@@ -276,7 +289,11 @@ int main(int argc, char** argv) {
 
     LOG << std::endl;
 
+    #ifdef USE_CUDA
+    auto res = new float[Ne];
+    #else
     auto res = new double[Ne];
+    #endif
 
     double start = omp_get_wtime();
     int iterations = solve(ia, ja, a, b, diag, Ne + 1, res, eps, maxit);
@@ -284,6 +301,7 @@ int main(int argc, char** argv) {
 
     LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
     LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
+    LOG_INFO << res[0] << std::endl;
 
     delete[] stats;
     // delete[] ia_en;
