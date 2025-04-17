@@ -208,7 +208,7 @@ template void fillCSR<float>(const int *ia, const int *ja, float *a, float *b, f
 #endif
 
 void buildMatrixFromCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<std::vector<bool>> &matrix) {
-    for (int i = 0; i < ia.size() - 1; i++) {
+    for (unsigned int i = 0; i < ia.size() - 1; i++) {
         for (int k = ia[i]; k < ia[i + 1]; k++) {
             matrix[i][ja[k]] = true;
         }
@@ -217,7 +217,7 @@ void buildMatrixFromCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<
 
 void buildFilledMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
     std::vector<std::vector<double>> &matrix) {
-    for (int i = 0; i < ia.size() - 1; i++) {
+    for (unsigned int i = 0; i < ia.size() - 1; i++) {
         for (int k = ia[i]; k < ia[i + 1]; k++) {
             matrix[i][ja[k]] = a[k];
         }
@@ -255,7 +255,7 @@ void transposeCSR(std::vector<int> &ia, std::vector<int> &ja, const int Nn, std:
     }
 
     // Fill the column indices
-    for (int i = 0; i < ia.size() - 1; ++i) {
+    for (unsigned int i = 0; i < ia.size() - 1; ++i) {
         for (int k = ia[i]; k < ia[i + 1]; ++k) {
             const int col = ja[k];
             const int dest_pos = buf[col]++;
@@ -356,7 +356,7 @@ std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const i
 
         ja_adj.push_back(adjacent[0]);
         int count = 1;
-        for (int i = 1; i < adjacent.size(); ++i) {
+        for (unsigned int i = 1; i < adjacent.size(); ++i) {
             if (adjacent[i] != adjacent[i - 1]) {
                 ja_adj.push_back(adjacent[i]);
                 count++;

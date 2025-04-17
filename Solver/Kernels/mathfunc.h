@@ -25,7 +25,7 @@ void axpy(double a, const double *x, const double *y, int size, double *res);
 template <typename T>
 void arrCopy(T *y, const T *x, const unsigned long size) {
     #pragma omp parallel for default(none) shared(x, y, size)
-    for (int i = 0; i < size; i++) {
+    for (unsigned int i = 0; i < size; i++) {
         y[i] = x[i];
     }
 }
@@ -42,7 +42,7 @@ void arrCopy(T *y, const T *x, const unsigned long size) {
 template <typename T>
 void arrInit(T *x, const T a, const unsigned size) {
     #pragma omp parallel for default(none) shared(x, a, size)
-    for (int i = 0; i < size; i++) {
+    for (unsigned int i = 0; i < size; i++) {
         x[i] = a;
     }
 }
