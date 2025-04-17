@@ -168,7 +168,7 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, 
         }
 
         a[k_i] = 1.234 * sum;
-        diag[i] = a[k_i];
+        diag[i] = 1. / a[k_i];
         // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
     }
 

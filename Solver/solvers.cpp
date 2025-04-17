@@ -58,7 +58,7 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
 
         #pragma omp parallel for proc_bind(master)
         for (int i = 0; i < N; i++) {
-            z[i] = r[i] / diag[i];
+            z[i] = r[i] * diag[i];
         }
 
         rho[0] = rho[1];
