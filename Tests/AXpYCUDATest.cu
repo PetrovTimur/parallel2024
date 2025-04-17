@@ -5,17 +5,17 @@
 #include <vector>
 
 
-void axpy_gpu(double a, double *x, double *y, int size, double *res) {
+void axpy_gpu(float a, float *x, float *y, int size, float *res) {
     int threadsPerBlock = 256;
     int blocksPerGrid = (size + threadsPerBlock - 1) / threadsPerBlock;
 
-    double *d_x, *d_y, *d_res;
-    cudaMalloc((void**)&d_x, size * sizeof(double));
-    cudaMalloc((void**)&d_y, size * sizeof(double));
-    cudaMalloc((void**)&d_res, size * sizeof(double));
+    float *d_x, *d_y, *d_res;
+    cudaMalloc((void**)&d_x, size * sizeof(float));
+    cudaMalloc((void**)&d_y, size * sizeof(float));
+    cudaMalloc((void**)&d_res, size * sizeof(float));
 
-    cudaMemcpy(d_x, x, size * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_y, y, size * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_x, x, size * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_y, y, size * sizeof(float), cudaMemcpyHostToDevice);
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -33,7 +33,7 @@ void axpy_gpu(double a, double *x, double *y, int size, double *res) {
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
 
-    cudaMemcpy(res, d_res, size * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(res, d_res, size * sizeof(float), cudaMemcpyDeviceToHost);
 
     cudaFree(d_x);
     cudaFree(d_y);
@@ -42,17 +42,17 @@ void axpy_gpu(double a, double *x, double *y, int size, double *res) {
 
 int main() {
     int size = 100000000;
-    double a = 2.0;
-    std::vector<double> x(size, 1.0);
-    std::vector<double> y(size, 2.0);
-    std::vector<double> res(size);
+    float a = 2.0;
+    std::vector<float> x(size, 1.0);
+    std::vector<float> y(size, 2.0);
+    std::vector<float> res(size);
 
     axpy_gpu(a, x.data(), y.data(), size, res.data());
 
     // Verify the result & print first error if any
     bool correct = true;
     for (int i = 0; i < size; ++i) {
-        double expected = a * x[i] + y[i];
+        float expected = a * x[i] + y[i];
         if (res[i] != expected) {
             std::cerr << "Mismatch at index " << i << ": " << res[i] << " != " << expected << std::endl;
             correct = false;
