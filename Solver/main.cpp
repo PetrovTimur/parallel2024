@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
     int Ne = stats[0] + stats[2];
     int nnz = 4 * stats[0] + 2 * stats[2];
 
-    LOG_DEBUG << "Nn = " << Nn << ", Ne = " << Ne << ", nnz = " << nnz << std::endl;
+    LOG_INFO << "Nn = " << Nn << ", Ne = " << Ne << ", nnz = " << nnz << std::endl;
 
     std::vector<int> ia_en;
     std::vector<int> ja_en;
