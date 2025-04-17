@@ -1,7 +1,7 @@
 #include "cuda_runtime.h"
 #include "thrust/device_vector.h"
 
-__global__ void axpy(const double a, const double *x, const double *y, const int size, double *res) {
+__global__ void axpy(const float a, const float *x, const float *y, const int size, float *res) {
     const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < size) {
         res[i] = a * x[i] + y[i];
@@ -60,13 +60,13 @@ __global__ void reduce1(const float *g_idata, float *g_odata, const unsigned int
     if (tid == 0) g_odata[blockIdx.x] = sdata[0];
 }
 
-__global__ void spMV(const int *ia, const int *ja, const double *a, const double *x, double *y, const int size) {
+__global__ void spMV(const int *ia, const int *ja, const float *a, const float *x, float *y, const int size) {
     const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < size) {
-        double sum = 0.0;
+        float sum = 0.0;
         for (unsigned int k = ia[i]; k < ia[i + 1]; k++) {
             const unsigned int j = ja[k];
-            const double a_ij = a[k];
+            const float a_ij = a[k];
             sum += x[j] * a_ij;
         }
 
@@ -75,7 +75,7 @@ __global__ void spMV(const int *ia, const int *ja, const double *a, const double
 }
 
 __global__ void dot(const float *x, const float *y, float *z, const int N) {
-    extern __shared__ float tsum[];
+    extern __shared__ float tsum[256];
 
     const unsigned int id = threadIdx.x;
     const unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -98,6 +98,16 @@ __global__ void dot(const float *x, const float *y, float *z, const int N) {
 
     if (id == 0) {
         z[blockIdx.x] = tsum[0];
+    }
+}
+
+
+__global__ void multiply(const float *x, const float *y, float *z, const int N) {
+    const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = gridDim.x * blockDim.x;
+
+    for (unsigned int k = i; k < N; k += stride) {
+        z[k] = x[k] * y[k];
     }
 }
 
