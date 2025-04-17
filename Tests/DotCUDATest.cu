@@ -4,6 +4,7 @@
 #include "cuda_runtime.h"
 #include <iostream>
 
+
 int main() {
     int blocks = 128;
     int threads = 256;
@@ -18,8 +19,10 @@ int main() {
     float *res;
     cudaMalloc(&res, sizeof(float));
 
-    dot<<<blocks, threads, threads*sizeof(float)>>>(d_x.data().get(), d_y.data().get(), d_z.data().get(), size);
-    reduce0<<<1, blocks, blocks*sizeof(float)>>>(d_z.data().get(), res, blocks);
+    // dot<<<blocks, threads, threads*sizeof(float)>>>(d_x.data().get(), d_y.data().get(), d_z.data().get(), size);
+    // reduce0<<<1, blocks, blocks*sizeof(float)>>>(d_z.data().get(), res, blocks);
+
+    dot_gpu(threads, blocks, d_x.data().get(), d_y.data().get(), d_z.data().get(), res, size);
 
     cudaMemcpy(&res_host, res, sizeof(float), cudaMemcpyDeviceToHost);
 
@@ -35,6 +38,8 @@ int main() {
     } else {
         std::cout << "Reduce test failed!" << std::endl;
     }
+
+    cudaFree(res);
 
     return 0;
 }
