@@ -20,7 +20,8 @@ void makeIncidenceMatrixCSR(const int Nx, int Ny, const int K1, const int K2, st
 #else
 void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<int> &ja);
 
-void fillCSR(const int *ia, const int *ja, double *a, double *b, double *diag, int size);
+template <typename T>
+void fillCSR(const int *ia, const int *ja, T *a, T *b, T *diag, int size);
 
 void makeIncidenceMatrixCSR(int Nx, int Ny, int K1, int K2, int i_start, int i_end, int j_start, int j_end,
                             std::vector<int> &ia, std::vector<int>

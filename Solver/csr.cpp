@@ -177,10 +177,11 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, 
         b[i] = std::sin(L2G[i]);
 }
 #else
-void fillCSR(const int *ia, const int *ja, double *a, double *b, double *diag, const int size) {
+template <typename T>
+void fillCSR(const int *ia, const int *ja, T *a, T *b, T *diag, const int size) {
     #pragma omp parallel for proc_bind(spread)
     for (int i = 0; i < size; i++) {
-        double sum = 0;
+        T sum = 0;
         int k_i = 0;
         for (int k = ia[i]; k < ia[i + 1]; k++) {
             int j = ja[k];
@@ -193,7 +194,7 @@ void fillCSR(const int *ia, const int *ja, double *a, double *b, double *diag, c
         }
 
         a[k_i] = 1.234 * sum;
-        diag[i] = a[k_i];
+        diag[i] = 1. / a[k_i];
         // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
     }
 
@@ -201,6 +202,9 @@ void fillCSR(const int *ia, const int *ja, double *a, double *b, double *diag, c
     for (int i = 0; i < size; i++)
         b[i] = std::sin(i);
 }
+
+template void fillCSR<double>(const int *ia, const int *ja, double *a, double *b, double *diag, int size);
+template void fillCSR<float>(const int *ia, const int *ja, float *a, float *b, float *diag, int size);
 #endif
 
 void buildMatrixFromCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<std::vector<bool>> &matrix) {
