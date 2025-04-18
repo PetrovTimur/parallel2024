@@ -2,11 +2,9 @@
 #define INPUT_H
 #include <iostream>
 #include <tuple>
-#include <tuple>
-#include <tuple>
-#include <tuple>
-#include <tuple>
 #include <vector>
+
+#define MAX_OUTPUT_LENGTH 20
 
 #ifdef USE_MPI
 std::tuple<int, int, int, int, int, int, int, int, int, int, int> input(int Nx, int Ny, int Px, int Py, int MyID,
@@ -20,8 +18,8 @@ std::tuple<int, int, int, int*> readData(const std::string &elementsTxtPath, con
 
 template <typename T>
 void printMatrix(std::vector<std::vector<T>> &matrix, std::ostream& os = std::cout) {
-    for (int i = 0; i < std::max(matrix.size(), 20); i++) {
-        for (int j = 0; j < std::max(matrix[i].size(), 20); j++) {
+    for (int i = 0; i < std::max(matrix.size(), MAX_OUTPUT_LENGTH); i++) {
+        for (int j = 0; j < std::max(matrix[i].size(), MAX_OUTPUT_LENGTH); j++) {
             os << matrix[i][j] << " ";
         }
         os << std::endl;
@@ -30,7 +28,7 @@ void printMatrix(std::vector<std::vector<T>> &matrix, std::ostream& os = std::co
 
 template <typename T>
 void printVector(std::vector<T> &a, std::ostream& os = std::cout) {
-    for (int i = 0; i < std::max(a.size(), 20); i++) {
+    for (int i = 0; i < std::max(a.size(), MAX_OUTPUT_LENGTH); i++) {
         os << a[i] << " ";
     }
     os << std::endl;
@@ -38,7 +36,7 @@ void printVector(std::vector<T> &a, std::ostream& os = std::cout) {
 
 template <typename T>
 void printArray(T* a, const int size, std::ostream& os = std::cout) {
-    for (int i = 0; i < std::max(size, 20); i++) {
+    for (int i = 0; i < std::max(size, MAX_OUTPUT_LENGTH); i++) {
         os << a[i] << " ";
     }
     os << std::endl;
