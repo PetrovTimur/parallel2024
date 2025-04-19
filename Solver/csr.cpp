@@ -34,6 +34,32 @@ void fillG2L(std::vector<int> &L2G, std::unordered_map<int, int> &G2L) {
     }
 }
 
+void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, std::vector<double> &a, std::vector<double> &b,
+    std::vector<double> &diag) {
+    #pragma omp parallel for proc_bind(master)
+    for (int i = 0; i < ia.size() - 1; i++) {
+        double sum = 0;
+        int k_i = 0;
+        for (int k = ia[i]; k < ia[i + 1]; k++) {
+            int j = ja[k];
+            if (i != j) {
+                a[k] = std::cos(L2G[i] * L2G[j] + L2G[i] + L2G[j]);
+                sum += std::abs(a[k]);
+            } else
+                k_i = k;
+            // std::cout << "el: " << i << ", j: " << j << ", val = " << a[k] << std::endl;
+        }
+
+        a[k_i] = 1.234 * sum;
+        diag[i] = 1. / a[k_i];
+        // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
+    }
+
+    #pragma omp parallel for proc_bind(master)
+    for (int i = 0; i < b.size(); i++)
+        b[i] = std::sin(L2G[i]);
+}
+
 void makeIncidenceMatrixCSR(const int Nx, int Ny, const int K1, const int K2, std::vector<int> &L2G, std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &Part) {
     ia.push_back(0);
 
@@ -74,6 +100,39 @@ void makeIncidenceMatrixCSR(const int Nx, int Ny, const int K1, const int K2, st
 
     Part.clear();
     Part.insert(Part.end(), new_Part.begin(), new_Part.end());
+}
+
+void buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, std::vector<int> &ia_adj, std::vector<int> &
+                                      ja_adj, const int Ne, std::vector<int> &Part, const int MyID) {
+    ia_adj.push_back(0);
+
+    for (int element1 = 0; element1 < Ne; ++element1) {
+        if (Part[element1] != MyID)
+            continue;
+
+        std::vector<int> adjacent;
+        for (int k = ia_en[element1]; k < ia_en[element1 + 1]; ++k) {
+            const int node = ja_en[k];
+
+            for (int l = ia_ne[node]; l < ia_ne[node + 1]; ++l) {
+                const int element2 = ja_ne[l];
+                adjacent.push_back(element2);
+            }
+        }
+        adjacent.push_back(element1);
+
+        std::sort(adjacent.begin(), adjacent.end());
+
+        ja_adj.push_back(adjacent[0]);
+        int count = 1;
+        for (int i = 1; i < adjacent.size(); ++i) {
+            if (adjacent[i] != adjacent[i - 1]) {
+                ja_adj.push_back(adjacent[i]);
+                count++;
+            }
+        }
+        ia_adj.push_back(ia_adj.back() + count);
+    }
 }
 
 #else
@@ -148,38 +207,10 @@ void makeIncidenceMatrixCSR(const int Nx, int Ny, const int K1, const int K2, co
         }
     }
 }
-#endif
 
-#ifdef USE_MPI
-void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, std::vector<double> &a, std::vector<double> &b,
-    std::vector<double> &diag) {
-    #pragma omp parallel for proc_bind(master)
-    for (int i = 0; i < ia.size() - 1; i++) {
-        double sum = 0;
-        int k_i = 0;
-        for (int k = ia[i]; k < ia[i + 1]; k++) {
-            int j = ja[k];
-            if (i != j) {
-                a[k] = std::cos(L2G[i] * L2G[j] + L2G[i] + L2G[j]);
-                sum += std::abs(a[k]);
-            } else
-                k_i = k;
-            // std::cout << "el: " << i << ", j: " << j << ", val = " << a[k] << std::endl;
-        }
-
-        a[k_i] = 1.234 * sum;
-        diag[i] = 1. / a[k_i];
-        // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
-    }
-
-    #pragma omp parallel for proc_bind(master)
-    for (int i = 0; i < b.size(); i++)
-        b[i] = std::sin(L2G[i]);
-}
-#else
 template <typename T>
 void fillCSR(const int *ia, const int *ja, T *a, T *b, T *diag, const int size) {
-    #pragma omp parallel for proc_bind(spread)
+    #pragma omp parallel for default(none) shared(ia, ja, a, b, diag, size)
     for (int i = 0; i < size; i++) {
         T sum = 0;
         int k_i = 0;
@@ -198,72 +229,49 @@ void fillCSR(const int *ia, const int *ja, T *a, T *b, T *diag, const int size) 
         // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
     }
 
-    #pragma omp parallel for proc_bind(spread)
+    #pragma omp parallel for default(none) shared(b, size)
     for (int i = 0; i < size; i++)
         b[i] = std::sin(i);
 }
 
 template void fillCSR<double>(const int *ia, const int *ja, double *a, double *b, double *diag, int size);
 template void fillCSR<float>(const int *ia, const int *ja, float *a, float *b, float *diag, int size);
-#endif
 
-void buildMatrixFromCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<std::vector<bool>> &matrix) {
-    for (unsigned int i = 0; i < ia.size() - 1; i++) {
-        for (int k = ia[i]; k < ia[i + 1]; k++) {
-            matrix[i][ja[k]] = true;
+std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
+    std::vector<int> ia_adj(Ne + 1);
+    std::vector<int> ja_adj;
+
+    for (int element1 = 0; element1 < Ne; ++element1) {
+        std::vector<int> adjacent;
+        for (int k = ia_en[element1]; k < ia_en[element1 + 1]; ++k) {
+            const int node = ja_en[k];
+
+            for (int l = ia_ne[node]; l < ia_ne[node + 1]; ++l) {
+                const int element2 = ja_ne[l];
+                adjacent.push_back(element2);
+            }
         }
-    }
-}
+        adjacent.push_back(element1);
 
-void buildFilledMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
-    std::vector<std::vector<double>> &matrix) {
-    for (unsigned int i = 0; i < ia.size() - 1; i++) {
-        for (int k = ia[i]; k < ia[i + 1]; k++) {
-            matrix[i][ja[k]] = a[k];
+        std::sort(adjacent.begin(), adjacent.end());
+
+        ja_adj.push_back(adjacent[0]);
+        int count = 1;
+        for (unsigned int i = 1; i < adjacent.size(); ++i) {
+            if (adjacent[i] != adjacent[i - 1]) {
+                ja_adj.push_back(adjacent[i]);
+                count++;
+            }
         }
-    }
-}
-
-void transposeCSR(std::vector<int> &ia, std::vector<int> &ja, const int Nn, std::vector<int> &ia_new,
-                  std::vector<int> &ja_new) {
-    const int nnz = ia[ia.size() - 1];
-    // auto ia_new = new int[Nn + 1];
-    // auto ja_new = new int[nnz];
-    ia_new.resize(Nn + 1);
-    ja_new.resize(nnz);
-
-    // Zero out ia_new
-    for (int i = 0; i <= Nn; i++) {
-        ia_new[i] = 0;
+        ia_adj[element1 + 1] = ia_adj[element1] + count;
     }
 
-    // Count the number of entries in each column
-    for (int i = 0; i < nnz; ++i) {
-        ia_new[ja[i] + 1]++;
-    }
+    auto ia_adj_new = new int[ia_adj.size()];
+    auto ja_adj_new = new int[ja_adj.size()];
+    arrCopy(ia_adj_new, ia_adj.data(), ia_adj.size());
+    arrCopy(ja_adj_new, ja_adj.data(), ja_adj.size());
 
-    // Compute the cumulative sum to get the new row pointers
-    for (int i = 1; i <= Nn; ++i) {
-        ia_new[i] += ia_new[i - 1];
-    }
-
-    const auto buf = new int[Nn + 1];
-
-    // Zero out buf
-    for (int i = 0; i <= Nn; ++i) {
-        buf[i] = ia_new[i];
-    }
-
-    // Fill the column indices
-    for (unsigned int i = 0; i < ia.size() - 1; ++i) {
-        for (int k = ia[i]; k < ia[i + 1]; ++k) {
-            const int col = ja[k];
-            const int dest_pos = buf[col]++;
-            ja_new[dest_pos] = i;
-        }
-    }
-
-    delete[] buf;
+    return std::make_pair(ia_adj_new, ja_adj_new);
 }
 
 std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
@@ -334,75 +342,62 @@ std::pair<int *, int *> buildAdjacencyMatrixCSRUsingSets(const int *ia_en, const
 
     return std::make_pair(ia_adj_new, ja_adj_new);
 }
-
-#ifndef USE_MPI
-std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
-    std::vector<int> ia_adj(Ne + 1);
-    std::vector<int> ja_adj;
-
-    for (int element1 = 0; element1 < Ne; ++element1) {
-        std::vector<int> adjacent;
-        for (int k = ia_en[element1]; k < ia_en[element1 + 1]; ++k) {
-            const int node = ja_en[k];
-
-            for (int l = ia_ne[node]; l < ia_ne[node + 1]; ++l) {
-                const int element2 = ja_ne[l];
-                adjacent.push_back(element2);
-            }
-        }
-        adjacent.push_back(element1);
-
-        std::sort(adjacent.begin(), adjacent.end());
-
-        ja_adj.push_back(adjacent[0]);
-        int count = 1;
-        for (unsigned int i = 1; i < adjacent.size(); ++i) {
-            if (adjacent[i] != adjacent[i - 1]) {
-                ja_adj.push_back(adjacent[i]);
-                count++;
-            }
-        }
-        ia_adj[element1 + 1] = ia_adj[element1] + count;
-    }
-
-    auto ia_adj_new = new int[ia_adj.size()];
-    auto ja_adj_new = new int[ja_adj.size()];
-    arrCopy(ia_adj_new, ia_adj.data(), ia_adj.size());
-    arrCopy(ja_adj_new, ja_adj.data(), ja_adj.size());
-
-    return std::make_pair(ia_adj_new, ja_adj_new);
-}
-#else
-void buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, std::vector<int> &ia_adj, std::vector<int> &
-                                      ja_adj, const int Ne, std::vector<int> &Part, const int MyID) {
-    ia_adj.push_back(0);
-
-    for (int element1 = 0; element1 < Ne; ++element1) {
-        if (Part[element1] != MyID)
-            continue;
-
-        std::vector<int> adjacent;
-        for (int k = ia_en[element1]; k < ia_en[element1 + 1]; ++k) {
-            const int node = ja_en[k];
-
-            for (int l = ia_ne[node]; l < ia_ne[node + 1]; ++l) {
-                const int element2 = ja_ne[l];
-                adjacent.push_back(element2);
-            }
-        }
-        adjacent.push_back(element1);
-
-        std::sort(adjacent.begin(), adjacent.end());
-
-        ja_adj.push_back(adjacent[0]);
-        int count = 1;
-        for (int i = 1; i < adjacent.size(); ++i) {
-            if (adjacent[i] != adjacent[i - 1]) {
-                ja_adj.push_back(adjacent[i]);
-                count++;
-            }
-        }
-        ia_adj.push_back(ia_adj.back() + count);
-    }
-}
 #endif
+
+void buildMatrixFromCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<std::vector<bool>> &matrix) {
+    for (unsigned int i = 0; i < ia.size() - 1; i++) {
+        for (int k = ia[i]; k < ia[i + 1]; k++) {
+            matrix[i][ja[k]] = true;
+        }
+    }
+}
+
+void buildFilledMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a,
+    std::vector<std::vector<double>> &matrix) {
+    for (unsigned int i = 0; i < ia.size() - 1; i++) {
+        for (int k = ia[i]; k < ia[i + 1]; k++) {
+            matrix[i][ja[k]] = a[k];
+        }
+    }
+}
+
+void transposeCSR(std::vector<int> &ia, std::vector<int> &ja, const int Nn, std::vector<int> &ia_new, std::vector<int> &ja_new) {
+    const int nnz = ia[ia.size() - 1];
+    // auto ia_new = new int[Nn + 1];
+    // auto ja_new = new int[nnz];
+    ia_new.resize(Nn + 1);
+    ja_new.resize(nnz);
+
+    // Zero out ia_new
+    for (int i = 0; i <= Nn; i++) {
+        ia_new[i] = 0;
+    }
+
+    // Count the number of entries in each column
+    for (int i = 0; i < nnz; ++i) {
+        ia_new[ja[i] + 1]++;
+    }
+
+    // Compute the cumulative sum to get the new row pointers
+    for (int i = 1; i <= Nn; ++i) {
+        ia_new[i] += ia_new[i - 1];
+    }
+
+    const auto buf = new int[Nn + 1];
+
+    // Zero out buf
+    for (int i = 0; i <= Nn; ++i) {
+        buf[i] = ia_new[i];
+    }
+
+    // Fill the column indices
+    for (unsigned int i = 0; i < ia.size() - 1; ++i) {
+        for (int k = ia[i]; k < ia[i + 1]; ++k) {
+            const int col = ja[k];
+            const int dest_pos = buf[col]++;
+            ja_new[dest_pos] = i;
+        }
+    }
+
+    delete[] buf;
+}
