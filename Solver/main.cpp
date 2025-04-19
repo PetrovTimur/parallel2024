@@ -295,7 +295,7 @@ int main(int argc, char** argv) {
     #endif
 
     double start = omp_get_wtime();
-    int iterations = solve(ia, ja, a, b, diag, Ne + 1, res, eps, maxit);
+    int iterations = solve(ia, ja, a, b, diag, Ne, res, eps, maxit);
     double end = omp_get_wtime();
 
     LOG_INFO << "Work took " << end - start << " seconds" << std::endl;

@@ -113,8 +113,8 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
     return k;
 }
 #else
-int solve(const int *ia, const int *ja, const double *a, const double *b, const double *diag, const int size, double *res, const double eps, const int maxit) {
-    const int N = size - 1;
+int solve(const int *ia, const int *ja, const double *a, const double *b, const double *diag, const int size, double *res, const double eps, const int maxIterations) {
+    const int N = size;
 
     const auto z = new double[N];
     const auto p = new double[N];
@@ -159,7 +159,7 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
             axpy(beta, p, z, N, p);
         }
 
-        spMV(ia, ja, a, p, size, q);
+        spMV(ia, ja, a, p, N + 1, q);
 
         dot(p, q, N, buf);
         double alpha = rho[1] / buf;
@@ -174,7 +174,7 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
         LOG << "--------------------------------------------------" << std::endl << std::endl;
 
     }
-    while (rho[1] > eps * eps && k < maxit);
+    while (rho[1] > eps * eps && k < maxIterations);
 
     #pragma omp parallel for default(none) shared(res, x, N)
     for (int i = 0; i < N; i++)
