@@ -208,14 +208,13 @@ int main(int argc, char** argv) {
 
     LOG_INFO << "Nx = " << Nx << ", Ny = " << Ny << ", K1 = " << K1 << ", K2 = " << K2 << std::endl;
 
-    auto stats = input(Nx, Ny, K1, K2);
-    int nodes = stats[1];
+    const gridInfo grid(Nx, Ny, K1, K2);
 
-    int Nn = nodes;
-    int Ne = stats[0] + stats[2];
-    int nnz = 4 * stats[0] + 2 * stats[2];
+    int Nn = grid.totalNodes;
+    int Ne = grid.totalElements;
+    // int nnz = 4 * stats[0] + 2 * stats[2];
 
-    LOG_INFO << "Nn = " << Nn << ", Ne = " << Ne << ", nnz = " << nnz << std::endl;
+    LOG_INFO << "Nn = " << Nn << ", Ne = " << Ne << std::endl;
 
     std::vector<int> ia_en;
     std::vector<int> ja_en;
@@ -303,7 +302,6 @@ int main(int argc, char** argv) {
     LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
     LOG_INFO << res[0] << std::endl;
 
-    delete[] stats;
     // delete[] ia_en;
     // delete[] ja_en;
     // delete[] ia_ne;

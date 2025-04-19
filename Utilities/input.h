@@ -11,7 +11,34 @@ std::tuple<int, int, int, int, int, int, int, int, int, int, int> input(int Nx, 
                                                                         std::vector<int> &L2G,
                                                                         std::vector<int> &Part);
 #else
-int *input(int Nx, int Ny, int K1, int K2);
+
+struct gridInfo {
+    int cells;
+    int diagCount;
+    int totalNodes;
+    int totalElements;
+
+    gridInfo(const int Nx, const int Ny, const int K1, const int K2) {
+        int total_cells = Nx * Ny;
+        int cycle_length = K1 + K2;
+        int full_cycles = total_cells / cycle_length;
+        int remaining_cells = total_cells % cycle_length;
+
+        int remaining_diag = std::max(0, remaining_cells - K1);
+        int total_diag = full_cycles * K2 + remaining_diag;
+
+        int nodes = (Nx + 1) * (Ny + 1);
+        int total_edges = Nx * (Ny + 1) + Ny * (Nx + 1) + total_diag;
+        int nonzero_elements = 2 * total_edges + nodes;
+
+        cells = total_cells;
+        diagCount = total_diag;
+        totalNodes = nodes;
+        totalElements = total_cells + total_diag;
+    }
+};
+
+void input(int Nx, int Ny, int K1, int K2, gridInfo &grid);
 #endif
 
 std::tuple<int, int, int, int*> readData(const std::string &elementsTxtPath, const std::string &elementsDatPath);

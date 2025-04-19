@@ -2,29 +2,6 @@
 #include <fstream>
 
 #ifndef USE_MPI
-int *input(int Nx, int Ny, int K1, int K2) {
-    int total_cells = Nx * Ny;
-    int cycle_length = K1 + K2;
-    int full_cycles = total_cells / cycle_length;
-    int remaining_cells = total_cells % cycle_length;
-
-    int remaining_ones = std::max(0, remaining_cells - K1);
-    int total_ones = full_cycles * K2 + remaining_ones;
-
-    int nodes = (Nx + 1) * (Ny + 1);
-    int total_edges = Nx * (Ny + 1) + Ny * (Nx + 1) + total_ones;
-    int nonzero_elements = 2 * total_edges + nodes;
-
-    auto array = new int[5];
-    array[0] = total_cells;
-    array[1] = nodes;
-    array[2] = total_ones;
-    array[3] = total_edges;
-    array[4] = nonzero_elements;
-
-    return array;
-}
-
 std::tuple<int, int, int, int *> readData(const std::string &elementsTxtPath, const std::string &elementsDatPath) {
     // Read the first file
     std::ifstream elementsTxt(elementsTxtPath);
