@@ -187,24 +187,24 @@ int main(int argc, char** argv) {
     }
 
     #else
-    struct arguments arguments{};
+    arguments args{};
 
     /* Default values. */
-    arguments.output_file = "-";
-    arguments.eps = 1e-3;
-    arguments.maxit = 100;
+    args.output_file = "-";
+    args.eps = 1e-3;
+    args.maxit = 100;
 
-    argp_parse (&argp, argc, argv, 0, nullptr, &arguments);
+    argp_parse (&argp, argc, argv, 0, nullptr, &args);
 
     omp_set_num_threads(omp_get_max_threads());
 
-    int Nx = arguments.Nx;
-    int Ny = arguments.Ny;
-    int K1 = arguments.K1;
-    int K2 = arguments.K2;
+    int Nx = args.Nx;
+    int Ny = args.Ny;
+    int K1 = args.K1;
+    int K2 = args.K2;
 
-    double eps = arguments.eps;
-    int maxit = arguments.maxit;
+    double eps = args.eps;
+    int maxit = args.maxit;
 
     LOG_INFO << "Nx = " << Nx << ", Ny = " << Ny << ", K1 = " << K1 << ", K2 = " << K2 << std::endl;
 
