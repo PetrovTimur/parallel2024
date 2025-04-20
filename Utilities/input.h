@@ -7,9 +7,7 @@
 #define MAX_OUTPUT_LENGTH 20
 
 #ifdef USE_MPI
-std::tuple<int, int, int, int, int, int, int, int, int, int, int> input(int Nx, int Ny, int Px, int Py, int MyID,
-                                                                        std::vector<int> &L2G,
-                                                                        std::vector<int> &Part);
+void input(int Nx, int Ny, int Px, int Py, int MyID, std::vector<int> &L2G, std::vector<int> &Part);
 #else
 
 struct gridInfo {

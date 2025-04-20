@@ -85,22 +85,7 @@ int main(int argc, char** argv) {
     // std::vector<int> G2L;
     std::vector<int> Part;
 
-    auto t = input(Nx, Ny, Px, Py, MyID, L2G, Part);
-    // int i_start = std::get<0>(t);
-    // int i_end = std::get<1>(t);
-    // int i_count = std::get<2>(t);
-    // int j_start = std::get<3>(t);
-    // int j_end = std::get<4>(t);
-    // int j_count = std::get<5>(t);
-    // int top_halo = std::get<6>(t);
-    // int right_halo = std::get<7>(t);
-    // int bottom_halo = std::get<8>(t);
-    // int left_halo = std::get<9>(t);
-    // int N_local = std::get<10>(t);
-
-
-    // std::cout << "My ID = " << MyID << ", i_start " << i_start << ", i_count " << i_count << ", i_end " << i_end << ", j_start " << j_start << ", j_count " << j_count << ", j_end " << j_end << std::endl;
-    // std::cout << "My ID = " << MyID << ", top_halo " << top_halo << ", right_halo " << right_halo << ", bottom_halo " << bottom_halo << ", left_halo " << left_halo << std::endl;
+    input(Nx, Ny, Px, Py, MyID, L2G, Part);
 
 
     // std::vector<int> ia(N0 + 1);

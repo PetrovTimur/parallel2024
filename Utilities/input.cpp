@@ -30,9 +30,7 @@ std::tuple<int, int, int, int *> readData(const std::string &elementsTxtPath, co
 }
 #else
 
-std::tuple<int, int, int, int, int, int, int, int, int, int, int> input(int Nx, int Ny, int Px, int Py, int MyID,
-                                                                        std::vector<int> &L2G,
-                                                                        std::vector<int> &Part) {
+void input(const int Nx, const int Ny, const int Px, const int Py, const int MyID, std::vector<int> &L2G, std::vector<int> &Part) {
     const int MyID_j = MyID % Px;
     const int MyID_i = MyID / Px;
 
@@ -122,6 +120,5 @@ std::tuple<int, int, int, int, int, int, int, int, int, int, int> input(int Nx, 
     }
 
     // L2G.resize(k);
-    return std::make_tuple(i_start,  i_end, i_count,j_start, j_end, j_count, top_halo, right_halo, bottom_halo, left_halo, N_local);
 }
 #endif
