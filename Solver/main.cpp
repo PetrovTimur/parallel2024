@@ -201,9 +201,17 @@ int main(int argc, char** argv) {
 
     LOG_INFO << "Nn = " << Nn << ", Ne = " << Ne << std::endl;
 
+    LOG_INFO << "Using " << omp_get_max_threads() << " threads" << std::endl;
+
     std::vector<int> ia_en;
     std::vector<int> ja_en;
+
+    double start = omp_get_wtime();
     makeIncidenceMatrixCSR(Nx, Ny, K1, K2, 0, Ny - 1, 0, Nx - 1, ia_en, ja_en);
+    double end = omp_get_wtime();
+
+    LOG_INFO << "EN construction done in " << end - start << " seconds" << std::endl;
+
     // int *ia_en = std::get<0>(matrix);
     // int *ja_en = std::get<1>(matrix);
 
@@ -216,7 +224,13 @@ int main(int argc, char** argv) {
 
     std::vector<int> ia_ne;
     std::vector<int> ja_ne;
+
+    start = omp_get_wtime();
     transposeCSR(ia_en, ja_en, Nn, ia_ne, ja_ne);
+    end = omp_get_wtime();
+
+    LOG_INFO << "Transpose (NE) construction done in " << end - start << " seconds" << std::endl;
+
     // int *ia_ne = std::get<0>(matrix_transposed);
     // int *ja_ne = std::get<1>(matrix_transposed);
 
@@ -227,13 +241,18 @@ int main(int argc, char** argv) {
     printArray(ja_ne.data(), ia_ne[Nn], LOG);
     #endif
 
+    start = omp_get_wtime();
     auto matrix_nn = buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne.data(), ja_ne.data(), Ne, Nn);
+    end = omp_get_wtime();
+
+    LOG_INFO << "Adjacency matrix (EE) construction done in " << end - start << " seconds" << std::endl;
+
     // Ne = Nn;
     // auto matrix_nn = buildAdjacencyMatrixCSRUsingSort(ia_ne.data(), ja_ne.data(), ia_en.data(), ja_en.data(), Ne, Nn);
     int *ia_nn = std::get<0>(matrix_nn);
     int *ja_nn = std::get<1>(matrix_nn);
 
-    std::cout << "Built adj matrix" << std::endl;
+    // std::cout << "Built adj matrix" << std::endl;
 
     int *ia = ia_nn;
     int *ja = ja_nn;
@@ -255,7 +274,11 @@ int main(int argc, char** argv) {
     auto diag = new double[Ne];
     #endif
 
+    start = omp_get_wtime();
     fillCSR(ia, ja, a, b, diag, Ne);
+    end = omp_get_wtime();
+
+    LOG_INFO << "Fill done in " << end - start << " seconds" << std::endl;
 
     #ifdef USE_DEBUG_MODE
     LOG_DEBUG << "IA:\t\t";
@@ -279,9 +302,9 @@ int main(int argc, char** argv) {
     auto res = new double[Ne];
     #endif
 
-    double start = omp_get_wtime();
+    start = omp_get_wtime();
     int iterations = solve(ia, ja, a, b, diag, Ne, res, eps, maxit);
-    double end = omp_get_wtime();
+    end = omp_get_wtime();
 
     LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
     LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
