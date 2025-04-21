@@ -1,5 +1,3 @@
-#include <unordered_map>
-
 #include "omp.h"
 #include "csr.h"
 #include "Utilities/input.h"
@@ -14,6 +12,7 @@
 
 #ifdef USE_MPI
 #include <mpi.h>
+#include <unordered_map>
 #include "Utilities/coms.h"
 #endif
 
@@ -184,12 +183,18 @@ int main(int argc, char** argv) {
     omp_set_num_threads(omp_get_max_threads());
 
     int Nx = args.Nx;
+    checkInput(Nx, "Nx");
     int Ny = args.Ny;
+    checkInput(Ny, "Ny");
     int K1 = args.K1;
+    checkInput(K1, "K1");
     int K2 = args.K2;
+    checkInput(K2, "K2");
 
     double eps = args.eps;
+    checkInput(eps, "eps");
     int maxit = args.maxit;
+    checkInput(maxit, "maxit");
 
     LOG_INFO << "Nx = " << Nx << ", Ny = " << Ny << ", K1 = " << K1 << ", K2 = " << K2 << std::endl;
 

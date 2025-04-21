@@ -4,6 +4,8 @@
 #include <tuple>
 #include <vector>
 
+#include "logger.h"
+
 #define MAX_OUTPUT_LENGTH 20
 
 #ifdef USE_MPI
@@ -65,6 +67,14 @@ void printArray(T* a, const int size, std::ostream& os = std::cout) {
         os << a[i] << " ";
     }
     os << std::endl;
+}
+
+template <typename T>
+void checkInput(const T n, const char *name) {
+    if (n <= 0) {
+        LOG_ERROR << "Incorrect input in parameter " << name << std::endl;
+        exit(1);
+    }
 }
 
 #endif //INPUT_H
