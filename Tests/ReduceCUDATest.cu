@@ -6,9 +6,9 @@
 #include <omp.h>
 #include <vector>
 
-int main() {
-    int blocks = 128;
-    int threads = 256;
+int main(int argc, char **argv) {
+    int blocks = std::atoi(argv[1]);
+    int threads = std::atoi(argv[2]);
     int size = 100000000;
     float a = 1.0f;
 
