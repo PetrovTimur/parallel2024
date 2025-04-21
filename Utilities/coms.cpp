@@ -18,7 +18,7 @@ void ComInit(const std::vector<int> &ia, const std::vector<int> &ja, const std::
 
     std::unordered_map<int, int> P2N;
 
-    for (int i = 0; i < ia.size() - 1; i++) {
+    for (unsigned int i = 0; i < ia.size() - 1; i++) {
         for (int col = ia[i]; col < ia[i + 1]; col++) {
             const int j = ja[col];
             if (Part[j] != MyID) {
@@ -40,7 +40,7 @@ void ComInit(const std::vector<int> &ia, const std::vector<int> &ja, const std::
         Neighbors[p.second] = p.first;
     }
 
-    for (int p = 0; p < Neighbors.size(); p++) {
+    for (unsigned int p = 0; p < Neighbors.size(); p++) {
         std::sort(SendToProcess[p].begin(), SendToProcess[p].end(),
             [L2G](const int i, const int j) {
                 return L2G[i] < L2G[j];
@@ -48,7 +48,7 @@ void ComInit(const std::vector<int> &ia, const std::vector<int> &ja, const std::
 
         int k = 1;
         Send.push_back(SendToProcess[p][0]);
-        for (int i = 1; i < SendToProcess[p].size(); i++) {
+        for (unsigned int i = 1; i < SendToProcess[p].size(); i++) {
             if (SendToProcess[p][i] != SendToProcess[p][i - 1]) {
                 Send.push_back(SendToProcess[p][i]);
                 k++;
@@ -57,7 +57,7 @@ void ComInit(const std::vector<int> &ia, const std::vector<int> &ja, const std::
         SendOffset.push_back(SendOffset.back() + k);
     }
 
-    for (int p = 0; p < Neighbors.size(); p++) {
+    for (unsigned int p = 0; p < Neighbors.size(); p++) {
         std::sort(RecvFromProcess[p].begin(), RecvFromProcess[p].end(),
         [L2G](const int i, const int j) {
             return L2G[i] < L2G[j];
@@ -65,7 +65,7 @@ void ComInit(const std::vector<int> &ia, const std::vector<int> &ja, const std::
 
         int k = 1;
         Recv.push_back(RecvFromProcess[p][0]);
-        for (int i = 1; i < RecvFromProcess[p].size(); i++) {
+        for (unsigned int i = 1; i < RecvFromProcess[p].size(); i++) {
             if (RecvFromProcess[p][i] != RecvFromProcess[p][i - 1]) {
                 Recv.push_back(RecvFromProcess[p][i]);
                 k++;
@@ -84,7 +84,7 @@ void ComUpdate(double *b, const std::vector<int> &RecvOffset, const std::vector<
     SendBuf.resize(Send.size());
     RecvBuf.resize(Recv.size());
 
-    // TODO: Add size asserts
+    // TODO: Fix size asserts
     assert(Recv.size() == RecvOffset.back() && "Recv size incorrect");
     assert(Send.size() == SendOffset.back() && "Send size incorrect");
 
@@ -95,7 +95,7 @@ void ComUpdate(double *b, const std::vector<int> &RecvOffset, const std::vector<
 
     int nreq = 0;
 
-    for (int p = 0; p < Neighbors.size(); p++) {
+    for (unsigned int p = 0; p < Neighbors.size(); p++) {
         const int size = RecvOffset[p + 1] - RecvOffset[p];
         const int neighbor_id = Neighbors[p];
         const int mpires = MPI_Irecv(&RecvBuf[RecvOffset[p]], size, MPI_DOUBLE, neighbor_id, 0, MPI_COMM_WORLD, &(Request[nreq]));
@@ -103,11 +103,11 @@ void ComUpdate(double *b, const std::vector<int> &RecvOffset, const std::vector<
         nreq++;
     }
 
-    for (int i = 0; i < Send.size(); i++) {
+    for (unsigned int i = 0; i < Send.size(); i++) {
         SendBuf[i] = b[Send[i]];
     }
 
-    for (int p = 0; p < Neighbors.size(); p++) {
+    for (unsigned int p = 0; p < Neighbors.size(); p++) {
         const int size = SendOffset[p + 1] - SendOffset[p];
         const int neighbor_id = Neighbors[p];
         const int mpires = MPI_Isend(&SendBuf[SendOffset[p]], size, MPI_DOUBLE, neighbor_id, 0, MPI_COMM_WORLD, &(Request[nreq]));
@@ -120,7 +120,7 @@ void ComUpdate(double *b, const std::vector<int> &RecvOffset, const std::vector<
         assert(mpires == MPI_SUCCESS && "MPI_Waitall failed");
     }
 
-    for (int i = 0; i < Recv.size(); i++) {
+    for (unsigned int i = 0; i < Recv.size(); i++) {
         b[Recv[i]] = RecvBuf[i];
     }
 }
