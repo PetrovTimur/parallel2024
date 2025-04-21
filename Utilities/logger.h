@@ -7,10 +7,6 @@
 #include <fstream>
 #include <ostream>
 
-enum class LogLevel {
-    INFO, DEBUG, WARNING, ERROR
-};
-
 class Logger {
 public:
     static Logger& getInstance() {
@@ -55,5 +51,7 @@ private:
 #define LOG Logger::getInstance()
 #define LOG_INFO Logger::getInstance() << "[INFO]  \t"
 #define LOG_DEBUG Logger::getInstance() << "[DEBUG] \t"
+#define LOG_WARNING Logger::getInstance() << "[WARNING]  \t"
+#define LOG_ERROR Logger::getInstance() << "[ERROR] \t"
 
 #endif // LOGGER_H
