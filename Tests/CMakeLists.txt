@@ -42,6 +42,7 @@ if (USE_CUDA)
             AXpYCUDATest
             ReduceCUDATest
             DotCUDATest
+            DeviceQueryTest
     )
 
     foreach (TEST ${CUDA_TESTS})
