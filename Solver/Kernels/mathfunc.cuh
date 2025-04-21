@@ -1,6 +1,8 @@
 #ifndef KERNELS_CUH
 #define KERNELS_CUH
 
+__device__ inline int ceilPow2(unsigned int n);
+
 __global__ void axpy(float a, const float *x, const float *y, int size, float *res);
 
 __global__ void reduce0(const float *x, float *y, int N);

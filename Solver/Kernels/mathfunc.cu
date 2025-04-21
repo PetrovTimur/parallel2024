@@ -1,6 +1,17 @@
 #include "cuda_runtime.h"
 #include "thrust/device_vector.h"
 
+__device__ inline int ceilPow2(const unsigned int n) {
+    // early out if already power of two
+    if (0 == (n & (n - 1))) {
+        return n;
+    }
+
+    int exp;
+    frexp(static_cast<float>(n), &exp);
+    return (1 << exp);
+}
+
 __global__ void axpy(const float a, const float *x, const float *y, const int size, float *res) {
     const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
@@ -25,8 +36,10 @@ __global__ void reduce0(const float *x, float *y, const int N) {
 
     __syncthreads();
 
-    for (unsigned int k = blockDim.x / 2; k > 0; k /= 2) {
-        if (tid < k) {
+    int block2 = ceilPow2(blockDim.x);
+
+    for (unsigned int k = block2 / 2; k > 0; k >>= 1) {
+        if (tid < k && tid + k < blockDim.x) {
             tsum[tid] += tsum[tid + k];
         }
         __syncthreads();
