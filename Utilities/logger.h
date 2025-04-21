@@ -6,6 +6,7 @@
 #include <sstream>
 #include <fstream>
 #include <ostream>
+#include <string>
 
 class Logger {
 public:
@@ -32,15 +33,18 @@ public:
 
 private:
     std::ofstream logFile_;
+    std::string logFilePath_;
 
     Logger() {
         auto t = std::time(nullptr);
         auto tm = *std::localtime(&t);
         std::ostringstream oss;
         oss << LOG_DIR << "/log_" << std::put_time(&tm, "%Y-%m-%d_%H:%M:%S") << ".txt";
+        logFilePath_ = oss.str();
         logFile_.open(oss.str(), std::ios::out | std::ios::trunc);
     }
     ~Logger() {
+        std::cout << "Log file saved to: " << logFilePath_ << std::endl;
         logFile_.close();
     }
 
