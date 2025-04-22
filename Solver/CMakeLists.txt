@@ -11,18 +11,16 @@ if (USE_CUDA)
     target_link_libraries(CGSolver PUBLIC IOs MathFuncCUDA)
 else ()
     if (USE_MPI)
-        add_executable(CGSolver CGSolverMPI.cpp
-                csr.cpp
-                csr.h
-                solvers.cpp
-                solvers.h)
+        set(source CGSolverMPI.cpp)
     else ()
-        add_executable(CGSolver CGSolver.cpp
-                csr.cpp
-                csr.h
-                solvers.cpp
-                solvers.h)
+        set(source CGSolver.cpp)
     endif ()
+
+    add_executable(CGSolver ${source}
+            csr.cpp
+            csr.h
+            solvers.cpp
+            solvers.h)
 
     add_dependencies(CGSolver IOs MathFunc)
     target_link_libraries(CGSolver PUBLIC IOs MathFunc)
