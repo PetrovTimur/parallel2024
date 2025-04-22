@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
 
     if (NumProc != Px * Py) {
         if (MyID == 0) {
-            std::cout << "Number of processes Px*Py doesn't match MPI config" << std::endl;
+            LOG_ERROR << "Number of processes Px*Py doesn't match MPI config" << std::endl;
         }
 
         MPI_Finalize();
