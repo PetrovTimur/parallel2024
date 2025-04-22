@@ -25,7 +25,7 @@ static char args_doc[] = "Nx Ny K1 K2";
 
 /* The options we understand. */
 static struct argp_option options[] = {
-    {"output", 'o', "FILE", 0, "Output to FILE instead of standard output"},
+    {"log_dir", 'd', "DIR", 0, "Output to DIR instead of standard log directory"},
     {"eps", 'e', "VALUE", 0, "Precision of calculations"},
     {"maxit", 'i', "VALUE", 0, "Maximum iterations"},
     {"Nx", 1001, "VALUE", 0, "X dimension"},
@@ -47,7 +47,7 @@ struct arguments {
 #endif
     float eps;
     int maxit;
-    const char *output_file;
+    std::string log_dir;
 };
 
 /* Parse a single option. */
@@ -61,12 +61,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         // case 'q': case 's':
         //     arguments->silent = 1;
         // break;
-        case 'o':
-            arguments->output_file = arg;
+        case 'd':
+            arguments->log_dir = arg;
         break;
 
         case 'e':
-            arguments->eps = std::stod(arg);
+            arguments->eps = std::stof(arg);
         break;
 
         case 'i':

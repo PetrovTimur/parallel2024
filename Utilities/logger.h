@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 #include <ostream>
 #include <string>
 
@@ -13,6 +14,11 @@ public:
     static Logger& getInstance() {
         static Logger instance;
         return instance;
+    }
+
+    // call before first getInstance()
+    static void setLogDirectory(const std::string& dir) {
+        logDirOverride_ = dir;
     }
 
     template<typename T>
@@ -26,7 +32,6 @@ public:
         return *this;
     }
 
-    // Add this conversion operator
     operator std::ostream&() {
         return logFile_;
     }
@@ -34,14 +39,16 @@ public:
 private:
     std::ofstream logFile_;
     std::string logFilePath_;
+    static std::string logDirOverride_;  // declared here
 
     Logger() {
+        std::string dir = logDirOverride_.empty() ? LOG_DIR : logDirOverride_;
         auto t = std::time(nullptr);
         auto tm = *std::localtime(&t);
         std::ostringstream oss;
-        oss << LOG_DIR << "/log_" << std::put_time(&tm, "%Y-%m-%d_%H:%M:%S") << ".txt";
+        oss << dir << "/log_" << std::put_time(&tm, "%Y-%m-%d_%H:%M:%S") << ".txt";
         logFilePath_ = oss.str();
-        logFile_.open(oss.str(), std::ios::out | std::ios::trunc);
+        logFile_.open(logFilePath_, std::ios::out | std::ios::trunc);
     }
     ~Logger() {
         std::cout << "Log file saved to: " << logFilePath_ << std::endl;

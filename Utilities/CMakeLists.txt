@@ -5,4 +5,6 @@ endif ()
 add_library(IOs SHARED
         input.cpp
         input.h
-        argparse.h)
+        argparse.h
+        logger.h
+        logger.cpp)

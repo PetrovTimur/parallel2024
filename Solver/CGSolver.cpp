@@ -15,11 +15,17 @@
 int main(int argc, char** argv) {
     arguments args{};
 
-    args.output_file = "-";
+    args.log_dir = "";
     args.eps = 1e-3;
     args.maxit = 100;
 
     argp_parse (&argp, argc, argv, 0, nullptr, &args);
+
+    if (!args.log_dir.empty()) {
+        Logger::setLogDirectory(args.log_dir);
+    }
+
+    LOG_INFO << "Starting with log directory: " << args.log_dir << std::endl;
 
     omp_set_num_threads(omp_get_max_threads());
 
