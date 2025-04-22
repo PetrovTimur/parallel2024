@@ -1,7 +1,7 @@
 add_subdirectory(Kernels)
 
 if (USE_CUDA)
-    add_executable(CGSolver main.cpp
+    add_executable(CGSolver CGSolver.cpp
             csr.cpp
             csr.h
             solvers.cu
@@ -10,11 +10,19 @@ if (USE_CUDA)
     add_dependencies(CGSolver IOs MathFuncCUDA)
     target_link_libraries(CGSolver PUBLIC IOs MathFuncCUDA)
 else ()
-    add_executable(CGSolver main.cpp
-            csr.cpp
-            csr.h
-            solvers.cpp
-            solvers.h)
+    if (USE_MPI)
+        add_executable(CGSolver CGSolverMPI.cpp
+                csr.cpp
+                csr.h
+                solvers.cpp
+                solvers.h)
+    else ()
+        add_executable(CGSolver CGSolver.cpp
+                csr.cpp
+                csr.h
+                solvers.cpp
+                solvers.h)
+    endif ()
 
     add_dependencies(CGSolver IOs MathFunc)
     target_link_libraries(CGSolver PUBLIC IOs MathFunc)

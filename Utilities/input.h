@@ -9,6 +9,7 @@
 #define MAX_OUTPUT_LENGTH 20
 
 #ifdef USE_MPI
+#include <mpi.h>
 void input(int Nx, int Ny, int Px, int Py, int MyID, std::vector<int> &L2G, std::vector<int> &Part);
 #else
 
@@ -72,8 +73,20 @@ void printArray(T* a, const int size, std::ostream& os = std::cout) {
 template <typename T>
 void checkInput(const T n, const char *name) {
     if (n <= 0) {
+        #ifdef USE_MPI
+        int rank = -1;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+        if (rank == 0) {
+            LOG_ERROR << "Incorrect input in parameter " << name << std::endl;
+        }
+
+        MPI_Finalize();
+        #else
         LOG_ERROR << "Incorrect input in parameter " << name << std::endl;
-        exit(1);
+        #endif
+
+        exit(0);
     }
 }
 
