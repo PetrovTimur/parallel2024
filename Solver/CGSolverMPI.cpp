@@ -98,7 +98,14 @@ int main(int argc, char** argv) {
     //
     // MPI_Barrier(MPI_COMM_WORLD);
 
+    double start = MPI_Wtime();
     makeIncidenceMatrixCSR(Nx, Ny, K1, K2, L2G, ia_en, ja_en, Part);
+    MPI_Barrier(MPI_COMM_WORLD);
+    double end = MPI_Wtime();
+
+    if (MyID == 0) {
+        LOG_INFO << "EN construction done in " << end - start << " seconds" << std::endl;
+    }
 
 
     std::unordered_map<int, int> G2L;
@@ -115,7 +122,15 @@ int main(int argc, char** argv) {
 
     // std::vector<int> ia_ne, ja_ne;
     int *ia_ne, *ja_ne;
+
+    start = MPI_Wtime();
     transposeCSR(ia_en, ja_en, G2L_nodes.size(), ia_ne, ja_ne);
+    MPI_Barrier(MPI_COMM_WORLD);
+    end = MPI_Wtime();
+
+    if (MyID == 0) {
+        LOG_INFO << "Transpose (NE) construction done in " << end - start << " seconds" << std::endl;
+    }
 
     // printVector(ja_ne, std::cout);
 
@@ -124,7 +139,16 @@ int main(int argc, char** argv) {
     // printVector(Part, std::cout);
 
     std::vector<int> ia_ee, ja_ee;
+
+    start = MPI_Wtime();
     buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, ia_ee, ja_ee, ia_en.size() - 1, Part, MyID);
+    MPI_Barrier(MPI_COMM_WORLD);
+    end = MPI_Wtime();
+
+    if (MyID == 0) {
+        LOG_INFO << "Adjacency matrix (EE) construction done in " << end - start << " seconds" << std::endl;
+    }
+
     // auto ia_ee = std::get<0>(matrix);
     // auto ja_ee = std::get<1>(matrix);
 
@@ -135,7 +159,16 @@ int main(int argc, char** argv) {
     std::vector<double> a(ja_ee.size());
     std::vector<double> b(ia_ee.size() - 1);
     std::vector<double> diag(ia_ee.size() - 1);
+
+    start = MPI_Wtime();
     fillCSR(ia_ee, ja_ee, L2G, a, b, diag);
+    MPI_Barrier(MPI_COMM_WORLD);
+    end = MPI_Wtime();
+
+    if (MyID == 0) {
+        LOG_INFO << "Fill done in " << end - start << " seconds" << std::endl;
+    }
+
 
     // std::cout << "My ID = " << MyID << std::endl;
     // printVector(ja_ee, std::cout);
@@ -152,24 +185,18 @@ int main(int argc, char** argv) {
 
     std::vector<double> res(ia_ee.size() - 1);
 
-    double start = MPI_Wtime();
+    start = MPI_Wtime();
     int iterations = solve(MyID, Part, L2G, ia_ee, ja_ee, a, b, diag, res);
-
-
-    // std::cout << "MyID: " << MyID << ", x[0]: " << res[0] << std::endl;
-    // for (double x : res)
-    //     std::cout << x << " ";
-    // std::cout << std::endl;
-
-    // out.close();
-    MPI_Finalize();
-    double end = MPI_Wtime();
+    MPI_Barrier(MPI_COMM_WORLD);
+    end = MPI_Wtime();
 
     if (MyID == 0) {
         LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
         LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
         LOG_INFO << res[0] << std::endl;
     }
+
+    MPI_Finalize();
 
     return 0;
 }
