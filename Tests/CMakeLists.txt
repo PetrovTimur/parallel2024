@@ -4,6 +4,7 @@ set(TESTS
         AXpYCorrectnessTest
         AXpYParallelTest
         SpMVCorrectnessTest
+        ScanTest
         CSRTransposeTest
         CSRBuildAdjacencyMatrixTest
         CSRIncidenceTest
