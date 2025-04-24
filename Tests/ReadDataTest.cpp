@@ -5,9 +5,9 @@
 void testReadData() {
     try {
         auto result = readData(PROJECT_SOURCE_DIR "/Data/mesh100K/elements.txt", PROJECT_SOURCE_DIR "/Data/mesh100K/elements.dat");
-        int Nn = std::get<0>(result);
-        int Ne = std::get<1>(result);
-        int M = std::get<2>(result);
+        // int Nn = std::get<0>(result);
+        // int Ne = std::get<1>(result);
+        // int M = std::get<2>(result);
         int* data = std::get<3>(result);
 
         // Check that the data is not null

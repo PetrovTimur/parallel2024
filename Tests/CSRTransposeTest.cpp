@@ -9,9 +9,9 @@ bool TestSquareMatrixTranspose() {
     int rows = 3;
     int cols = 3;
 
-    std::vector<int> ia_ne, ja_ne;
+    int *ia_ne, *ja_ne;
     transposeCSR(ia, ja, cols, ia_ne, ja_ne);
-    auto result = std::make_pair(ia_ne.data(), ja_ne.data());
+    auto result = std::make_pair(ia_ne, ja_ne);
 
     int expected_ia[] = {0, 2, 3, 5};
     int expected_ja[] = {0, 2, 0, 1, 2};
@@ -49,9 +49,9 @@ bool TestRectangularMatrixTranspose() {
     int rows = 2;
     int cols = 3;
 
-    std::vector<int> ia_ne, ja_ne;
+    int *ia_ne, *ja_ne;
     transposeCSR(ia, ja, cols, ia_ne, ja_ne);
-    auto result = std::make_pair(ia_ne.data(), ja_ne.data());
+    auto result = std::make_pair(ia_ne, ja_ne);
 
     int expected_ia[] = {0, 1, 2, 4};
     int expected_ja[] = {0, 1, 0, 1};
@@ -89,9 +89,9 @@ bool TestEmptyMatrixTranspose() {
     int rows = 1;
     int cols = 1;
 
-    std::vector<int> ia_ne, ja_ne;
+    int *ia_ne, *ja_ne;
     transposeCSR(ia, ja, cols, ia_ne, ja_ne);
-    auto result = std::make_pair(ia_ne.data(), ja_ne.data());
+    auto result = std::make_pair(ia_ne, ja_ne);
 
     bool success = true;
 
@@ -115,9 +115,9 @@ bool TestDiagonalMatrixTranspose() {
     int rows = 3;
     int cols = 3;
 
-    std::vector<int> ia_ne, ja_ne;
+    int *ia_ne, *ja_ne;
     transposeCSR(ia, ja, cols, ia_ne, ja_ne);
-    auto result = std::make_pair(ia_ne.data(), ja_ne.data());
+    auto result = std::make_pair(ia_ne, ja_ne);
 
     int expected_ia[] = {0, 1, 2, 3};
     int expected_ja[] = {0, 1, 2};

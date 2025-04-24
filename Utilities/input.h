@@ -29,8 +29,8 @@ struct gridInfo {
         int total_diag = full_cycles * K2 + remaining_diag;
 
         int nodes = (Nx + 1) * (Ny + 1);
-        int total_edges = Nx * (Ny + 1) + Ny * (Nx + 1) + total_diag;
-        int nonzero_elements = 2 * total_edges + nodes;
+        // int total_edges = Nx * (Ny + 1) + Ny * (Nx + 1) + total_diag;
+        // int nonzero_elements = 2 * total_edges + nodes;
 
         cells = total_cells;
         diagCount = total_diag;

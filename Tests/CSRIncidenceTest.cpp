@@ -31,12 +31,12 @@ int main() {
     printArray(ia_en.data(), Ne + 1);
     printArray(ja_en.data(), ja_en.size());
 
-    std::vector<int> ia_ne, ja_ne;
+    int *ia_ne, *ja_ne;
     transposeCSR(ia_en, ja_en, Nn, ia_ne, ja_ne);
     // auto ia_ne = csr_transposed.first;
     // auto ja_ne = csr_transposed.second;
 
-    auto csr_adjacent = buildAdjacencyMatrixCSR(ia_ne.data(), ja_ne.data(), Ne, Nn);
+    auto csr_adjacent = buildAdjacencyMatrixCSR(ia_ne, ja_ne, Ne, Nn);
     auto ia_adj = csr_adjacent.first;
     auto ja_adj = csr_adjacent.second;
 
