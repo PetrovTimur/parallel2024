@@ -364,40 +364,31 @@ void buildFilledMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<d
     }
 }
 
-void transposeCSR(std::vector<int> &ia, std::vector<int> &ja, const int Nn, std::vector<int> &ia_new, std::vector<int> &ja_new) {
+void transposeCSR(std::vector<int> &ia, std::vector<int> &ja, const int Nn, int *&ia_new, int *&ja_new) {
     const int nnz = ia[ia.size() - 1];
-    // auto ia_new = new int[Nn + 1];
-    // auto ja_new = new int[nnz];
-    ia_new.resize(Nn + 1);
-    ja_new.resize(nnz);
+    ia_new = new int[Nn + 1];
+    ja_new = new int[nnz];
 
-    // Zero out ia_new
-    for (int i = 0; i <= Nn; i++) {
-        ia_new[i] = 0;
-    }
+    arrInit(ia_new, 0, Nn + 1);
 
-    // Count the number of entries in each column
+    #pragma omp parallel for default(none) shared(ia_new, ja, nnz)
     for (int i = 0; i < nnz; ++i) {
+        #pragma omp atomic update
         ia_new[ja[i] + 1]++;
     }
 
-    // Compute the cumulative sum to get the new row pointers
-    for (int i = 1; i <= Nn; ++i) {
-        ia_new[i] += ia_new[i - 1];
-    }
+    scan(ia_new, ia_new, Nn + 1);
 
     const auto buf = new int[Nn + 1];
+    arrCopy(buf, ia_new, Nn + 1);
 
-    // Zero out buf
-    for (int i = 0; i <= Nn; ++i) {
-        buf[i] = ia_new[i];
-    }
-
-    // Fill the column indices
+    #pragma omp parallel for default(none) shared(ia, ja, ja_new, buf)
     for (unsigned int i = 0; i < ia.size() - 1; ++i) {
         for (int k = ia[i]; k < ia[i + 1]; ++k) {
             const int col = ja[k];
-            const int dest_pos = buf[col]++;
+            int dest_pos;
+            #pragma omp atomic capture
+            dest_pos = buf[col]++;
             ja_new[dest_pos] = i;
         }
     }

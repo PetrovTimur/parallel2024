@@ -41,7 +41,8 @@ int main(int argc, char** argv) {
         Logger::setLogDirectory(args.log_dir);
     }
 
-    omp_set_num_threads(omp_get_max_threads());
+    omp_set_num_threads(1);
+    // omp_set_num_threads(omp_get_max_threads());
 
     int Nx = args.Nx;
     checkInput(Nx, "Nx");
@@ -112,7 +113,8 @@ int main(int argc, char** argv) {
     // std::cout << "G2L_nodes size = " << G2L_nodes.size() << std::endl;
     // printVector(ja_en, std::cout);
 
-    std::vector<int> ia_ne, ja_ne;
+    // std::vector<int> ia_ne, ja_ne;
+    int *ia_ne, *ja_ne;
     transposeCSR(ia_en, ja_en, G2L_nodes.size(), ia_ne, ja_ne);
 
     // printVector(ja_ne, std::cout);
@@ -122,7 +124,7 @@ int main(int argc, char** argv) {
     // printVector(Part, std::cout);
 
     std::vector<int> ia_ee, ja_ee;
-    buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne.data(), ja_ne.data(), ia_ee, ja_ee, ia_en.size() - 1, Part, MyID);
+    buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, ia_ee, ja_ee, ia_en.size() - 1, Part, MyID);
     // auto ia_ee = std::get<0>(matrix);
     // auto ja_ee = std::get<1>(matrix);
 

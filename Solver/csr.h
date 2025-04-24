@@ -32,8 +32,8 @@ void buildMatrixFromCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<
 
 void buildFilledMatrix(std::vector<int> &ia, std::vector<int> &ja, std::vector<double> &a, std::vector<std::vector<double>> &matrix);
 
-void transposeCSR(std::vector<int> &ia, std::vector<int> &ja, int Nn, std::vector<int> &ia_new,
-                  std::vector<int> &ja_new);
+void transposeCSR(std::vector<int> &ia, std::vector<int> &ja, int Nn, int *&ia_new,
+                  int *&ja_new);
 
 std::pair<int*, int*> buildAdjacencyMatrixCSR(const int* ia_ne, const int* ja_ne, int Ne, int Nn);
 

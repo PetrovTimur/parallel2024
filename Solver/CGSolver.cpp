@@ -74,8 +74,10 @@ int main(int argc, char** argv) {
     printVector(ja_en, LOG);
     #endif
 
-    std::vector<int> ia_ne;
-    std::vector<int> ja_ne;
+    // std::vector<int> ia_ne;
+    // std::vector<int> ja_ne;
+
+    int *ia_ne, *ja_ne;
 
     start = omp_get_wtime();
     transposeCSR(ia_en, ja_en, Nn, ia_ne, ja_ne);
@@ -94,7 +96,7 @@ int main(int argc, char** argv) {
     #endif
 
     start = omp_get_wtime();
-    auto matrix_nn = buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne.data(), ja_ne.data(), Ne, Nn);
+    auto matrix_nn = buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, Ne, Nn);
     end = omp_get_wtime();
 
     LOG_INFO << "Adjacency matrix (EE) construction done in " << end - start << " seconds" << std::endl;
