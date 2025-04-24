@@ -7,6 +7,7 @@
 #include <vector>
 #include <utility>
 #include <numeric>
+#include <omp.h>
 #include <unordered_map>
 // #include <unordered_set>
 
@@ -241,40 +242,69 @@ template void fillCSR<double>(const int *ia, const int *ja, double *a, double *b
 #endif
 
 std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
-    std::vector<int> ia_adj(Ne + 1);
-    std::vector<int> ja_adj;
-
-    for (int element1 = 0; element1 < Ne; ++element1) {
-        std::vector<int> adjacent;
-        for (int k = ia_en[element1]; k < ia_en[element1 + 1]; ++k) {
-            const int node = ja_en[k];
-
-            for (int l = ia_ne[node]; l < ia_ne[node + 1]; ++l) {
-                const int element2 = ja_ne[l];
-                adjacent.push_back(element2);
-            }
+    int num_threads;
+    #pragma omp parallel default(none) shared(num_threads)
+    {
+        #pragma omp single
+        {
+            num_threads = omp_get_num_threads();
         }
-        adjacent.push_back(element1);
-
-        std::sort(adjacent.begin(), adjacent.end());
-
-        ja_adj.push_back(adjacent[0]);
-        int count = 1;
-        for (unsigned int i = 1; i < adjacent.size(); ++i) {
-            if (adjacent[i] != adjacent[i - 1]) {
-                ja_adj.push_back(adjacent[i]);
-                count++;
-            }
-        }
-        ia_adj[element1 + 1] = ia_adj[element1] + count;
     }
 
-    auto ia_adj_new = new int[ia_adj.size()];
-    auto ja_adj_new = new int[ja_adj.size()];
-    arrCopy(ia_adj_new, ia_adj.data(), ia_adj.size());
-    arrCopy(ja_adj_new, ja_adj.data(), ja_adj.size());
+    auto ia_adj = new int[Ne + 1];
+    ia_adj[0] = 0;
+    std::vector<std::vector<int>> ja_local(num_threads);
+    std::vector<int> ia_local(num_threads + 1);
 
-    return std::make_pair(ia_adj_new, ja_adj_new);
+    #pragma omp parallel default(none) shared(ia_en, ja_en, ia_ne, ja_ne, ia_adj, ia_local, ja_local, num_threads, Ne)
+    {
+        int tid = omp_get_thread_num();
+        int chunk = (Ne + num_threads - 1) / num_threads;
+        int start = tid * chunk;
+        int end   = std::min(start + chunk, Ne);
+        for (int element1 = start; element1 < end; ++element1) {
+            std::vector<int> adjacent;
+            for (int k = ia_en[element1]; k < ia_en[element1 + 1]; ++k) {
+                const int node = ja_en[k];
+
+                for (int l = ia_ne[node]; l < ia_ne[node + 1]; ++l) {
+                    const int element2 = ja_ne[l];
+                    adjacent.push_back(element2);
+                }
+            }
+            adjacent.push_back(element1);
+
+            std::sort(adjacent.begin(), adjacent.end());
+
+            ja_local[tid].push_back(adjacent[0]);
+            int count = 1;
+            for (unsigned int i = 1; i < adjacent.size(); ++i) {
+                if (adjacent[i] != adjacent[i - 1]) {
+                    ja_local[tid].push_back(adjacent[i]);
+                    count++;
+                }
+            }
+            ia_adj[element1 + 1] = count;
+            ia_local[tid + 1] += count;
+        }
+    }
+
+    scan(ia_adj, ia_adj, Ne + 1);
+
+    for (int tid = 1; tid <= num_threads; ++tid) {
+        ia_local[tid] += ia_local[tid - 1];
+    }
+
+    auto ja_adj = new int[ia_local[num_threads]];
+
+    #pragma omp parallel for default(none) shared(ja_adj, ia_local, ja_local, num_threads)
+    for (int tid = 0; tid < num_threads; tid++) {
+        for (int i = ia_local[tid]; i < ia_local[tid + 1]; i++) {
+            ja_adj[i] = ja_local[tid][i - ia_local[tid]];
+        }
+    }
+
+    return std::make_pair(ia_adj, ja_adj);
 }
 
 std::pair<int *, int *> buildAdjacencyMatrixCSR(const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
