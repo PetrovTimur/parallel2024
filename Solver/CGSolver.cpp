@@ -166,8 +166,8 @@ int main(int argc, char** argv) {
 
     // delete[] ia_en;
     // delete[] ja_en;
-    // delete[] ia_ne;
-    // delete[] ja_ne;
+    delete[] ia_ne;
+    delete[] ja_ne;
     delete[] ia;
     delete[] ja;
     delete[] a;

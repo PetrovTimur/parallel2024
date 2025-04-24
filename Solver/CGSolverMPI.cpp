@@ -149,13 +149,6 @@ int main(int argc, char** argv) {
         LOG_INFO << "Adjacency matrix (EE) construction done in " << end - start << " seconds" << std::endl;
     }
 
-    // auto ia_ee = std::get<0>(matrix);
-    // auto ja_ee = std::get<1>(matrix);
-
-    // MPI_Barrier(MPI_COMM_WORLD);
-    // std::cout << "My ID = " << MyID << std::endl;
-    // printVector(L2G, std::cout);
-
     std::vector<double> a(ja_ee.size());
     std::vector<double> b(ia_ee.size() - 1);
     std::vector<double> diag(ia_ee.size() - 1);
@@ -195,6 +188,10 @@ int main(int argc, char** argv) {
         LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
         LOG_INFO << res[0] << std::endl;
     }
+
+    delete[] ia_ne;
+    delete[] ja_ne;
+
 
     MPI_Finalize();
 
