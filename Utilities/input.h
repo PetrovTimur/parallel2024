@@ -39,7 +39,6 @@ struct gridInfo {
     }
 };
 
-void input(int Nx, int Ny, int K1, int K2, gridInfo &grid);
 #endif
 
 std::tuple<int, int, int, int*> readData(const std::string &elementsTxtPath, const std::string &elementsDatPath);
