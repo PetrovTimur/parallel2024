@@ -234,8 +234,11 @@ void fillCSR(const int *ia, const int *ja, T *a, T *b, T *diag, const int size) 
         b[i] = std::sin(i);
 }
 
-template void fillCSR<double>(const int *ia, const int *ja, double *a, double *b, double *diag, int size);
+#ifdef USE_CUDA
 template void fillCSR<float>(const int *ia, const int *ja, float *a, float *b, float *diag, int size);
+#else
+template void fillCSR<double>(const int *ia, const int *ja, double *a, double *b, double *diag, int size);
+#endif
 
 std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, const int Ne, const int Nn) {
     std::vector<int> ia_adj(Ne + 1);
