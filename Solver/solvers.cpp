@@ -77,7 +77,7 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
 
         ComUpdate(p, RecvOffset, SendOffset, Neighbors, Send, Recv);
 
-        spMV(ia, ja, a, p, q);
+        spMV(ia.data(), ja.data(), a.data(), p, ia.size(), q);
 
         dot(p, q, N, buf);
         MPI_Allreduce(&buf, &total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);

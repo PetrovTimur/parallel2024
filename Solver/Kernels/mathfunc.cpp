@@ -21,23 +21,6 @@ void axpy(const double a, const double *x, const double *y, const int size, doub
     }
 }
 
-#ifdef USE_MPI
-
-void spMV(const std::vector<int> &ia, const std::vector<int> &ja, const std::vector<double> &a, const double *b, double *res) {
-    #pragma omp parallel for default(none) shared(ia, ja, a, b, res)
-    for (int i = 0; i < ia.size() - 1; i++) {
-        double sum = 0;
-        for (int col = ia[i]; col < ia[i + 1]; col++) {
-            const int j = ja[col];
-            const double a_ij = a[col];
-            sum += a_ij * b[j];
-        }
-        res[i] = sum;
-    }
-}
-
-#else
-
 void spMV(const int *ia, const int *ja, const double *a, const double *b, const int size, double *res) {
     #pragma omp parallel for default(none) shared(ia, ja, a, b, size, res)
     for (int i = 0; i < size - 1; i++) {
@@ -50,4 +33,3 @@ void spMV(const int *ia, const int *ja, const double *a, const double *b, const 
         res[i] = sum;
     }
 }
-#endif

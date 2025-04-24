@@ -5,12 +5,7 @@
 
 void dot(const double *x, const double *y, int size, double &res);
 
-#ifdef USE_MPI
-void spMV(const std::vector<int> &ia, const std::vector<int> &ja, const std::vector<double> &a, const double *b, double
-          *res);
-#else
 void spMV(const int *ia, const int *ja, const double *a, const double *b, int size, double *res);
-#endif
 
 void axpy(double a, const double *x, const double *y, int size, double *res);
 
