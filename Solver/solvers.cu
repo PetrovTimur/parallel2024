@@ -73,13 +73,13 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
     //     k++;
     // }
 
-    std::cout << "Starting: ";
+    // std::cout << "Starting: ";
 
     do {
         k++;
 
         LOG_INFO << "Iteration " << k << std::endl;
-        std::cout << "Iteration " << k << std::endl;
+        // std::cout << "Iteration " << k << std::endl;
 
         const auto start = omp_get_wtime();
 
@@ -129,7 +129,7 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
         dot_gpu(threads, blocks, x.data().get(), x.data().get(), vec_buf.data().get(), norm_gpu, N);
         // dot<<<blocks, threads>>>(x.data().get(), x.data().get(), norm_gpu, N);
         cudaMemcpy(&norm, norm_gpu, sizeof(float), cudaMemcpyDeviceToHost);
-        LOG_INFO << "L2 norm: " << std::sqrt(norm) << std::endl;
+        LOG_INFO << "Solution norm: " << std::sqrt(norm) << std::endl;
         LOG << "--------------------------------------------------" << std::endl << std::endl;
 
     }
@@ -137,7 +137,7 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
 
     // #pragma omp parallel for default(none) shared(res, x, N)
     cudaMemcpy(res, x.data().get(), N * sizeof(float), cudaMemcpyDeviceToHost);
-    std::cout << x[0] << x[1] << std::endl;
+    // std::cout << x[0] << x[1] << std::endl;
 
     // delete[] z;
     // delete[] p;
