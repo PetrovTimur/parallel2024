@@ -56,6 +56,6 @@ if (USE_CUDA)
     endforeach ()
 endif ()
 
-if (NOT USE_MPI)
+if (MEASURES)
     add_subdirectory(Time)
 endif ()

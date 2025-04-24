@@ -19,6 +19,7 @@ option(ENABLE_TESTS "Enable automatic testing" ON)
 option(USE_DEBUG_MODE "Use debug tools" OFF)
 option(USE_MPI "Use MPI" OFF)
 option(USE_CUDA "Use CUDA" OFF)
+option(MEASURES "Enable measuring binaries" OFF)
 
 if (USE_DEBUG_MODE)
     add_compile_definitions(USE_DEBUG_MODE)
