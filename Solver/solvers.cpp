@@ -170,7 +170,18 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
         LOG_INFO << "Time " << omp_get_wtime() - start << std::endl;
         // LOG_INFO << "rho = " << rho[0] << ", " << rho[1] << ", alpha = " << alpha << std::endl;
         dot(x, x, N, norm);
-        LOG_INFO << "L2 norm: " << std::sqrt(norm) << std::endl;
+        LOG_INFO << "Solution norm: " << std::sqrt(norm) << std::endl;
+        #ifdef USE_DEBUG_MODE
+        spMV(ia, ja, a, x, N + 1, z);
+
+        #pragma omp parallel for default(none) shared(z, b, N)
+        for (int i = 0; i < N; i++)
+            z[i] -= b[i];
+
+        dot(z, z, N, norm);
+        LOG_DEBUG << "Residual norm: " << std::sqrt(norm) << std::endl;
+        #endif
+
         LOG << "--------------------------------------------------" << std::endl << std::endl;
 
     }
