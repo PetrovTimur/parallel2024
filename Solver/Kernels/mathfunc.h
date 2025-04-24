@@ -9,6 +9,8 @@ void spMV(const int *ia, const int *ja, const double *a, const double *b, int si
 
 void axpy(double a, const double *x, const double *y, int size, double *res);
 
+void scan(const int* input, int* output, int n);
+
 /**
  * @brief Copy one array data to another array
  *
