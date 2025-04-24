@@ -8,24 +8,28 @@ int main() {
     int Nx = 3;
     int Ny = 2;
 
-    auto stats = input(Nx, Ny, 1, 1); // total_cells, nodes, total_split_cells, total_edges, ...
-
+    gridInfo grid(Nx, Ny, 1, 1);
     // int Ne = Nx * Ny;
     // int Nn = (Nx + 1) * (Ny + 1);
     // int nnz = 4 * Nx * Ny;
 
-    printArray(stats, 5);
+    // printArray(grid, 5);
 
-    int Ne = stats[0] - stats[2] + 2 * stats[2];
-    int Nn = stats[1];
-    int nnz = (stats[0] - stats[2]) * 4 + 2 * stats[2] * 3;
+    // int Ne = stats[0] - stats[2] + 2 * stats[2];
+    // int Nn = stats[1];
+    // int nnz = (stats[0] - stats[2]) * 4 + 2 * stats[2] * 3;
+
+    int Ne = grid.totalElements;
+    int Nn = grid.totalNodes;
+
+    // TODO: fix
 
     std::vector<int> ia_en;
     std::vector<int> ja_en;
-    makeIncidenceMatrixCSR(Nx, Ny, 1, 1, 0, Ny, 0, Nx, ia_en, ja_en);
+    makeIncidenceMatrixCSR(Nx, Ny, 1, 1, 0, Ny - 1, 0, Nx - 1, ia_en, ja_en);
 
     printArray(ia_en.data(), Ne + 1);
-    printArray(ja_en.data(), nnz);
+    printArray(ja_en.data(), ja_en.size());
 
     std::vector<int> ia_ne, ja_ne;
     transposeCSR(ia_en, ja_en, Nn, ia_ne, ja_ne);
