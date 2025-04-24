@@ -46,8 +46,8 @@ std::tuple<int, int, int, int*> readData(const std::string &elementsTxtPath, con
 
 template <typename T>
 void printMatrix(std::vector<std::vector<T>> &matrix, std::ostream& os = std::cout) {
-    for (int i = 0; i < std::max(matrix.size(), MAX_OUTPUT_LENGTH); i++) {
-        for (int j = 0; j < std::max(matrix[i].size(), MAX_OUTPUT_LENGTH); j++) {
+    for (int i = 0; i < std::min(matrix.size(), MAX_OUTPUT_LENGTH); i++) {
+        for (int j = 0; j < std::min(matrix[i].size(), MAX_OUTPUT_LENGTH); j++) {
             os << matrix[i][j] << " ";
         }
         os << std::endl;
@@ -56,7 +56,7 @@ void printMatrix(std::vector<std::vector<T>> &matrix, std::ostream& os = std::co
 
 template <typename T>
 void printVector(std::vector<T> &a, std::ostream& os = std::cout) {
-    for (int i = 0; i < std::max(a.size(), MAX_OUTPUT_LENGTH); i++) {
+    for (int i = 0; i < std::min(static_cast<int>(a.size()), MAX_OUTPUT_LENGTH); i++) {
         os << a[i] << " ";
     }
     os << std::endl;
@@ -64,7 +64,7 @@ void printVector(std::vector<T> &a, std::ostream& os = std::cout) {
 
 template <typename T>
 void printArray(T* a, const int size, std::ostream& os = std::cout) {
-    for (int i = 0; i < std::max(size, MAX_OUTPUT_LENGTH); i++) {
+    for (int i = 0; i < std::min(size, MAX_OUTPUT_LENGTH); i++) {
         os << a[i] << " ";
     }
     os << std::endl;
