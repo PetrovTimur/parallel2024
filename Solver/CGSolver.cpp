@@ -96,20 +96,20 @@ int main(int argc, char** argv) {
     #endif
 
     start = omp_get_wtime();
-    auto matrix_nn = buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, Ne, Nn);
+    auto matrix_ee = buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, Ne, Nn);
     end = omp_get_wtime();
 
     LOG_INFO << "Adjacency matrix (EE) construction done in " << end - start << " seconds" << std::endl;
 
     // Ne = Nn;
     // auto matrix_nn = buildAdjacencyMatrixCSRUsingSort(ia_ne.data(), ja_ne.data(), ia_en.data(), ja_en.data(), Ne, Nn);
-    int *ia_nn = std::get<0>(matrix_nn);
-    int *ja_nn = std::get<1>(matrix_nn);
+    int *ia_ee = std::get<0>(matrix_ee);
+    int *ja_ee = std::get<1>(matrix_ee);
 
     // std::cout << "Built adj matrix" << std::endl;
 
-    int *ia = ia_nn;
-    int *ja = ja_nn;
+    int *ia = ia_ee;
+    int *ja = ja_ee;
 
     #ifdef USE_DEBUG_MODE
     // std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
