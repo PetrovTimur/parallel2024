@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "input.h"
+// #include "input.h"
 
 
 void ComInit(const std::vector<int> &ia, const std::vector<int> &ja, const std::vector<int> &Part, const std::vector<int> &L2G, const int
@@ -42,7 +42,7 @@ void ComInit(const std::vector<int> &ia, const std::vector<int> &ja, const std::
 
     for (unsigned int p = 0; p < Neighbors.size(); p++) {
         std::sort(SendToProcess[p].begin(), SendToProcess[p].end(),
-            [L2G](const int i, const int j) {
+            [&L2G](const int i, const int j) {
                 return L2G[i] < L2G[j];
             });
 
@@ -59,7 +59,7 @@ void ComInit(const std::vector<int> &ia, const std::vector<int> &ja, const std::
 
     for (unsigned int p = 0; p < Neighbors.size(); p++) {
         std::sort(RecvFromProcess[p].begin(), RecvFromProcess[p].end(),
-        [L2G](const int i, const int j) {
+        [&L2G](const int i, const int j) {
             return L2G[i] < L2G[j];
         });
 
