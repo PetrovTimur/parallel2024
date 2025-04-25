@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
     end = MPI_Wtime();
 
     if (MyID == 0) {
-        LOG_INFO << "Fill done in " << end - start << " seconds" << std::endl;
+        LOG_INFO << "Fill done in " << end - start << " seconds" << std::endl << std::endl;
     }
 
 
