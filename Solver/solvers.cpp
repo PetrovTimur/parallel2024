@@ -54,9 +54,10 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
             LOG_INFO << "Iteration " << k << std::endl;
         }
 
+        MPI_Barrier(MPI_COMM_WORLD);
         double start = MPI_Wtime();
 
-        #pragma omp parallel for proc_bind(master)
+        // #pragma omp parallel for proc_bind(master)
         for (int i = 0; i < N; i++) {
             z[i] = r[i] * diag[i];
         }
@@ -67,7 +68,7 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
         MPI_Allreduce(&buf, &rho[1], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
         if (k == 1)
-            #pragma omp parallel for proc_bind(master)
+            // #pragma omp parallel for proc_bind(master)
             for (int i = 0; i < N; i++)
                 p[i] = z[i];
         else {
@@ -86,6 +87,7 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
         axpy(alpha, p, x, N, x);
         axpy(-alpha, q, r, N, r);
 
+        MPI_Barrier(MPI_COMM_WORLD);
         double end = MPI_Wtime();
         dot(x, x, N, norm);
         MPI_Allreduce(&norm, &total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -99,7 +101,7 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
     }
     while (rho[1] > eps * eps && k < maxit);
 
-    #pragma omp parallel for proc_bind(master)
+    // #pragma omp parallel for proc_bind(master)
     for (int i = 0; i < N; i++)
         res[i] = x[i];
 
@@ -109,7 +111,6 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
     delete[] x;
     delete[] r;
     delete[] rho;
-
     return k;
 }
 #else
