@@ -12,8 +12,8 @@
 // #include <unordered_set>
 
 #ifdef USE_MPI
-void localizeCSR(const int *ia, const int size, int *ja, std::unordered_map<int, int> G2L) {
-    for (int i = 0; i < size; i++) {
+void localizeCSR(const int *ia, const int size, int *ja, std::unordered_map<int, int> &G2L) {
+    for (int i = 0; i < size - 1; i++) {
         for (int j = ia[i]; j < ia[i + 1]; j++) {
             ja[j] = G2L[ja[j]];
         }

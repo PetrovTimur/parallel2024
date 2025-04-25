@@ -6,7 +6,7 @@
 #ifdef USE_MPI
 void makeCSR(int Nx, int Ny, int K1, int K2, int i_start, int i_end, int j_start, int j_end, std::vector<int> &G2L, std::vector<int> &ia, std::vector<int> &ja);
 
-void localizeCSR(const int *ia, const int size, int *ja, std::unordered_map<int, int> G2L);
+void localizeCSR(const int *ia, const int size, int *ja, std::unordered_map<int, int> &G2L);
 
 void constructG2L(std::vector<int> &ia_en, std::vector<int> &ja_en, std::unordered_map<int, int> &G2L);
 
