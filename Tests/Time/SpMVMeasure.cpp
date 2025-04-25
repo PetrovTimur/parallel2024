@@ -1,3 +1,4 @@
+#include <cassert>
 #include <omp.h>
 #include <iostream>
 #include <ostream>
@@ -12,7 +13,7 @@
 #include "Utilities/coms.h"
 #endif
 
-int main() {
+int main(int argc, char *argv[]) {
     #ifdef USE_MPI
     omp_set_num_threads(omp_get_max_threads());
 
@@ -52,51 +53,50 @@ int main() {
         int Py = NumProc / 2;
 
         std::vector<int> L2G;
-        std::vector<int> G2L((Nx + 1) * (Ny + 1), -1);
-        std::vector<int> Part((Nx + 1) * (Ny + 1));
+        std::vector<int> Part;
 
-        std::tuple<int, int, int, int, int, int, int, int, int, int> t = input(Nx, Ny, Px, Py, MyID, L2G, G2L, Part);
-        int i_start = std::get<0>(t);
-        int i_end = std::get<1>(t);
-        int i_count = std::get<2>(t);
-        int j_start = std::get<3>(t);
-        int j_end = std::get<4>(t);
-        int j_count = std::get<5>(t);
-        int top_halo = std::get<6>(t);
-        int right_halo = std::get<7>(t);
-        int bottom_halo = std::get<8>(t);
-        int left_halo = std::get<9>(t);
+        input(Nx, Ny, Px, Py, MyID, L2G, Part);
 
-        // std::vector<int> ia(N0 + 1);
-        std::vector<int> ia = {0};
-        // std::vector<int> ja(7 * (N0 + 1));
-        std::vector<int> ja;
+        std::vector<int> ia_en;
+        std::vector<int> ja_en;
 
-        makeCSR(Nx, Ny, K1, K2, i_start + top_halo, i_end - bottom_halo, j_start + left_halo, j_end - right_halo, G2L, ia, ja);
+        makeIncidenceMatrixCSR(Nx, Ny, K1, K2, L2G, ia_en, ja_en, Part);
+        std::unordered_map<int, int> G2L;
+        fillG2L(L2G, G2L);
 
-        std::vector<double> a(ja.size());
-        std::vector<double> b(ia.size() - 1);
-        std::vector<double> diag(ia.size() - 1);
-        std::vector<double> res(ia.size() - 1);
-        fillCSR(ia, ja, L2G, a, b, diag);
+        std::unordered_map<int, int> G2L_nodes;
+        constructG2L(ia_en, ja_en, G2L_nodes);
 
-        std::vector<double> recv_buf;
-        std::vector<int> recv_offset(7);
+        localizeCSR(ia_en.data(), ia_en.size(), ja_en.data(), G2L_nodes);
 
-        std::vector<double> send_buf;
-        std::vector<int> send_offset(7);
+        int *ia_ne, *ja_ne;
+        transposeCSR(ia_en, ja_en, G2L_nodes.size(), ia_ne, ja_ne);
 
-        ComInitOffsets(top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, recv_offset, send_offset);
-        recv_buf.resize(recv_offset[recv_offset.size() - 1]);
-        send_buf.resize(send_offset[send_offset.size() - 1]);
+        std::vector<int> ia_ee, ja_ee;
+        buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, ia_ee, ja_ee, ia_en.size() - 1, Part, MyID);
+
+        std::vector<double> a(ja_ee.size());
+        std::vector<double> b(ia_ee.size() - 1);
+        std::vector<double> diag(ia_ee.size() - 1);
+
+        fillCSR(ia_ee, ja_ee, L2G, a, b, diag);
+
+        std::vector<double> res(ia_ee.size() - 1);
+
+        // std::vector<int> RecvOffset, SendOffset;
+        // std::vector<int> Recv, Send;
+        // std::vector<int> Neighbors;
+
+        // std::cout << "Ready " << ia_ee.size() - 1 << std::endl;
 
         int runs = 1e7 / k + 1;
         double aggregate_time = 0;
         for (int p = 0; p < runs; ++p) {
             // Calculate
+            // ComInit(ia_ee, ja_ee, Part, L2G, MyID, RecvOffset, SendOffset, Send, Recv, Neighbors);
+            std::vector<double> q(b.size() * 20, 1);
             double start = MPI_Wtime();
-            Com(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, b, recv_offset, send_offset, recv_buf, send_buf);
-            spMV(ia, ja, a, b, recv_buf, res);
+            spMV(ia_ee.data(), ja_ee.data(), a.data(), q.data(), ia_ee.size(), res.data());
             MPI_Barrier(MPI_COMM_WORLD);
             double end = MPI_Wtime();
 
@@ -106,7 +106,7 @@ int main() {
         double average_time = aggregate_time / runs;
 
         if (MyID == 0)
-            std::cout << 2 * 6 * Nx * Ny / (average_time * 1e9) << ",";
+            std::cout << 2 * NumProc * ia_ee.back() / (average_time * 1e9) << ",";
     }
     if (MyID == 0)
         std::cout << std::endl;
@@ -115,42 +115,61 @@ int main() {
 
     #else
     omp_set_num_threads(omp_get_max_threads());
-    std::vector<int> ia;
-    std::vector<int> ja;
-    std::vector<double> a;
-    std::vector<double> b;
-    std::vector<double> diag;
-    std::vector<double> res;
+    // std::vector<int> ia;
+    // std::vector<int> ja;
+    // std::vector<double> a;
+    // std::vector<double> b;
+    // std::vector<double> diag;
+    // std::vector<double> res;
 
     int T  = omp_get_max_threads();
     std::cout << "T = " << T << std::endl;
 
-    for (int k = 1e5; k <= 1e8; k *= 10) {
+    for (int k = 1e6; k <= 1e8; k *= 10) {
         int K1 = 30;
         int K2 = 23;
         int Nx = 1000;
         int Ny = k / Nx / 5;
 
-        const auto stats = input(Nx, Ny, K1, K2);
-        const int nodes = stats[1];
-        const int nonzero_elements = stats[4];
+        const gridInfo grid(Nx, Ny, K1, K2);
+        int Nn = grid.totalNodes;
+        int Ne = grid.totalElements;
 
-        ia.resize(nodes + 1);
-        ja.resize(nonzero_elements);
-        a.resize(nonzero_elements);
-        b.resize(nodes);
-        diag.resize(nodes);
-        res.resize(nodes);
+        std::vector<int> ia_en;
+        std::vector<int> ja_en;
+        makeIncidenceMatrixCSR(Nx, Ny, K1, K2, 0, Ny - 1, 0, Nx - 1, ia_en, ja_en);
 
-        makeCSR(Nx, Ny, K1, K2, ia, ja);
-        fillCSR(ia.data(), ja.data(), a.data(), b.data(), diag.data(), nodes);
+        int *ia_ne, *ja_ne;
+        transposeCSR(ia_en, ja_en, Nn, ia_ne, ja_ne);
+
+        auto matrix_ee = buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, Ne, Nn);
+        int *ia = std::get<0>(matrix_ee);
+        int *ja = std::get<1>(matrix_ee);
+
+        #ifdef USE_CUDA
+        auto a = new float[ia[Ne]];
+        auto b = new float[Ne];
+        auto diag = new float[Ne];
+        #else
+        auto a = new double[ia[Ne]];
+        auto b = new double[Ne];
+        auto diag = new double[Ne];
+        #endif
+
+        fillCSR(ia, ja, a, b, diag, Ne);
+
+        #ifdef USE_CUDA
+        auto res = new float[Ne];
+        #else
+        auto res = new double[Ne];
+        #endif
 
         int runs = 1e7 / k + 1;
         double aggregate_time = 0;
         for (int p = 0; p < runs; ++p) {
             // Calculate
             double start = omp_get_wtime();
-            spMV(ia.data(), ja.data(), a.data(), b.data(), ia.size(), res.data());
+            spMV(ia, ja, a, b, Ne, res);
             double end = omp_get_wtime();
 
             aggregate_time += end - start;
@@ -158,9 +177,7 @@ int main() {
 
         double average_time = aggregate_time / runs;
 
-        std::cout << 2 * a.size() / (average_time * 1e9) << ", ";
-
-        delete[] stats;
+        std::cout << 2 * ia[Ne] / (average_time * 1e9) << ",";
     }
     std::cout << std::endl;
     #endif

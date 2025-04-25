@@ -11,7 +11,7 @@
 #include <mpi.h>
 #endif
 
-int main() {
+int main(int argc, char *argv[]) {
     #ifdef USE_MPI
     omp_set_num_threads(omp_get_max_threads());
 
@@ -64,7 +64,7 @@ int main() {
             double alpha = std::tan(p);
             // Calculate
             double start = MPI_Wtime();
-            axpy(alpha, x, y, res);
+            axpy(alpha, x.data(), y.data(), x.size(), res.data());
             MPI_Barrier(MPI_COMM_WORLD);
             double end = MPI_Wtime();
 
@@ -92,13 +92,13 @@ int main() {
     int T  = omp_get_max_threads();
     std::cout << "T = " << T << std::endl;
 
-    for (int k = 1e5; k <= 1e8; k *= 10) {
+    for (int k = 1e6; k <= 1e8; k *= 10) {
         x.resize(k);
         y.resize(k);
         res.resize(k);
 
         // Fill
-        #pragma omp parallel for proc_bind(spread)
+        #pragma omp parallel for default(none) shared(x, y, k)
         for (int i = 0; i < k; i++) {
             x[i] = sin(i);
             y[i] = cos(i);
@@ -119,8 +119,8 @@ int main() {
 
         double average_time = aggregate_time / runs;
 
-        std::cout << 2 * k / (average_time * 1e9) << ", ";
-        std::cout << average_time << std::endl;
+        std::cout << 2 * k / (average_time * 1e9) << ",";
+        // std::cout << average_time << std::endl;
     }
     std::cout << std::endl;
     #endif
