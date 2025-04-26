@@ -107,6 +107,9 @@ int main(int argc, char *argv[]) {
 
         if (MyID == 0)
             std::cout << 2 * NumProc * ia_ee.back() / (average_time * 1e9) << ",";
+
+        delete[] ia_ne;
+        delete[] ja_ne;
     }
     if (MyID == 0)
         std::cout << std::endl;
@@ -178,6 +181,9 @@ int main(int argc, char *argv[]) {
         double average_time = aggregate_time / runs;
 
         std::cout << 2 * ia[Ne] / (average_time * 1e9) << ",";
+
+        delete[] ia_ne;
+        delete[] ja_ne;
     }
     std::cout << std::endl;
     #endif

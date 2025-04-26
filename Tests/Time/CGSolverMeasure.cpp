@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <omp.h>
 #include <iostream>
 #include <ostream>
@@ -12,7 +13,7 @@
 #include "Utilities/coms.h"
 #endif
 
-int main() {
+int main(int argc, char *argv[]) {
     #ifdef USE_MPI
     omp_set_num_threads(omp_get_max_threads());
 
@@ -52,33 +53,39 @@ int main() {
         int Py = NumProc / 2;
 
         std::vector<int> L2G;
-        std::vector<int> G2L((Nx + 1) * (Ny + 1), -1);
-        std::vector<int> Part((Nx + 1) * (Ny + 1));
+        std::vector<int> Part;
 
-        std::tuple<int, int, int, int, int, int, int, int, int, int> t = input(Nx, Ny, Px, Py, MyID, L2G, G2L, Part);
-        int i_start = std::get<0>(t);
-        int i_end = std::get<1>(t);
-        int i_count = std::get<2>(t);
-        int j_start = std::get<3>(t);
-        int j_end = std::get<4>(t);
-        int j_count = std::get<5>(t);
-        int top_halo = std::get<6>(t);
-        int right_halo = std::get<7>(t);
-        int bottom_halo = std::get<8>(t);
-        int left_halo = std::get<9>(t);
+        input(Nx, Ny, Px, Py, MyID, L2G, Part);
 
-        // std::vector<int> ia(N0 + 1);
-        std::vector<int> ia = {0};
-        // std::vector<int> ja(7 * (N0 + 1));
-        std::vector<int> ja;
+        std::vector<int> ia_en;
+        std::vector<int> ja_en;
 
-        makeCSR(Nx, Ny, K1, K2, i_start + top_halo, i_end - bottom_halo, j_start + left_halo, j_end - right_halo, G2L, ia, ja);
+        makeIncidenceMatrixCSR(Nx, Ny, K1, K2, L2G, ia_en, ja_en, Part);
+        std::unordered_map<int, int> G2L;
+        fillG2L(L2G, G2L);
 
-        std::vector<double> a(ja.size());
-        std::vector<double> b(ia.size() - 1);
-        std::vector<double> diag(ia.size() - 1);
-        std::vector<double> res(ia.size() - 1);
-        fillCSR(ia, ja, L2G, a, b, diag);
+        // std::cout << "L2G size = " << L2G.size() << std::endl;
+        // MPI_Barrier(MPI_COMM_WORLD);
+        // std::cout << "G2L size = " << G2L.size() << ", G2L max index: " << std::max_element(G2L.begin(), G2L.end(), [](const auto &a, const auto &b) { return a.second < b.second; })->second << std::endl;
+
+        std::unordered_map<int, int> G2L_nodes;
+        constructG2L(ia_en, ja_en, G2L_nodes);
+
+        localizeCSR(ia_en.data(), ia_en.size(), ja_en.data(), G2L_nodes);
+
+        int *ia_ne, *ja_ne;
+        transposeCSR(ia_en, ja_en, G2L_nodes.size(), ia_ne, ja_ne);
+
+        std::vector<int> ia_ee, ja_ee;
+        buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, ia_ee, ja_ee, ia_en.size() - 1, Part, MyID);
+
+        std::vector<double> a(ja_ee.size());
+        std::vector<double> b(ia_ee.size() - 1);
+        std::vector<double> diag(ia_ee.size() - 1);
+
+        fillCSR(ia_ee, ja_ee, L2G, a, b, diag);
+
+        std::vector<double> res(ia_ee.size() - 1);
 
         int runs = 1;
         int iterations = 0;
@@ -86,7 +93,7 @@ int main() {
         for (int p = 0; p < runs; ++p) {
             // Calculate
             double start = MPI_Wtime();
-            iterations = solve(MyID, Px, top_halo, left_halo, right_halo, bottom_halo, i_count, j_count, ia, ja, a, b, diag, res);
+            iterations = solve(MyID, Part, L2G, ia_ee, ja_ee, a, b, diag, res);
             double end = MPI_Wtime();
 
 
@@ -96,7 +103,10 @@ int main() {
         double average_time = aggregate_time / runs;
 
         if (MyID == 0)
-            std::cout << iterations * NumProc * (3 * ia.size() + 3 * ia.size() + a.size()) / (average_time * 1e9) << ",";
+            std::cout << 2 * iterations * NumProc * (0.5 * ia_ee.size() + 2 * ia_ee.size() + 3 * ia_ee.size() + ia_ee.size() + a.size()) / (average_time * 1e9) << ",";
+
+        delete[] ia_ne;
+        delete[] ja_ne;
     }
     // std::cout << std::endl;
 
@@ -115,28 +125,44 @@ int main() {
 
     std::cout << "T = " << omp_get_max_threads() << std::endl;
 
-    for (int k = 1e5; k <= 1e8; k *= 10) {
+    for (int k = 1e6; k <= 1e8; k *= 10) {
         int K1 = 30;
         int K2 = 23;
         int Nx = 2000;
         int Ny = k / Nx / 5;
 
-        auto stats = input(Nx, Ny, K1, K2);
-        // std::tuple<int, int> t = input(Nx, Ny, K1, K2);
-        // int nodes = std::get<0>(t);
-        // int nonzero_elements = std::get<1>(t);
-        int nodes = stats[1];
-        int nonzero_elements = stats[4];
+        const gridInfo grid(Nx, Ny, K1, K2);
+        int Nn = grid.totalNodes;
+        int Ne = grid.totalElements;
 
-        ia.resize(nodes + 1);
-        ja.resize(nonzero_elements);
-        a.resize(nonzero_elements);
-        b.resize(nodes);
-        diag.resize(nodes);
-        res.resize(nodes);
+        std::vector<int> ia_en;
+        std::vector<int> ja_en;
+        makeIncidenceMatrixCSR(Nx, Ny, K1, K2, 0, Ny - 1, 0, Nx - 1, ia_en, ja_en);
 
-        makeCSR(Nx, Ny, K1, K2, ia, ja);
-        fillCSR(ia.data(), ja.data(), a.data(), b.data(), diag.data(), nodes);
+        int *ia_ne, *ja_ne;
+        transposeCSR(ia_en, ja_en, Nn, ia_ne, ja_ne);
+
+        auto matrix_ee = buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, Ne, Nn);
+        int *ia = std::get<0>(matrix_ee);
+        int *ja = std::get<1>(matrix_ee);
+
+        #ifdef USE_CUDA
+        auto a = new float[ia[Ne]];
+        auto b = new float[Ne];
+        auto diag = new float[Ne];
+        #else
+        auto a = new double[ia[Ne]];
+        auto b = new double[Ne];
+        auto diag = new double[Ne];
+        #endif
+
+        fillCSR(ia, ja, a, b, diag, Ne);
+
+        #ifdef USE_CUDA
+        auto res = new float[Ne];
+        #else
+        auto res = new double[Ne];
+        #endif
 
         int runs = 1;
         int iterations = 0;
@@ -144,7 +170,7 @@ int main() {
         for (int p = 0; p < runs; ++p) {
             // Calculate
             double start = omp_get_wtime();
-            iterations = solve(ia.data(), ja.data(), a.data(), b.data(), diag.data(), ia.size(), res.data(), 1e-3, 1000);
+            iterations = solve(ia, ja, a, b, diag, Ne, res, 1e-3, 1000);
             double end = omp_get_wtime();
 
             aggregate_time += end - start;
@@ -152,9 +178,10 @@ int main() {
 
         double average_time = aggregate_time / runs;
 
-        std::cout << iterations * (3 * nodes + 3 * nodes + a.size()) / (average_time * 1e9) << ", ";
+        std::cout << 2 * iterations * (0.5 * Ne + 2 * Ne + 3 * Ne + Ne + ia[Ne]) / (average_time * 1e9) << ",";
 
-        delete[] stats;
+        delete[] ia_ne;
+        delete[] ja_ne;
     }
     std::cout << std::endl;
     #endif
