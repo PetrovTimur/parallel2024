@@ -37,8 +37,9 @@ int main(int argc, char** argv) {
 
     argp_parse (&argp, argc, argv, 0, nullptr, &args);
 
-    if (!args.log_dir.empty()) {
+    if (!args.log_dir.empty() && (MyID == 0)) {
         Logger::setLogDirectory(args.log_dir);
+        LOG_INFO << "Starting with log directory: " << args.log_dir << std::endl;
     }
 
     omp_set_num_threads(1);

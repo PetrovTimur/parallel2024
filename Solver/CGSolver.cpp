@@ -23,9 +23,8 @@ int main(int argc, char** argv) {
 
     if (!args.log_dir.empty()) {
         Logger::setLogDirectory(args.log_dir);
+        LOG_INFO << "Starting with log directory: " << args.log_dir << std::endl;
     }
-
-    LOG_INFO << "Starting with log directory: " << args.log_dir << std::endl;
 
     omp_set_num_threads(omp_get_max_threads());
 
