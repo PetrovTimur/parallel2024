@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
         }
         double average_time = aggregate_time / runs;
 
-        std::cout << 2 * k / (average_time * 1e9) << ",";
+        std::cout << 2 * ia[Ne] / (average_time * 1e9) << ",";
     }
     std::cout << std::endl;
 
