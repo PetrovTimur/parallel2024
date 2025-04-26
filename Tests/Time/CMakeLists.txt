@@ -3,8 +3,11 @@ set(MEASURES
     AXpYMeasure
     SpMVMeasure
     CGSolverMeasure
-    CSRAdjacencyMeasure
 )
+
+if (NOT USE_MPI)
+    set(MEASURES ${MEASURES} CSRAdjacencyMeasure)
+endif ()
 
 foreach (MEASURE ${MEASURES})
 #    cmake_path(GET MEASURE_SOURCE STEM MEASURE)

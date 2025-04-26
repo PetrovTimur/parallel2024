@@ -43,8 +43,7 @@ int main() {
 
     // Transpose the CSR matrix to obtain node-to-element connectivity (ia_ne, ja_ne).
     // The transpose function treats the original CSR as a matrix with Ne rows and Nn columns.
-    std::vector<int> ia_ne;
-    std::vector<int> ja_ne;
+    int *ia_ne, *ja_ne;
     double start_tr = omp_get_wtime();
     transposeCSR(ia_en_vector, ja_en_vector, Nn, ia_ne, ja_ne);
     double end_tr = omp_get_wtime();
@@ -54,21 +53,21 @@ int main() {
 
     // Measure time for building adjacency matrix using sets variant.
     double start_sets = omp_get_wtime();
-    auto adj_sets = buildAdjacencyMatrixCSRUsingSets(ia_en_vector.data(), ja_en_vector.data(), ia_ne.data(), ja_ne.data(), Ne, Nn);
+    auto adj_sets = buildAdjacencyMatrixCSRUsingSets(ia_en_vector.data(), ja_en_vector.data(), ia_ne, ja_ne, Ne, Nn);
     double end_sets = omp_get_wtime();
     double duration_sets = (end_sets - start_sets) * 1000; // convert to milliseconds
     std::cout << "Time (using sets): " << duration_sets << " ms" << std::endl;
 
     // Measure time for building adjacency matrix using sort variant.
     double start_sort = omp_get_wtime();
-    auto adj_sort = buildAdjacencyMatrixCSRUsingSort(ia_en_vector.data(), ja_en_vector.data(), ia_ne.data(), ja_ne.data(), Ne, Ne);
+    auto adj_sort = buildAdjacencyMatrixCSRUsingSort(ia_en_vector.data(), ja_en_vector.data(), ia_ne, ja_ne, Ne, Ne);
     double end_sort = omp_get_wtime();
     double duration_sort = (end_sort - start_sort) * 1000; // convert to milliseconds
     std::cout << "Time (using sort): " << duration_sort << " ms" << std::endl;
 
     // Measure time for building adjacency matrix using single CSR variant.
     double start_single = omp_get_wtime();
-    auto adj_single = buildAdjacencyMatrixCSR(ia_ne.data(), ja_ne.data(), Ne, Nn);
+    auto adj_single = buildAdjacencyMatrixCSR(ia_ne, ja_ne, Ne, Nn);
     double end_single = omp_get_wtime();
     double duration_single = (end_single - start_single) * 1000; // convert to milliseconds
     std::cout << "Time (using single): " << duration_single << " ms" << std::endl;
