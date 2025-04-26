@@ -164,7 +164,7 @@ bool DisconnectedGraphIncidenceToAdjacency() {
 
     // Expected adjacency matrix (all zeros)
     int expected_ia[] = {0, 0, 0};
-    int expected_ja[] = {};
+    // int expected_ja[] = {};
 
     bool success = true;
 
