@@ -40,7 +40,7 @@ if (USE_CUDA)
     set(CMAKE_CUDA_ARCHITECTURES 89)
     add_compile_definitions(USE_CUDA)
     enable_language(CUDA)
-#    find_package(CUDAToolkit REQUIRED)
+    find_package(CUDAToolkit REQUIRED)
 endif ()
 
 if (ENABLE_TESTS)
