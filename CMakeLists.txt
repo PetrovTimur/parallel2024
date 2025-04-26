@@ -21,6 +21,10 @@ option(USE_MPI "Use MPI" OFF)
 option(USE_CUDA "Use CUDA" OFF)
 option(MEASURES "Enable measuring binaries" OFF)
 
+if(USE_MPI AND USE_CUDA)
+    message(FATAL_ERROR "You cannot enable both USE_MPI and USE_CUDA at the same time.")
+endif()
+
 if (DEBUG_MODE)
     add_compile_definitions(DEBUG_MODE)
 endif ()
