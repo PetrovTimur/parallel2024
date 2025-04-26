@@ -1,5 +1,6 @@
 #include "solvers.h"
 
+#include <algorithm>
 #include <complex>
 #include <iostream>
 #include <omp.h>
@@ -30,7 +31,7 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
     const int maxit = 20;
 
     const auto z = new double[N];
-    const auto p = new double[N + Recv.size()];
+    const auto p = new double[L2G.size()];
 
     const auto q = new double[N];
     arrInit(q, 0., N);
