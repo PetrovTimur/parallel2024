@@ -38,7 +38,7 @@ if (NOT USE_MPI)
 endif ()
 
 if (USE_CUDA)
-    message("CUDA TESTING")
+#    message("CUDA TESTING")
     set(CUDA_TESTS
             AXpYCUDATest
             ReduceCUDATest
