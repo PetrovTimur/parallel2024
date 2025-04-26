@@ -146,23 +146,13 @@ int main(int argc, char *argv[]) {
         int *ia = std::get<0>(matrix_ee);
         int *ja = std::get<1>(matrix_ee);
 
-        #ifdef USE_CUDA
-        auto a = new float[ia[Ne]];
-        auto b = new float[Ne];
-        auto diag = new float[Ne];
-        #else
         auto a = new double[ia[Ne]];
         auto b = new double[Ne];
         auto diag = new double[Ne];
-        #endif
 
         fillCSR(ia, ja, a, b, diag, Ne);
 
-        #ifdef USE_CUDA
-        auto res = new float[Ne];
-        #else
         auto res = new double[Ne];
-        #endif
 
         int runs = 1;
         int iterations = 0;
