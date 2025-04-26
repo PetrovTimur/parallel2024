@@ -12,9 +12,11 @@
 void ComInit(const std::vector<int> &ia, const std::vector<int> &ja, const std::vector<int> &Part, const std::vector<int> &L2G, const int
              MyID, std::vector<int> &RecvOffset, std::vector<int> &SendOffset, std::vector<int> &Send, std::vector<int> &Recv, std::vector<int> &Neighbors) {
 
-    std::vector<std::vector<int>> SendToProcess(8);
-    std::vector<std::vector<int>> RecvFromProcess(8);
-    // TODO: change 8 to num neighbors
+    int NumProc;
+    MPI_Comm_size(MPI_COMM_WORLD,&NumProc);
+
+    std::vector<std::vector<int>> SendToProcess(NumProc);
+    std::vector<std::vector<int>> RecvFromProcess(NumProc);
 
     std::unordered_map<int, int> P2N;
 
