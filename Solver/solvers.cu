@@ -37,7 +37,7 @@ inline void checkLast(const char *errorMessage, const char *file,
 }
 
 int solve(const int *ia, const int *ja, const float *a, const float *b, const float *diag, int size, float *res, const double eps, const int maxit) {
-    const int N = size - 1;
+    const int N = size;
     const int blocks = 204;
     const int threads = 256;
 
