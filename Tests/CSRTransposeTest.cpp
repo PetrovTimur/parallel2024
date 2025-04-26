@@ -36,8 +36,8 @@ bool TestSquareMatrixTranspose() {
         }
     }
 
-    // delete[] result.first;
-    // delete[] result.second;
+    delete[] result.first;
+    delete[] result.second;
 
     return success;
 }
@@ -76,8 +76,8 @@ bool TestRectangularMatrixTranspose() {
         }
     }
 
-    // delete[] result.first;
-    // delete[] result.second;
+    delete[] result.first;
+    delete[] result.second;
 
     return success;
 }
@@ -86,7 +86,7 @@ bool TestRectangularMatrixTranspose() {
 bool TestEmptyMatrixTranspose() {
     std::vector<int> ia = {0, 0};  // Empty matrix
     std::vector<int> ja = {};      // No elements
-    int rows = 1;
+    // int rows = 1;
     int cols = 1;
 
     int *ia_ne, *ja_ne;
@@ -102,8 +102,8 @@ bool TestEmptyMatrixTranspose() {
         success = false;
     }
 
-    // delete[] result.first;
-    // delete[] result.second;
+    delete[] result.first;
+    delete[] result.second;
 
     return success;
 }
@@ -142,8 +142,8 @@ bool TestDiagonalMatrixTranspose() {
         }
     }
 
-    // delete[] result.first;
-    // delete[] result.second;
+    delete[] result.first;
+    delete[] result.second;
 
     return success;
 }
