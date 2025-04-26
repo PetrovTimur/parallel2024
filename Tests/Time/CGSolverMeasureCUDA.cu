@@ -10,9 +10,6 @@
 int main(int argc, char *argv[]) {
     omp_set_num_threads(omp_get_max_threads());
 
-    int threads = 256;
-    int blocks = 204;
-
     int T  = omp_get_max_threads();
     std::cout << "T = " << T << std::endl;
 
