@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     // int *ia_en = std::get<0>(matrix);
     // int *ja_en = std::get<1>(matrix);
 
-    #ifdef USE_DEBUG_MODE
+    #ifdef DEBUG_MODE
     LOG_DEBUG << "IA_EN:\t";
     printVector(ia_en, LOG);
     LOG_DEBUG << "JA_EN:\t";
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     // int *ia_ne = std::get<0>(matrix_transposed);
     // int *ja_ne = std::get<1>(matrix_transposed);
 
-    #ifdef USE_DEBUG_MODE
+    #ifdef DEBUG_MODE
     LOG_DEBUG << "IA_NE:\t";
     printArray(ia_ne.data(), Nn + 1, LOG);
     LOG_DEBUG << "JA_NE:\t";
@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
     int *ia = ia_ee;
     int *ja = ja_ee;
 
-    #ifdef USE_DEBUG_MODE
+    #ifdef DEBUG_MODE
     // std::vector<std::vector<bool>> matrix(nodes + 1, std::vector<bool>(nodes + 1, false));
     // buildMatrixFromCSR(ia, ja, matrix);
     // LOG_DEBUG << "Matrix:" << std::endl;
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
 
     LOG_INFO << "Fill done in " << end - start << " seconds" << std::endl;
 
-    #ifdef USE_DEBUG_MODE
+    #ifdef DEBUG_MODE
     LOG_DEBUG << "IA:\t\t";
     printArray(ia, Ne + 1, LOG);
 
@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
     delete[] b;
     delete[] diag;
 
-    #ifdef USE_DEBUG_MODE
+    #ifdef DEBUG_MODE
     LOG_DEBUG << "res:\t";
     printArray(res, Ne, LOG);
     #endif

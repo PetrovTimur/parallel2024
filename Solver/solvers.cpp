@@ -173,7 +173,7 @@ int solve(const int *ia, const int *ja, const double *a, const double *b, const 
         // LOG_INFO << "rho = " << rho[0] << ", " << rho[1] << ", alpha = " << alpha << std::endl;
         dot(x, x, N, norm);
         LOG_INFO << "Solution norm: " << std::sqrt(norm) << std::endl;
-        #ifdef USE_DEBUG_MODE
+        #ifdef DEBUG_MODE
         spMV(ia, ja, a, x, N + 1, z);
 
         #pragma omp parallel for default(none) shared(z, b, N)

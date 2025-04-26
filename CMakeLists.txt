@@ -16,13 +16,13 @@ add_compile_definitions(PROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\")
 add_compile_definitions(LOG_DIR=\"${PROJECT_BINARY_DIR}/log\")
 
 option(ENABLE_TESTS "Enable automatic testing" ON)
-option(USE_DEBUG_MODE "Use debug tools" OFF)
+option(DEBUG_MODE "Use debug tools" OFF)
 option(USE_MPI "Use MPI" OFF)
 option(USE_CUDA "Use CUDA" OFF)
 option(MEASURES "Enable measuring binaries" OFF)
 
-if (USE_DEBUG_MODE)
-    add_compile_definitions(USE_DEBUG_MODE)
+if (DEBUG_MODE)
+    add_compile_definitions(DEBUG_MODE)
 endif ()
 
 if (USE_MPI)
