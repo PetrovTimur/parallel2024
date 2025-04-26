@@ -31,8 +31,19 @@ A C++ project for solving large sparse systems using parallel algorithms (OpenMP
 
 4. **Build:**
     ```sh
-    make
+    make -j$(nproc)
     ```
+
+## Build Options
+
+| Option       | Description                        | Default |
+|--------------|------------------------------------|---------|
+| DEBUG_MODE   | Enable debug logging and checks    | OFF     |
+| USE_MPI      | Enable MPI parallelization         | OFF     |
+| USE_CUDA     | Enable CUDA GPU support            | OFF     |
+| ENABLE_TESTS | Build and enable tests             | ON      |
+
+Set options via `cmake -DOPTION=ON ..`.
 
 ## Running
 
@@ -46,17 +57,6 @@ A C++ project for solving large sparse systems using parallel algorithms (OpenMP
     ```sh
     mpirun -np 4 ./bin/CGSolverMPI --Nx 100 --Ny 100 --K1 1 --K2 1 --Px 2 --Py 2
     ```
-
-## Build Options
-
-| Option       | Description                        | Default |
-|--------------|------------------------------------|---------|
-| DEBUG_MODE   | Enable debug logging and checks    | OFF     |
-| USE_MPI      | Enable MPI parallelization         | OFF     |
-| USE_CUDA     | Enable CUDA GPU support            | OFF     |
-| ENABLE_TESTS | Build and enable tests             | ON      |
-
-Set options via `cmake -DOPTION=ON ..`.
 
 ## Directory Structure
 
