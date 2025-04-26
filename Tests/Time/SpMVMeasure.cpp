@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
         for (int p = 0; p < runs; ++p) {
             // Calculate
             // ComInit(ia_ee, ja_ee, Part, L2G, MyID, RecvOffset, SendOffset, Send, Recv, Neighbors);
-            std::vector<double> q(b.size() * 20, 1);
+            std::vector<double> q(L2G.size(), 1);
             double start = MPI_Wtime();
             spMV(ia_ee.data(), ja_ee.data(), a.data(), q.data(), ia_ee.size(), res.data());
             MPI_Barrier(MPI_COMM_WORLD);
