@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(parallel2024_task1)
+project(parallel2024)
 
 find_package(OpenMP)
 
