@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
     end = MPI_Wtime();
 
     if (MyID == 0) {
-        LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
+        LOG_INFO << "Work done in " << end - start << " seconds" << std::endl;
         LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
         LOG_INFO << res[0] << std::endl;
     }

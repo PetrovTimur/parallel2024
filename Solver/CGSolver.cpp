@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
     int iterations = solve(ia, ja, a, b, diag, Ne, res, eps, maxit);
     end = omp_get_wtime();
 
-    LOG_INFO << "Work took " << end - start << " seconds" << std::endl;
+    LOG_INFO << "Work done in " << end - start << " seconds" << std::endl;
     LOG_INFO << "Convergence required "  << iterations << " iterations" << std::endl;
     LOG_INFO << res[0] << std::endl;
 
