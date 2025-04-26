@@ -81,8 +81,8 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 \vfill
 
 \begin{center}
-	26 декабря \\
-	Москва, 2024
+	26 апреля \\
+	Москва, 2025
 \end{center}
 
 \enlargethispage{2\baselineskip}
@@ -135,8 +135,8 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 
 \begin{lstlisting}[escapechar=!]{bash}
 	mkdir build && cd build
-	cmake -DENABLE_TESTS=<!\color{cyan}On!|Off> -DUSE_DEBUG_MODE=<On|!\color{cyan}Off!> -DUSE_MPI=<On|!\color{cyan}Off!> ..
-	make -j 4
+	cmake -DENABLE_TESTS=<!\color{cyan}On!|Off> -DDEBUG_MODE=<On|!\color{cyan}Off!> -DUSE_MPI=<On|!\color{cyan}Off!> ..
+	make -j $(nproc)
 	cd ../bin
 \end{lstlisting}
 
@@ -152,7 +152,7 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 Для запуска на локальных системах достаточно указать количество нитей, а также все необходимые входные данные:
 
 \begin{lstlisting}{bash}
-	OMP_NUM_THREADS=k ./CGSolver Nx Ny K1 K2
+	OMP_NUM_THREADS=k ./CGSolver --Nx VAL --Ny VAL --K1 VAL --K2 VAL
 \end{lstlisting}
 
 Для запуска на кластере, использующем систему очередей, запускается скрипт со следующими параметрами:
@@ -175,7 +175,7 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 Для запуска MPI версии программы локально (обязательно следует указывать число нитей на один MPI процесс OMP\_NUM\_THREADS=M, иначе по умолчанию будет общее число доступных нитей, что существенно замедлит выполнение):
 
 \begin{lstlisting}{bash}
-	OMP_NUM_THREADS=M mpiexec -n N bin_mpi/CGSolver Nx Ny K1 K2 Px Py
+	OMP_NUM_THREADS=M mpiexec -n N bin_mpi/CGSolver --Nx VAL --Ny VAL --K1 VAL --K2 VAL --Px VAL --Py VAL
 \end{lstlisting}
 
 и на кластере:
@@ -203,9 +203,10 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 
 \begin{figure}[H]
 	\center
-	\begin{tabular}{cc}
-		\includegraphics[width=85mm]{singlethread_pc} & \includegraphics[width=85mm]{singlethread_polus} \\
-		(а) PC & (б) Polus \\[6pt]
+	\begin{tabular}{c}
+		%\includegraphics[width=85mm]{singlethread_pc} & \includegraphics[width=85mm]{singlethread_polus} \\
+		\includegraphics[width=85mm]{singlethread_pc} \\
+		%(а) PC & (б) Polus \\[6pt]
 	\end{tabular}
 	\caption{Зависимость производительности от размера входных данных} 
 	\label{fig:singlethread_flops}
@@ -226,25 +227,28 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 \begin{figure}[H]
 	\center
 	\begin{tabular}{cc}
-		\includegraphics[width=85mm]{csr_init_speedup} & \includegraphics[width=85mm]{csr_fill_speedup} \\
-		(а) & (б) \\[6pt]
+		\includegraphics[width=85mm]{2025/boost_construct} & \includegraphics[width=85mm]{2025/boost_transpose} \\
+		(a) EN & (б) NE \\
+		\includegraphics[width=85mm]{2025/boost_adjacency} & \includegraphics[width=85mm]{2025/boost_fill} \\
+		(в) EE & (г) Fill \\[6pt]
 	\end{tabular}
-	\caption{Ускорение создания (а) и заполнения (б) массивов формата CSR в зависимости от числа нитей} 
+	\caption{Ускорение создания (а), транспонирования (б), построения смежности (в) и заполнения (г) в зависимости от числа нитей} 
 	\label{fig:gridd}
 \end{figure}
 
 \begin{figure}[H]
 	\center
 	\begin{tabular}{cc}
-		\includegraphics[width=85mm]{multithread_pc_dot} & \includegraphics[width=85mm]{multithread_pc_axpy} \\
+		\includegraphics[width=85mm]{2025/openmp_dot} & \includegraphics[width=85mm]{2025/openmp_axpy} \\
 		(a) Dot & (б) AXpY \\
-		\includegraphics[width=85mm]{multithread_pc_spmv} & \includegraphics[width=85mm]{multithread_pc_cgsolver} \\
+		\includegraphics[width=85mm]{2025/openmp_spmv} & \includegraphics[width=85mm]{2025/openmp_cgsolver} \\
 		(в) SpMV & (г) CGSolver \\[6pt]
 	\end{tabular}
-	\caption{Зависимость производительности от числа нитей (PC)}
+	\caption{Зависимость производительности от числа нитей}
 	\label{fig:multithread_flops_pc} 
 \end{figure}
 
+\iffalse
 \begin{figure}[H]
 	\center
 	\begin{tabular}{cc}
@@ -274,7 +278,7 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 		CGSolve & 1.99 & 3.91 & 7.36 & 10.98 & 14.64 & 17.56 & 18.96 & 19.18 \\
 		\hline
 	\end{tabular}
-	\caption{Расчеты ускорения для каждой из операций при $N = 1e8$ (Polus)}
+	\caption{Расчеты ускорения для каждой из операций при $N = 1e8$}
 	\label{fig:speedup}
 \end{figure}
 
@@ -288,28 +292,29 @@ top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
 		\includegraphics[width=85mm]{multithread_polus_spmv2} & \includegraphics[width=85mm]{multithread_polus_cgsolver2} \\
 		(в) SpMV & (г) CGSolver \\[6pt]
 	\end{tabular}
-	\caption{Зависимость производительности от числа нитей на двухсокетной конфигурации (Polus)}
+	\caption{Зависимость производительности от числа нитей на двухсокетной конфигурации}
 	\label{fig:multithread_flops_polus2} 
 \end{figure}
+\fi
 
 \begin{figure}[H]
 	\center
 	\setlength{\tabcolsep}{10pt}
 	\renewcommand{\arraystretch}{1.5}
-	\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
+		\begin{tabular}{|c|c|c|c|c|}
 		\hline
-		T & 2 & 4 & 8 & 16 & 32 & 40 & 60 & 80 & 120 & 160  \\
+		T & 2 & 4 & 6 & 12  \\
 		\hline
-		Dot & 1.98 & 3.96 & 7.42 & 14.11 & 20.10 & 25.46 & 29.11 & 34.95 & 37.51 & 38.85 \\
+		Dot & 2.00 & 3.98 & 5.51 & 9.06 \\
 		\hline
-		AXpY & 1.99 & 3.89 & 7.38 & 14.41 & 20.83 & 26.19 & 30.44 & 35.95 & 38.97 & 40.22  \\
+		AXpY & 1.89 & 2.56 & 2.86 & 2.81 \\
 		\hline
-		SpMV & 1.99 & 3.94 & 7.51 & 13.26 & 22.23 & 27.52 & 31.48 & 36.85 & 39.65 & 40.60  \\
+		SpMV & 1.98 & 3.89 & 5.76 & 6.05 \\
 		\hline
-		CGSolve & 1.98 & 3.86 & 7.19 & 13.43 & 19.63 & 21.34 & 26.18 & 30.03 & 31.73 & 32.27 \\
+		CGSolve & 1.94 & 3.62 & 4.71 & 5.24 \\
 		\hline
 	\end{tabular}
-	\caption{Расчеты ускорения для каждой из операций на двухсокетной конфигурации при $N = 10^8$ (Polus)}
+	\caption{Расчеты ускорения для каждой из операций на двухсокетной конфигурации при $N = 10^8$}
 	\label{fig:speedup2}
 \end{figure}
 
@@ -347,11 +352,11 @@ $ TBP_{PC, AXpY} = \min(384\ GFLOPS, 89,6\ GB/s \cdot 1/12) = 7.5\ GFLOPS $
 
 $ TBP_{PC, SpMV} = \min(384\ GFLOPS, 89,6\ GB/s \cdot 1/11) = 8.1\ GFLOPS $
 
-$ TBP_{Polus, dot} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/8) = 19.2\ GFLOPS $
+%$ TBP_{Polus, dot} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/8) = 19.2\ GFLOPS $
 
-$ TBP_{Polus, AXpY} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/12) = 12.8\ GFLOPS $
+%$ TBP_{Polus, AXpY} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/12) = 12.8\ GFLOPS $
 
-$ TBP_{Polus, SpMV} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/11) = 14\ GFLOPS $
+%$ TBP_{Polus, SpMV} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/11) = 14\ GFLOPS $
 
 \begin{figure}[h!]
 	\center
@@ -363,11 +368,11 @@ $ TBP_{Polus, SpMV} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/11) = 14\ GFLOPS $
 		\hline
 		$PC\ TBP_{Analytical} $ & $ 11.2\ GFLOPS $ & $ 7.5\ GFLOPS $ & $ 8.1\ GFLOPS $ \\
 		\hline
-		$PC\ RealP $ & $ 5.06\ GFLOPS $ & $ 3.45\ GFLOPS $ & $ 2.25\ GFLOPS $ \\
-		\hline
-		$ Polus\ TBP_{Analytical} $& $ 19.2\ GFLOPS $ & $ 12.8\ GFLOPS $ & $ 14\ GFLOPS $ \\
-		\hline
-		$ Polus\ RealP $ & $ 3.01\ GFLOPS $ & $ 2.16\ GFLOPS $ & $ 1.31\ GFLOPS $ \\
+		$PC\ RealP $ & $ 8.93\ GFLOPS $ & $ 4.77\ GFLOPS $ & $ 6.21\ GFLOPS $ \\
+		%\hline
+		%$ Polus\ TBP_{Analytical} $& $ 19.2\ GFLOPS $ & $ 12.8\ GFLOPS $ & $ 14\ GFLOPS $ \\
+		%\hline
+		%$ Polus\ RealP $ & $ 3.01\ GFLOPS $ & $ 2.16\ GFLOPS $ & $ 1.31\ GFLOPS $ \\
 		\hline
 	\end{tabular}
 	\caption{Аналитические и реальные значение производительности для каждой из операций}
@@ -381,17 +386,18 @@ $ TBP_{Polus, SpMV} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/11) = 14\ GFLOPS $
 \begin{figure}[H]
 	\center
 	\begin{tabular}{cc}
-		\includegraphics[width=85mm]{mpi_polus_dot} & \includegraphics[width=85mm]{mpi_polus_axpy} \\
+		\includegraphics[width=85mm]{2025/mpi_dot} & \includegraphics[width=85mm]{2025/mpi_axpy} \\
 		(a) Dot & (б) AXpY \\
-		\includegraphics[width=85mm]{mpi_polus_spmv} & \includegraphics[width=85mm]{mpi_polus_cgsolver} \\
+		\includegraphics[width=85mm]{2025/mpi_spmv} & \includegraphics[width=85mm]{2025/mpi_cgsolver} \\
 		(в) SpMV & (г) CGSolver \\[6pt]
 	\end{tabular}
-	\caption{Зависимость производительности от числа процессов (Polus)}
+	\caption{Зависимость производительности от числа процессов}
 	\label{fig:mpi_flops_polus} 
 \end{figure}
 
-\newpage
+\iffalse
 
+\newpage
 \subsection{Сравнение с OpenMP}
 
 \begin{figure}[H]
@@ -405,26 +411,41 @@ $ TBP_{Polus, SpMV} = \min(290\ GFLOPS, 153,6\ GB/s \cdot 1/11) = 14\ GFLOPS $
 	\caption{Сравнение производительности при $N = 10^8$ (Polus)}
 	\label{fig:mpi_flops_comapre} 
 \end{figure}
+\fi
 
 \begin{figure}[H]
 	\center
 	\setlength{\tabcolsep}{6pt}
 	\renewcommand{\arraystretch}{1.3}
-	\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+	\begin{tabular}{|c|c|c|c|c|}
 		\hline
-		T & 2 & 4 & 8 & 16 & 32 & 40 & 64 & 80 & 120 & 160 & 240 & 320  \\
+		T & 2 & 4 & 6 & 12  \\
 		\hline
-		Dot & 1.93 & 3.62 & 7.71 & 13.63 & 28.75 & 36.39 & 41.90 & 52.19 & 57.91 & 65.93 & 69.57 & 72.53 \\
+		Dot & 1.94 & 3.89 & 5.62 & 8.31 \\
 		\hline
-		AXpY & 1.96 & 3.94 & 7.65 & 14.26 & 29.06 & 36.25 & 42.54 & 52.40 & 56.58 & 67.85 & 70.58 & 72.15  \\
+		AXpY & 1.82 & 2.55 & 2.82 & 2.76 \\
 		\hline
-		SpMV & 1.71 & 3.42 & 6.16 & 11.98 & 24.02 & 30.93 & 37.32 & 45.74 & 49.18 & 55.39 & 61.21 & 63.71  \\
+		SpMV & 2.05 & 3.74 & 6.07 & 7.60 \\
 		\hline
-		CGSolve & 1.75 & 3.39 & 6.64 & 13.05 & 24.91 & 28.92 & 37.97 & 43.17 & 50.34 & 59.49 & 62.25 & 66.88 \\
+		CGSolve & 2.03 & 3.81 & 5.20 & 6.38 \\
 		\hline
 	\end{tabular}
-	\caption{Расчеты ускорения в MPI режиме при $N = 10^8$ (Polus)}
+	\caption{Расчеты ускорения в MPI режиме при $N = 10^8$}
 	\label{fig:speedup3}
+\end{figure}
+
+\section{CUDA реализация}
+
+\begin{figure}[H]
+	\center
+	\begin{tabular}{cc}
+		\includegraphics[width=85mm]{2025/cuda_dot} & \includegraphics[width=85mm]{2025/cuda_axpy} \\
+		(a) Dot & (б) AXpY \\
+		\includegraphics[width=85mm]{2025/cuda_spmv} & \includegraphics[width=85mm]{2025/cuda_cgsolver} \\
+		(в) SpMV & (г) CGSolver \\[6pt]
+	\end{tabular}
+	\caption{Зависимость производительности от размера матрицы}
+	\label{fig:cuda_flops_polus} 
 \end{figure}
 
 
