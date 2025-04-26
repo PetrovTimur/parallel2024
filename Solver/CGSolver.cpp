@@ -89,9 +89,9 @@ int main(int argc, char** argv) {
 
     #ifdef DEBUG_MODE
     LOG_DEBUG << "IA_NE:\t";
-    printArray(ia_ne.data(), Nn + 1, LOG);
+    printArray(ia_ne, Nn + 1, LOG);
     LOG_DEBUG << "JA_NE:\t";
-    printArray(ja_ne.data(), ia_ne[Nn], LOG);
+    printArray(ja_ne, ia_ne[Nn], LOG);
     #endif
 
     start = omp_get_wtime();
