@@ -19,7 +19,11 @@ option(ENABLE_TESTS "Enable automatic testing" ON)
 option(DEBUG_MODE "Use debug tools" OFF)
 option(USE_MPI "Use MPI" OFF)
 option(USE_CUDA "Use CUDA" OFF)
-option(MEASURES "Enable measuring binaries" OFF)
+option(MEASURES "Enable measuring" OFF)
+
+if(USE_MPI AND USE_CUDA)
+    message(FATAL_ERROR "You cannot enable both USE_MPI and USE_CUDA at the same time.")
+endif()
 
 if(USE_MPI AND USE_CUDA)
     message(FATAL_ERROR "You cannot enable both USE_MPI and USE_CUDA at the same time.")
