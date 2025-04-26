@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <set>
 #include <vector>
 #include <utility>
@@ -183,28 +184,96 @@ void makeCSR(int Nx, int Ny, int K1, int K2, std::vector<int> &ia, std::vector<i
 
 
 void makeIncidenceMatrixCSR(const int Nx, int Ny, const int K1, const int K2, const int i_start, const int i_end, const int j_start, const int j_end, std::vector<int> &ia, std::vector<int> &ja) {
-    ia.push_back(0);
+    // ia.push_back(0);
+    //
+    // for (int i = i_start; i <= i_end; i++) {
+    //     for (int j = j_start; j <= j_end; j++) {
+    //         const int cell = i * Nx + j;
+    //         if (cell % (K1 + K2) < K1) {
+    //             ja.push_back(cell + cell / Nx);
+    //             ja.push_back(cell + cell / Nx + 1);
+    //             ja.push_back((cell + Nx + 1) + cell / Nx);
+    //             ja.push_back((cell + Nx + 1) + cell / Nx + 1);
+    //             ia.push_back(ia[ia.size() - 1] + 4);
+    //         } else {
+    //             ja.push_back(cell + cell / Nx);
+    //             ja.push_back(cell + cell / Nx + 1);
+    //             ja.push_back((cell + Nx + 1) + cell / Nx);
+    //             ia.push_back(ia[ia.size() - 1] + 3);
+    //
+    //             ja.push_back(cell + cell / Nx + 1);
+    //             ja.push_back((cell + Nx + 1) + cell / Nx);
+    //             ja.push_back((cell + Nx + 1) + cell / Nx + 1);
+    //             ia.push_back(ia[ia.size() - 1] + 3);
+    //         }
+    //     }
+    // }
 
-    for (int i = i_start; i <= i_end; i++) {
-        for (int j = j_start; j <= j_end; j++) {
-            const int cell = i * Nx + j;
+    int num_threads;
+    #pragma omp parallel default(none) shared(num_threads)
+    {
+        #pragma omp single
+        {
+            num_threads = omp_get_num_threads();
+        }
+    }
+
+    int N_cells = (j_end - j_start + 1) * (i_end - i_start + 1);
+    std::vector<std::vector<int>> ja_local(num_threads);
+    std::vector<std::vector<int>> ia_count(num_threads);
+
+    #pragma omp parallel default(none) shared(num_threads, N_cells, Nx, i_start, j_start, i_end, j_end, K1, K2, ia_count, ja_local)
+    {
+        int tid = omp_get_thread_num();
+        int chunk = (N_cells + num_threads - 1) / num_threads;
+        int start = tid * chunk + (i_start * Nx + j_start);
+        int end   = std::min(start + chunk, N_cells + (i_start * Nx + j_start));
+
+        for (int cell = start; cell < end; cell++) {
             if (cell % (K1 + K2) < K1) {
-                ja.push_back(cell + cell / Nx);
-                ja.push_back(cell + cell / Nx + 1);
-                ja.push_back((cell + Nx + 1) + cell / Nx);
-                ja.push_back((cell + Nx + 1) + cell / Nx + 1);
-                ia.push_back(ia[ia.size() - 1] + 4);
+                ja_local[tid].push_back(cell + cell / Nx);
+                ja_local[tid].push_back(cell + cell / Nx + 1);
+                ja_local[tid].push_back((cell + Nx + 1) + cell / Nx);
+                ja_local[tid].push_back((cell + Nx + 1) + cell / Nx + 1);
+                ia_count[tid].push_back(4);
             } else {
-                ja.push_back(cell + cell / Nx);
-                ja.push_back(cell + cell / Nx + 1);
-                ja.push_back((cell + Nx + 1) + cell / Nx);
-                ia.push_back(ia[ia.size() - 1] + 3);
+                ja_local[tid].push_back(cell + cell / Nx);
+                ja_local[tid].push_back(cell + cell / Nx + 1);
+                ja_local[tid].push_back((cell + Nx + 1) + cell / Nx);
+                ia_count[tid].push_back(3);
 
-                ja.push_back(cell + cell / Nx + 1);
-                ja.push_back((cell + Nx + 1) + cell / Nx);
-                ja.push_back((cell + Nx + 1) + cell / Nx + 1);
-                ia.push_back(ia[ia.size() - 1] + 3);
+                ja_local[tid].push_back(cell + cell / Nx + 1);
+                ja_local[tid].push_back((cell + Nx + 1) + cell / Nx);
+                ja_local[tid].push_back((cell + Nx + 1) + cell / Nx + 1);
+                ia_count[tid].push_back(3);
             }
+        }
+    }
+
+    std::vector<int> ia_offset(num_threads + 1);
+    std::vector<int> ja_offset(num_threads + 1);
+
+    for (int tid = 0; tid < num_threads; tid++) {
+        ia_offset[tid + 1] = ia_count[tid].size() + ia_offset[tid];
+        ja_offset[tid + 1] = ja_local[tid].size() + ja_offset[tid];
+    }
+
+    ia.resize(ia_offset.back() + 1);
+    ja.resize(ja_offset.back());
+
+    #pragma omp parallel for default(none) shared(num_threads, ia_offset, ia_count, ia)
+    for (int tid = 0; tid < num_threads; tid++) {
+        for (int i = ia_offset[tid]; i < ia_offset[tid + 1]; i++) {
+            ia[i + 1] = ia_count[tid][i - ia_offset[tid]];
+        }
+    }
+
+    scan(ia.data(), ia.data(), ia.size());
+
+    #pragma omp parallel for default(none) shared(num_threads, ja_offset, ja_local, ja)
+    for (int tid = 0; tid < num_threads; tid++) {
+        for (int i = ja_offset[tid]; i < ja_offset[tid + 1]; i++) {
+            ja[i] = ja_local[tid][i - ja_offset[tid]];
         }
     }
 }
@@ -254,9 +323,9 @@ std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const i
     auto ia_adj = new int[Ne + 1];
     ia_adj[0] = 0;
     std::vector<std::vector<int>> ja_local(num_threads);
-    std::vector<int> ia_local(num_threads + 1);
+    std::vector<int> ia_offset(num_threads + 1);
 
-    #pragma omp parallel default(none) shared(ia_en, ja_en, ia_ne, ja_ne, ia_adj, ia_local, ja_local, num_threads, Ne)
+    #pragma omp parallel default(none) shared(ia_en, ja_en, ia_ne, ja_ne, ia_adj, ia_offset, ja_local, num_threads, Ne)
     {
         int tid = omp_get_thread_num();
         int chunk = (Ne + num_threads - 1) / num_threads;
@@ -285,22 +354,22 @@ std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const i
                 }
             }
             ia_adj[element1 + 1] = count;
-            ia_local[tid + 1] += count;
+            ia_offset[tid + 1] += count;
         }
     }
 
     scan(ia_adj, ia_adj, Ne + 1);
 
     for (int tid = 1; tid <= num_threads; ++tid) {
-        ia_local[tid] += ia_local[tid - 1];
+        ia_offset[tid] += ia_offset[tid - 1];
     }
 
-    auto ja_adj = new int[ia_local[num_threads]];
+    auto ja_adj = new int[ia_offset[num_threads]];
 
-    #pragma omp parallel for default(none) shared(ja_adj, ia_local, ja_local, num_threads)
+    #pragma omp parallel for default(none) shared(ja_adj, ia_offset, ja_local, num_threads)
     for (int tid = 0; tid < num_threads; tid++) {
-        for (int i = ia_local[tid]; i < ia_local[tid + 1]; i++) {
-            ja_adj[i] = ja_local[tid][i - ia_local[tid]];
+        for (int i = ia_offset[tid]; i < ia_offset[tid + 1]; i++) {
+            ja_adj[i] = ja_local[tid][i - ia_offset[tid]];
         }
     }
 
