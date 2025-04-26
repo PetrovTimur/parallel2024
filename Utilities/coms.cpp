@@ -86,9 +86,8 @@ void ComUpdate(double *b, const std::vector<int> &RecvOffset, const std::vector<
     SendBuf.resize(Send.size());
     RecvBuf.resize(Recv.size());
 
-    // TODO: Fix size asserts
-    assert(Recv.size() == RecvOffset.back() && "Recv size incorrect");
-    assert(Send.size() == SendOffset.back() && "Send size incorrect");
+    assert(static_cast<int>(Recv.size()) == RecvOffset.back() && "Recv size incorrect");
+    assert(static_cast<int>(Send.size()) == SendOffset.back() && "Send size incorrect");
 
     std::vector<MPI_Request> Request;
     std::vector<MPI_Status> Status;

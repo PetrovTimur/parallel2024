@@ -23,15 +23,15 @@ void localizeCSR(const int *ia, const int size, int *ja, std::unordered_map<int,
 
 void constructG2L(std::vector<int> &ia_en, std::vector<int> &ja_en, std::unordered_map<int, int> &G2L) {
     int k = 0;
-    for (int i = 0; i < ja_en.size(); i++) {
-        if (!G2L.count(ja_en[i])) {
-            G2L[ja_en[i]] = k++;
+    for (int el : ja_en) {
+        if (!G2L.count(el)) {
+            G2L[el] = k++;
         }
     }
 }
 
 void fillG2L(std::vector<int> &L2G, std::unordered_map<int, int> &G2L) {
-    for (int j = 0; j < L2G.size(); j++) {
+    for (unsigned int j = 0; j < L2G.size(); j++) {
         G2L[L2G[j]] = j;
     }
 }
@@ -39,11 +39,11 @@ void fillG2L(std::vector<int> &L2G, std::unordered_map<int, int> &G2L) {
 void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, std::vector<double> &a, std::vector<double> &b,
     std::vector<double> &diag) {
     #pragma omp parallel for proc_bind(master)
-    for (int i = 0; i < ia.size() - 1; i++) {
+    for (unsigned int i = 0; i < ia.size() - 1; i++) {
         double sum = 0;
         int k_i = 0;
         for (int k = ia[i]; k < ia[i + 1]; k++) {
-            int j = ja[k];
+            unsigned int j = ja[k];
             if (i != j) {
                 a[k] = std::cos(L2G[i] * L2G[j] + L2G[i] + L2G[j]);
                 sum += std::abs(a[k]);
@@ -57,8 +57,8 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, 
         // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
     }
 
-    #pragma omp parallel for proc_bind(master)
-    for (int i = 0; i < b.size(); i++)
+    #pragma omp parallel for
+    for (unsigned int i = 0; i < b.size(); i++)
         b[i] = std::sin(L2G[i]);
 }
 
@@ -68,7 +68,7 @@ void makeIncidenceMatrixCSR(const int Nx, int Ny, const int K1, const int K2, st
     std::vector<int> new_L2G;
     std::vector<int> new_Part;
 
-    for (int i = 0; i < L2G.size(); i++) {
+    for (unsigned int i = 0; i < L2G.size(); i++) {
         int cell = L2G[i];
         int global_idx = cell + cell / (K1 + K2) * K2 + std::max(0, cell % (K1 + K2) - K1);
 
@@ -127,7 +127,7 @@ void buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const 
 
         ja_adj.push_back(adjacent[0]);
         int count = 1;
-        for (int i = 1; i < adjacent.size(); ++i) {
+        for (unsigned int i = 1; i < adjacent.size(); ++i) {
             if (adjacent[i] != adjacent[i - 1]) {
                 ja_adj.push_back(adjacent[i]);
                 count++;

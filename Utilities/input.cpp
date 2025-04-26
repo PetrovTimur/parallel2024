@@ -66,7 +66,7 @@ void input(const int Nx, const int Ny, const int Px, const int Py, const int MyI
         }
     }
 
-    int N_local = L2G.size();
+    // int N_local = L2G.size();
     if (top_halo) {
         if (left_halo) {
             L2G.push_back(i_start * (Nx) + j_start);
