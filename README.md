@@ -55,7 +55,7 @@ Set options via `cmake -DOPTION=ON ..`.
     ```
 - Example run (MPI):
     ```sh
-    mpirun -np 4 ./bin/CGSolverMPI --Nx 100 --Ny 100 --K1 1 --K2 1 --Px 2 --Py 2
+    mpirun -np 4 ./bin/CGSolver --Nx 100 --Ny 100 --K1 1 --K2 1 --Px 2 --Py 2
     ```
 
 ## Directory Structure
