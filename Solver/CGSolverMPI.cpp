@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 
     args.log_dir = "";
     args.eps = 1e-3;
-    args.maxit = 100;
+    args.maxit = 20;
 
     argp_parse (&argp, argc, argv, 0, nullptr, &args);
 
@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
     std::vector<double> res(ia_ee.size() - 1);
 
     start = MPI_Wtime();
-    int iterations = solve(MyID, Part, L2G, ia_ee, ja_ee, a, b, diag, res);
+    int iterations = solve(MyID, Part, L2G, ia_ee, ja_ee, a, b, diag, res, eps, maxit);
     MPI_Barrier(MPI_COMM_WORLD);
     end = MPI_Wtime();
 

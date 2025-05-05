@@ -16,7 +16,7 @@
 
 #ifdef USE_MPI
 int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &L2G, const std::vector<int> &ia, const std::vector<int> &ja,
-          const std::vector<double> &a, const std::vector<double> &b, const std::vector<double> &diag, std::vector<double> &res) {
+          const std::vector<double> &a, const std::vector<double> &b, const std::vector<double> &diag, std::vector<double> &res, const double eps, int maxit) {
 
     std::vector<int> RecvOffset, SendOffset;
     std::vector<int> Recv, Send;
@@ -27,8 +27,8 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
     // std::cout << "My ID: " << MyID << ", Neighbors size: " << Neighbors.size() << std::endl;
 
     int N = ia.size() - 1;
-    const double eps = 1e-3;
-    const int maxit = 20;
+    // const double eps = 1e-3;
+    // const int maxit = 20;
 
     const auto z = new double[N];
     const auto p = new double[L2G.size()];
