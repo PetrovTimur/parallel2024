@@ -61,18 +61,6 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
     int k = 0;
     float buf, norm;
 
-    // while (rho[1] > eps * eps && k < maxit) {
-    //     if (k > 1) {
-    //         beta = rho[1] / rho[0];
-    //     } else {
-    //         p = z;cuda-memcheck ./bin/CGSolver --Nx=4 --Ny=4 --K1=2 --K2=3
-    //     }
-    //
-    //
-    //
-    //     k++;
-    // }
-
     // std::cout << "Starting: ";
 
     do {
@@ -135,9 +123,7 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
     }
     while (rho[1] > eps * eps && k < maxit);
 
-    // #pragma omp parallel for default(none) shared(res, x, N)
     cudaMemcpy(res, x.data().get(), N * sizeof(float), cudaMemcpyDeviceToHost);
-    // std::cout << x[0] << x[1] << std::endl;
 
     // delete[] z;
     // delete[] p;
