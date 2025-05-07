@@ -36,12 +36,13 @@ A C++ project for solving large sparse systems using parallel algorithms (OpenMP
 
 ## Build Options
 
-| Option       | Description                        | Default |
-|--------------|------------------------------------|---------|
-| DEBUG_MODE   | Enable debug logging and checks    | OFF     |
-| USE_MPI      | Enable MPI parallelization         | OFF     |
-| USE_CUDA     | Enable CUDA GPU support            | OFF     |
-| ENABLE_TESTS | Build and enable tests             | ON      |
+| Option       | Description                          | Default |
+|--------------|--------------------------------------|---------|
+| DEBUG_MODE   | Enable debug logging and checks      | OFF     |
+| USE_MPI      | Enable MPI parallelization           | OFF     |
+| USE_CUDA     | Enable CUDA GPU support              | OFF     |
+| ENABLE_TESTS | Build and enable tests               | ON      |
+| MEASURES     | Build performance measuring binaries | OFF     |
 
 Set options via `cmake -DOPTION=ON ..`.
 
