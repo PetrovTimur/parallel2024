@@ -9,18 +9,22 @@ const char * argp_program_version = "CGSolver 1.0";
 const char * argp_program_bug_address = "<s02240520@stud.cs.msu.ru>";
 
 /* Program documentation. */
-#ifdef USE_MPI
+#if defined(USE_MPI)
 static char doc[] = "CGSolver -- a parallel solver using MPI";
+#elif defined(USE_CUDA)
+static char doc[] = "CGSolver -- a parallel solver using CUDA";
 #else
 static char doc[] = "CGSolver -- a parallel solver using OpenMP";
+#end
+
 #endif
 
 
 /* A description of the arguments we accept. */
 #ifdef USE_MPI
-static char args_doc[] = "Nx Ny K1 K2 Px Py";
+static char args_doc[] = "[--Nx VALUE] [--Ny VALUE] [--K1 VALUE] [--K2 VALUE] [--Px VALUE] [--Py VALUE]";
 #else
-static char args_doc[] = "Nx Ny K1 K2";
+static char args_doc[] = "[--Nx VALUE] [--Ny VALUE] [--K1 VALUE] [--K2 VALUE]";
 #endif
 
 /* The options we understand. */
