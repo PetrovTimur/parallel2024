@@ -38,7 +38,7 @@ void fillG2L(std::vector<int> &L2G, std::unordered_map<int, int> &G2L) {
 
 void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, std::vector<double> &a, std::vector<double> &b,
     std::vector<double> &diag) {
-    #pragma omp parallel for proc_bind(master)
+    #pragma omp parallel for default(none) shared(ia, ja, a, b, diag, L2G)
     for (unsigned int i = 0; i < ia.size() - 1; i++) {
         double sum = 0;
         int k_i = 0;
@@ -57,7 +57,7 @@ void fillCSR(std::vector<int> &ia, std::vector<int> &ja, std::vector<int> &L2G, 
         // std::cout << "el: " << i << ", j: " << ja[k_i] << ", val = " << a[k_i] << std::endl;
     }
 
-    #pragma omp parallel for
+    #pragma omp parallel for default(none) shared(b, L2G)
     for (unsigned int i = 0; i < b.size(); i++)
         b[i] = std::sin(L2G[i]);
 }
