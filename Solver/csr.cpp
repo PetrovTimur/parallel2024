@@ -14,6 +14,7 @@
 
 #ifdef USE_MPI
 void localizeCSR(const int *ia, const int size, int *ja, std::unordered_map<int, int> &G2L) {
+    #pragma omp parallel for default(none) shared(ia, ja, G2L, size)
     for (int i = 0; i < size - 1; i++) {
         for (int j = ia[i]; j < ia[i + 1]; j++) {
             ja[j] = G2L[ja[j]];
