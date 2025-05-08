@@ -15,8 +15,6 @@ static char doc[] = "CGSolver -- a parallel solver using MPI";
 static char doc[] = "CGSolver -- a parallel solver using CUDA";
 #else
 static char doc[] = "CGSolver -- a parallel solver using OpenMP";
-#end
-
 #endif
 
 
