@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
     std::vector<int> ia_ee, ja_ee;
 
     start = MPI_Wtime();
-    buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, ia_ee, ja_ee, ia_en.size() - 1, Part, MyID);
+    buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, ia_ee, ja_ee, Part, MyID);
     MPI_Barrier(MPI_COMM_WORLD);
     end = MPI_Wtime();
 

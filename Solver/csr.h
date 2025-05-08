@@ -41,7 +41,7 @@ std::pair<int *, int *> buildAdjacencyMatrixCSRUsingSets(const int *ia_en, const
 
 #ifdef USE_MPI
 void buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, std::vector<int> &ia_adj, std::vector<int> &
-                                      ja_adj, int Ne, std::vector<int> &Part, int MyID);
+                                      ja_adj, std::vector<int> &Part, int MyID);
 #else
 std::pair<int*, int*> buildAdjacencyMatrixCSRUsingSort(const int *ia_en, const int *ja_en, const int *ia_ne, const int *ja_ne, int Ne, int Nn);
 #endif
