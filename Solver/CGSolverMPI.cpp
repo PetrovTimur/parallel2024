@@ -42,9 +42,6 @@ int main(int argc, char** argv) {
         LOG_INFO << "Starting with log directory: " << args.log_dir << std::endl;
     }
 
-    omp_set_num_threads(1);
-    // omp_set_num_threads(omp_get_max_threads());
-
     int Nx = args.Nx;
     checkInput(Nx, "Nx");
     int Ny = args.Ny;
@@ -66,6 +63,7 @@ int main(int argc, char** argv) {
 
     if (MyID == 0) {
         LOG_INFO << "Nx = " << Nx << ", Ny = " << Ny << ", K1 = " << K1 << ", K2 = " << K2 << ", Px = " << Px << ", Py = " << Py << std::endl;
+        LOG_INFO << "Using " << NumProc << " processes, " << omp_get_max_threads() << " threads/process" << std::endl;
     }
 
     if (NumProc != Px * Py) {
