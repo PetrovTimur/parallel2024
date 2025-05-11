@@ -40,15 +40,15 @@ inline void getDeviceSpecs(int &blocks, int &threads) {
     cudaGetDevice(&device);
     cudaGetDeviceProperties(&prop, device);
 
-    #ifdef DEBUG_MODE
-    LOG_DEBUG << "Device " << prop.name << ", " << prop.major << "." << prop.minor << std::endl;
-    LOG_DEBUG << "Max threads per block: " << prop.maxThreadsPerBlock << std::endl;
-    LOG_DEBUG << "Max blocks per SM: " << prop.maxBlocksPerMultiProcessor << std::endl;
-    LOG_DEBUG << "SM count: " << prop.multiProcessorCount << std::endl;
-    LOG_DEBUG << "Max threads per SM: " << prop.maxThreadsPerMultiProcessor << std::endl;
-
-    LOG_DEBUG << "-----------------" << std::endl << std::endl;
-    #endif
+    // #ifdef DEBUG_MODE
+    // LOG_DEBUG << "Device " << prop.name << ", " << prop.major << "." << prop.minor << std::endl;
+    // LOG_DEBUG << "Max threads per block: " << prop.maxThreadsPerBlock << std::endl;
+    // LOG_DEBUG << "Max blocks per SM: " << prop.maxBlocksPerMultiProcessor << std::endl;
+    // LOG_DEBUG << "SM count: " << prop.multiProcessorCount << std::endl;
+    // LOG_DEBUG << "Max threads per SM: " << prop.maxThreadsPerMultiProcessor << std::endl;
+    //
+    // LOG_DEBUG << "-----------------" << std::endl << std::endl;
+    // #endif
 
     blocks = prop.multiProcessorCount * prop.maxThreadsPerMultiProcessor / 256;
     threads = 256;

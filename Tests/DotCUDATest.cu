@@ -1,13 +1,17 @@
 #include "thrust/device_vector.h"
 #include <thrust/host_vector.h>
 #include "Solver/Kernels/mathfunc.cuh"
+#include "Utilities/cuda_helper.cuh"
 #include "cuda_runtime.h"
 #include <iostream>
 
 
 int main() {
-    int blocks = 128;
-    int threads = 256;
+    int blocks, threads;
+    getDeviceSpecs(blocks, threads);
+
+    std::cout << blocks << " blocks, " << threads << " threads" << std::endl;
+
     int size = 100000000;
     float a = 2.f;
     float b = 3.f;
@@ -20,7 +24,21 @@ int main() {
     float *res;
     cudaMalloc(&res, sizeof(float));
 
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    cudaEventRecord(start);
     dot_gpu(threads, blocks, d_x.data().get(), d_y.data().get(), d_z.data().get(), res, size);
+    cudaEventRecord(stop);
+
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    std::cout << 2 * size / 1e9 / (milliseconds / 1000.0) << ", " << milliseconds / 1000.0 << std::endl;
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 
     cudaMemcpy(&res_host, res, sizeof(float), cudaMemcpyDeviceToHost);
 
@@ -32,9 +50,9 @@ int main() {
 
 
     if (correct) {
-        std::cout << "Reduce test passed!" << std::endl;
+        std::cout << "Dot test passed!" << std::endl;
     } else {
-        std::cout << "Reduce test failed!" << std::endl;
+        std::cout << "Dot test failed!" << std::endl;
     }
 
     cudaFree(res);
