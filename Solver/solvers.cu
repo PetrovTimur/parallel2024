@@ -2,44 +2,19 @@
 #include "thrust/device_vector.h"
 #include "Solver/Kernels/mathfunc.cuh"
 #include <Utilities/logger.h>
+#include <Utilities/cuda_helper.cuh>
 #include "solvers.cuh"
 #include "omp.h"
 
 
-#define checkCudaErrors(val) check((val), #val, __FILE__, __LINE__)
-void check(cudaError_t err, const char* const func, const char* const file,
-           const int line)
-{
-    if (err != cudaSuccess)
-    {
-        std::cerr << "CUDA Runtime Error at: " << file << ":" << line
-                  << std::endl;
-        std::cerr << cudaGetErrorString(err) << " " << func << std::endl;
-        // We don't exit when we encounter CUDA errors in this example.
-        std::exit(EXIT_FAILURE);
-    }
-}
-
-#define getLastCudaError(msg) checkLast(msg, __FILE__, __LINE__)
-
-inline void checkLast(const char *errorMessage, const char *file,
-                               const int line) {
-    cudaError_t err = cudaGetLastError();
-
-    if (cudaSuccess != err) {
-        fprintf(stderr,
-                "%s(%i) : getLastCudaError() CUDA error :"
-                " %s : (%d) %s.\n",
-                file, line, errorMessage, static_cast<int>(err),
-                cudaGetErrorString(err));
-        exit(EXIT_FAILURE);
-    }
-}
-
 int solve(const int *ia, const int *ja, const float *a, const float *b, const float *diag, int size, float *res, const double eps, const int maxit) {
     const int N = size;
-    const int blocks = 204;
-    const int threads = 256;
+    int blocks = 204;
+    int threads = 256;
+
+    getDeviceSpecs(blocks, threads);
+
+    LOG_INFO << "Using " << blocks << " blocks, " << threads << " threads/block" << std::endl;
 
     thrust::device_vector<float> z(N);
     thrust::device_vector<float> p(N);

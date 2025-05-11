@@ -17,4 +17,5 @@ if (USE_CUDA)
 
         target_include_directories(MathFuncCUDA PUBLIC ${PROJECT_SOURCE_DIR} ${CUDAToolkit_INCLUDE_DIRS})
         set_target_properties(MathFuncCUDA PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+        target_sources(MathFuncCUDA PUBLIC ${PROJECT_SOURCE_DIR}/Utilities/cuda_helper.cuh)
 endif ()
