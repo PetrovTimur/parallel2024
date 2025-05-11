@@ -104,7 +104,8 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
     while (rho[1] > eps * eps && k < maxit);
 
     double end = MPI_Wtime();
-    LOG_INFO << "Solve time " << end - start << std::endl;
+    if (MyID == 0)
+        LOG_INFO << "Solve time " << end - start << std::endl;
 
     // #pragma omp parallel for proc_bind(master)
     for (int i = 0; i < N; i++)
