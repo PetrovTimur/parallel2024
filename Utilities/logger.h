@@ -23,36 +23,47 @@ public:
 
     template<typename T>
     Logger& operator<<(const T& data) {
-        logFile_ << data;
+        *logStream_ << data;
         return *this;
     }
 
     Logger& operator<<(std::ostream& (*manip)(std::ostream&)) {
-        logFile_ << manip;
+        *logStream_ << manip;
         return *this;
     }
 
     operator std::ostream&() {
-        return logFile_;
+        return *logStream_;
     }
 
 private:
     std::ofstream logFile_;
+    std::ostream* logStream_ = &std::cout;
     std::string logFilePath_;
     static std::string logDirOverride_;  // declared here
 
     Logger() {
-        std::string dir = logDirOverride_.empty() ? LOG_DIR : logDirOverride_;
-        auto t = std::time(nullptr);
-        auto tm = *std::localtime(&t);
-        std::ostringstream oss;
-        oss << dir << "/log_" << std::put_time(&tm, "%Y-%m-%d_%H:%M:%S") << ".txt";
-        logFilePath_ = oss.str();
-        logFile_.open(logFilePath_, std::ios::out | std::ios::trunc);
+        if (!logDirOverride_.empty()) {
+            auto t = std::time(nullptr);
+            auto tm = *std::localtime(&t);
+            std::ostringstream oss;
+            oss << logDirOverride_ << "/log_" << std::put_time(&tm, "%Y-%m-%d_%H:%M:%S") << ".txt";
+            logFilePath_ = oss.str();
+            logFile_.open(logFilePath_, std::ios::out | std::ios::trunc);
+            if (logFile_.is_open()) {
+                logStream_ = &logFile_;
+            } else {
+                // fallback to cout if file can't be opened
+                logStream_ = &std::cout;
+                logFilePath_.clear();
+            }
+        }
     }
     ~Logger() {
-        std::cout << "Log file saved to: " << logFilePath_ << std::endl;
-        logFile_.close();
+        if (logFile_.is_open()) {
+            std::cout << "Log file saved to: " << logFilePath_ << std::endl;
+            logFile_.close();
+        }
     }
 
     Logger(const Logger&) = delete;
