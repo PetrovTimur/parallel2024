@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
         transposeCSR(ia_en, ja_en, G2L_nodes.size(), ia_ne, ja_ne);
 
         std::vector<int> ia_ee, ja_ee;
-        buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, ia_ee, ja_ee, ia_en.size() - 1, Part, MyID);
+        buildAdjacencyMatrixCSRUsingSort(ia_en.data(), ja_en.data(), ia_ne, ja_ne, ia_ee, ja_ee, Part, MyID);
 
         std::vector<double> a(ja_ee.size());
         std::vector<double> b(ia_ee.size() - 1);
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
         for (int p = 0; p < runs; ++p) {
             // Calculate
             double start = MPI_Wtime();
-            iterations = solve(MyID, Part, L2G, ia_ee, ja_ee, a, b, diag, res);
+            iterations = solve(MyID, Part, L2G, ia_ee, ja_ee, a, b, diag, res, 1e-3, 50);
             double end = MPI_Wtime();
 
 
