@@ -59,7 +59,7 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
         MPI_Barrier(MPI_COMM_WORLD);
         double start = MPI_Wtime();
 
-        // #pragma omp parallel for proc_bind(master)
+        #pragma omp parallel for default(none) shared(z, r, diag, N)
         for (int i = 0; i < N; i++) {
             z[i] = r[i] * diag[i];
         }
@@ -70,7 +70,7 @@ int solve(const int MyID, const std::vector<int> &Part, const std::vector<int> &
         MPI_Allreduce(&buf, &rho[1], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
         if (k == 1)
-            // #pragma omp parallel for proc_bind(master)
+            #pragma omp parallel for default(none) shared(p, z, N)
             for (int i = 0; i < N; i++)
                 p[i] = z[i];
         else {
