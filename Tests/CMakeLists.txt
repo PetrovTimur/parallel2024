@@ -55,7 +55,7 @@ if (USE_CUDA)
         target_link_libraries(${TEST} PUBLIC MathFuncCUDA OpenMP::OpenMP_CXX)
         set_target_properties(${TEST} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
         target_compile_options(${TEST} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -Xcompiler=-fopenmp>)
-        target_compile_features(${TEST} PRIVATE cxx_std_17 cuda_std_17)
+        target_compile_features(${TEST} PRIVATE cxx_std_14 cuda_std_14)
     endforeach ()
 endif ()
 

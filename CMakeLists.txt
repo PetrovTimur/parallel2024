@@ -46,10 +46,17 @@ if (USE_MPI)
 endif ()
 
 if (USE_CUDA)
-    set(CMAKE_CUDA_ARCHITECTURES 89)
+    if(POLICY CMP0104)
+        cmake_policy(SET CMP0104 NEW)
+    endif()
+
+    if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+        set(CMAKE_CUDA_ARCHITECTURES 89)
+    endif()
+
     add_compile_definitions(USE_CUDA)
     enable_language(CUDA)
-    find_package(CUDAToolkit REQUIRED)
+#    find_package(CUDAToolkit REQUIRED)
 endif ()
 
 if (ENABLE_TESTS)
