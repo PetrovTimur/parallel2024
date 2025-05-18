@@ -104,6 +104,7 @@ void ComUpdate(double *b, const std::vector<int> &RecvOffset, const std::vector<
         nreq++;
     }
 
+    #pragma omp parallel for default(none) shared(Send, SendBuf, b)
     for (unsigned int i = 0; i < Send.size(); i++) {
         SendBuf[i] = b[Send[i]];
     }
@@ -121,6 +122,7 @@ void ComUpdate(double *b, const std::vector<int> &RecvOffset, const std::vector<
         assert(mpires == MPI_SUCCESS && "MPI_Waitall failed");
     }
 
+    #pragma omp parallel for default(none) shared(Recv, RecvBuf, b)
     for (unsigned int i = 0; i < Recv.size(); i++) {
         b[Recv[i]] = RecvBuf[i];
     }
