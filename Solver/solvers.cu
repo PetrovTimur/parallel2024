@@ -36,35 +36,35 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
     int k = 0;
     float buf, norm;
 
-    // std::cout << "Starting: ";
+    // CUDA timing events
+    cudaEvent_t start_solve, end_solve, start_iter, end_iter;
+    cudaEventCreate(&start_solve);
+    cudaEventCreate(&end_solve);
+    cudaEventCreate(&start_iter);
+    cudaEventCreate(&end_iter);
+
+    cudaEventRecord(start_solve);
 
     do {
         k++;
 
         LOG_INFO << "Iteration " << k << std::endl;
-        // std::cout << "Iteration " << k << std::endl;
 
-        const auto start = omp_get_wtime();
+        cudaEventRecord(start_iter);
 
         multiply<<<blocks, threads>>>(r.data().get(), diag_gpu.data().get(), z.data().get(), N);
         getLastCudaError("Kernel execution failed");
 
         rho[0] = rho[1];
 
-        // std::cout << r.size() << std::endl << z.size() << std::endl << N << std::endl;
-
         assert(r.size() == z.size() && r.size() == N && "Size mismatch");
         dot_gpu(threads, blocks, r.data().get(), z.data().get(), vec_buf.data().get(), rho.data().get() + 1, N);
         getLastCudaError("Kernel execution failed");
-
-        // rho[1] = *buf_gpu;
 
         if (k == 1)
             p = z;
         else {
             const float beta = rho[1] / rho[0];
-            // TODO: move to GPU (?)
-            // axpy(beta, p, z, N, p);
             axpy<<<blocks, threads>>>(beta, p.data().get(), z.data().get(), N, p.data().get());
             getLastCudaError("Kernel execution failed");
 
@@ -86,11 +86,13 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
         axpy<<<blocks, threads>>>(-alpha, q.data().get(), r.data().get(), N, r.data().get());
         getLastCudaError("Kernel execution failed");
 
+        cudaEventRecord(end_iter);
+        cudaEventSynchronize(end_iter);
+        float iter_ms = 0.0f;
+        cudaEventElapsedTime(&iter_ms, start_iter, end_iter);
+        LOG_INFO << "Time " << iter_ms / 1000.0 << std::endl;
 
-        LOG_INFO << "Time " << omp_get_wtime() - start << std::endl;
-        // LOG_INFO << "rho = " << rho[0] << ", " << rho[1] << ", alpha = " << alpha << std::endl;
         dot_gpu(threads, blocks, x.data().get(), x.data().get(), vec_buf.data().get(), norm_gpu, N);
-        // dot<<<blocks, threads>>>(x.data().get(), x.data().get(), norm_gpu, N);
         cudaMemcpy(&norm, norm_gpu, sizeof(float), cudaMemcpyDeviceToHost);
         LOG_INFO << "Solution norm: " << std::sqrt(norm) << std::endl;
         LOG << "--------------------------------------------------" << std::endl << std::endl;
@@ -98,17 +100,21 @@ int solve(const int *ia, const int *ja, const float *a, const float *b, const fl
     }
     while (rho[1] > eps * eps && k < maxit);
 
-    cudaMemcpy(res, x.data().get(), N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaEventRecord(end_solve);
+    cudaEventSynchronize(end_solve);
+    float solve_ms = 0.0f;
+    cudaEventElapsedTime(&solve_ms, start_solve, end_solve);
+    LOG_INFO << "Solve time " << solve_ms / 1000.0 << std::endl;
 
-    // delete[] z;
-    // delete[] p;
-    // delete[] q;
-    // delete[] x;
-    // delete[] r;
-    // delete[] rho;
+    cudaMemcpy(res, x.data().get(), N * sizeof(float), cudaMemcpyDeviceToHost);
 
     cudaFree(buf_gpu);
     cudaFree(norm_gpu);
+
+    cudaEventDestroy(start_solve);
+    cudaEventDestroy(end_solve);
+    cudaEventDestroy(start_iter);
+    cudaEventDestroy(end_iter);
 
     return k;
 }
