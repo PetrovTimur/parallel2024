@@ -48,10 +48,8 @@ endif ()
 if (USE_CUDA)
     if(POLICY CMP0104)
         cmake_policy(SET CMP0104 NEW)
-    endif()
-
-    if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-        set(CMAKE_CUDA_ARCHITECTURES 89)
+    elseif (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+        set(CMAKE_CUDA_ARCHITECTURES 75 80 86 89 CACHE STRING "CUDA architectures")
     endif()
 
     add_compile_definitions(USE_CUDA)
