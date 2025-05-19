@@ -2,14 +2,30 @@
 #include <thrust/host_vector.h>
 #include "Solver/Kernels/mathfunc.cuh"
 #include "cuda_runtime.h"
+#include "Utilities/cuda_helper.cuh"
 #include <iostream>
 #include <omp.h>
 #include <vector>
 
 int main(int argc, char **argv) {
-    int blocks = std::atoi(argv[1]);
-    int threads = std::atoi(argv[2]);
+    int blocks, threads;
+    getDeviceSpecs(blocks, threads);
+
+    if (argc > 2) {
+        blocks = std::atoi(argv[1]);
+        threads = std::atoi(argv[2]);
+    }
+
+    std::cout << blocks << " blocks, " << threads << " threads" << std::endl;
+
     int size = 100000000;
+
+    if (argc > 3) {
+        size = std::atoi(argv[3]);
+    }
+
+    std::cout << size << " numbers" << std::endl;
+
     float a = 1.0f;
 
     thrust::host_vector<float> x(size, a);
@@ -29,7 +45,7 @@ int main(int argc, char **argv) {
     cudaEventSynchronize(stop);
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
-    std::cout << 2 * size / 1e9 / (milliseconds / 1000.0) << " GFLOPS, " << milliseconds << " ms" << std::endl;
+    std::cout << 2 * size / 1e9 / (milliseconds / 1000.0) << " GFLOPS, " << milliseconds / 1000.0 << " s" << std::endl;
 
     float res = d_x[0];
     d_x[0] = a;
@@ -73,7 +89,8 @@ int main(int argc, char **argv) {
     cudaEventSynchronize(stop);
     milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
-    std::cout << 2 * size / 1e9 / (milliseconds / 1000.0) << " GFLOPS, " << milliseconds << " ms" << std::endl;
+    std::cout << 2 * size / 1e9 / (milliseconds / 1000.0) << " GFLOPS, " << milliseconds / 1000.0 << " s" << std::endl;
+
 
     res = d_y[0];
 

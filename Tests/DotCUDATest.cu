@@ -6,13 +6,25 @@
 #include <iostream>
 
 
-int main() {
+int main(int argc, char *argv[]) {
     int blocks, threads;
     getDeviceSpecs(blocks, threads);
+
+    if (argc > 2) {
+        blocks = std::atoi(argv[1]);
+        threads = std::atoi(argv[2]);
+    }
 
     std::cout << blocks << " blocks, " << threads << " threads" << std::endl;
 
     int size = 100000000;
+
+    if (argc > 3) {
+        size = std::atoi(argv[3]);
+    }
+
+    std::cout << size << " numbers" << std::endl;
+
     float a = 2.f;
     float b = 3.f;
 
@@ -35,7 +47,8 @@ int main() {
     cudaEventSynchronize(stop);
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
-    std::cout << 2 * size / 1e9 / (milliseconds / 1000.0) << ", " << milliseconds / 1000.0 << std::endl;
+    std::cout << 2 * size / 1e9 / (milliseconds / 1000.0) << " GFLOPS, " << milliseconds / 1000.0 << " s" << std::endl;
+
 
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
