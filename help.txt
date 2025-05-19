@@ -1,0 +1,21 @@
+Thread affinity helper
+export OMP_AFFINITY_FORMAT="Thread Affinity: %{process_id} %.3{thread_num} %.15{thread_affinity}"
+
+Display affinity
+export OMP_DISPLAY_AFFINITY=TRUE
+
+OpenMP version check
+echo |cpp -fopenmp -dM |grep -i open
+
+Run OpenMP
+OMP_PLACES=cores ./CGSolver --Nx 2000 --Ny 3000 --K1 30 --K2 23 --Px 1 --Py 1 -e 1e-7 -i 30
+
+Run MPI (1 process)
+OMP_PLACES=cores mpiexec --bind-to none -n 1 ./CGSolver --Nx 2000 --Ny 3000 --K1 30 --K2 23 --Px 1 --Py 1 -e 1e-7 -i 30
+OMP_PLACES=cores mpiexec --map-by ppr:1:node:pe=x -n 1 ./CGSolver --Nx 2000 --Ny 3000 --K1 30 --K2 23 --Px 1 --Py 1 -e 1e-7 -i 30
+
+Run MPI (2 processes)
+OMP_PLACES=cores mpiexec --map-by ppr:1:socket:pe=x -n 2 ./CGSolver --Nx 2000 --Ny 3000 --K1 30 --K2 23 --Px 1 --Py 2 -e 1e-7 -i 30
+
+Run MPI (4 processes)
+OMP_PLACES=cores mpiexec --map-by ppr:2:socket:pe=x -n 4 ./CGSolver --Nx 2000 --Ny 3000 --K1 30 --K2 23 --Px 2 --Py 2 -e 1e-7 -i 30
